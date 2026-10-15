@@ -1,0 +1,45 @@
+{% extends "documents/base.html" %}
+{% load docs %}
+{% block title %}Invoice {{ invoice.invoice_no }}{% endblock %}
+{% block page_size %}80mm {{ thermal_height|default:"297mm" }}{% endblock %}
+{% block page_footer %}{% endblock %}
+{% block extra_style %}{% include "documents/_thermal_style.html" %}{% endblock %}
+{% block content %}
+<div class="t-center">
+  <div class="t-shop">{{ shop.name }}</div>
+  <div class="t-meta">{{ shop.address }}{% if shop.phone %}<br>Tel {{ shop.phone }}{% endif %}
+    {% if shop.pan_vat_number %}<br>{% if shop.is_vat_registered %}VAT{% else %}PAN{% endif %} No. {{ shop.pan_vat_number }}{% endif %}</div>
+  <div class="t-title">{% if invoice.is_vat_invoice %}Tax Invoice{% else %}Invoice{% endif %}</div>
+  {% if copy_number %}<div class="t-copy">COPY OF ORIGINAL – {{ copy_number }}</div>{% endif %}
+  {% if invoice.is_cancelled %}<div class="t-copy">CANCELLED</div>{% endif %}
+</div>
+<div class="t-rule"></div>
+<div class="t-row"><span>Invoice</span><span>{{ invoice.invoice_no }}</span></div>
+<div class="t-row"><span>Miti</span><span>{{ invoice.invoice_date_bs }} BS</span></div>
+<div class="t-row"><span>Date</span><span>{{ invoice.invoice_date|date:"d M Y" }}</span></div>
+<div class="t-row"><span>Customer</span><span>{{ invoice.customer_name }}</span></div>
+{% if invoice.customer_pan %}<div class="t-row"><span>Buyer's PAN</span><span>{{ invoice.customer_pan }}</span></div>{% endif %}
+<div class="t-rule"></div>
+{% for line in lines %}
+  <div class="t-item">
+    <div>{{ line.description }}</div>
+    <div class="t-row t-sub"><span>{{ line.quantity|qty }} {{ line.unit }} × {{ line.rate|amount }}</span><span>{{ line.amount|amount }}</span></div>
+  </div>
+{% endfor %}
+<div class="t-rule"></div>
+<div class="t-row"><span>Sub-total</span><span>{{ invoice.subtotal|amount }}</span></div>
+{% if invoice.discount_amount %}<div class="t-row"><span>Discount</span><span>− {{ invoice.discount_amount|amount }}</span></div>{% endif %}
+{% if invoice.is_vat_invoice %}
+  <div class="t-row"><span>Taxable</span><span>{{ invoice.taxable_amount|amount }}</span></div>
+  <div class="t-row"><span>VAT {{ invoice.vat_rate|qty }}%</span><span>{{ invoice.vat_amount|amount }}</span></div>
+{% endif %}
+{% if invoice.round_off %}<div class="t-row"><span>Round off</span><span>{{ invoice.round_off|amount }}</span></div>{% endif %}
+<div class="t-row t-grand"><span>TOTAL</span><span>Rs. {{ invoice.total|amount }}</span></div>
+{% if not invoice.is_cancelled %}
+  <div class="t-row"><span>Paid</span><span>{{ paid|amount }}</span></div>
+  <div class="t-row"><span><strong>Balance</strong></span><span><strong>{{ balance|amount }}</strong></span></div>
+{% endif %}
+<div class="t-rule"></div>
+<div class="t-sub">{{ invoice.amount_in_words }}</div>
+<div class="t-foot">{{ shop.invoice_footer_note }}<br>{{ invoice.issued_by }} · {{ generated_at|date:"d M Y H:i" }}</div>
+{% endblock %}

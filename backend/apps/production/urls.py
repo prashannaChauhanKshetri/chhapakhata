@@ -1,0 +1,9 @@
+from rest_framework.routers import DefaultRouter
+
+from . import views
+
+router = DefaultRouter()
+router.include_root_view = False
+router.register("jobs", views.JobViewSet, basename="job")
+
+urlpatterns = router.urls

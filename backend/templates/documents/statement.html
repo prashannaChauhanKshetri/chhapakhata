@@ -1,0 +1,64 @@
+{% extends "documents/base.html" %}
+{% load docs %}
+{% block title %}Statement – {{ customer.name }}{% endblock %}
+{% block content %}
+<div class="doc-header">
+  {% include "documents/_shop_header.html" %}
+  <div class="doc-title">
+    <h1>Statement of Account</h1>
+    <div class="sub">{{ period }}</div>
+  </div>
+</div>
+
+<div class="info">
+  <div class="block">
+    <div class="label">Customer</div>
+    <div class="strong">{{ customer.name }}</div>
+    {% if customer.address %}<div>{{ customer.address }}</div>{% endif %}
+    {% if customer.phone %}<div class="muted">Tel {{ customer.phone }}</div>{% endif %}
+    {% if customer.pan_no %}<div>PAN {{ customer.pan_no }}</div>{% endif %}
+  </div>
+  <div class="block">
+    <table class="kv">
+      <tr><td>Opening balance</td><td class="num">{{ statement.opening_balance|amount }}</td></tr>
+      <tr><td>Total billed</td><td class="num">{{ statement.total_debit|amount }}</td></tr>
+      <tr><td>Total received</td><td class="num">{{ statement.total_credit|amount }}</td></tr>
+      <tr><td><strong>{% if statement.closing_balance < 0 %}Advance with us{% else %}Balance due{% endif %}</strong></td><td class="num"><strong>Rs. {{ statement.closing_balance|amount }}</strong></td></tr>
+    </table>
+  </div>
+</div>
+
+<table class="lines">
+  <thead>
+    <tr>
+      <th style="width: 11%">Miti (BS)</th>
+      <th style="width: 11%">Date (AD)</th>
+      <th style="width: 15%">Reference</th>
+      <th>Details</th>
+      <th class="num" style="width: 12%">Debit</th>
+      <th class="num" style="width: 12%">Credit</th>
+      <th class="num" style="width: 13%">Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td colspan="6" class="muted">Opening balance</td>
+      <td class="num">{{ statement.opening_balance|amount }}</td>
+    </tr>
+  {% for e in statement.entries %}
+    <tr>
+      <td>{{ e.date_bs }}</td>
+      <td>{{ e.date|date:"d M Y" }}</td>
+      <td>{{ e.reference }}</td>
+      <td>{{ e.narration }}</td>
+      <td class="num">{% if e.debit %}{{ e.debit|amount }}{% endif %}</td>
+      <td class="num">{% if e.credit %}{{ e.credit|amount }}{% endif %}</td>
+      <td class="num">{{ e.balance|amount }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7" class="muted center">No transactions in this period.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<div class="footer-note">Positive balance is the amount due to {{ shop.name }}. Generated {{ generated_at|date:"d M Y, H:i" }} ({{ generated_at_bs }} BS).</div>
+{% endblock %}

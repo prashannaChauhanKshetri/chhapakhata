@@ -1,0 +1,8 @@
+kind,name,rate,min_sqft,material,basis,default_quantity,active
+media,Star Flex,35,,Star Flex,,,yes
+media,Normal Flex,25,,Normal Flex,,,yes
+media,Vinyl,70,2,Vinyl,,,yes
+addon,Design / editing,500,,,fixed,1,yes
+addon,Eyelets,5,,,per_piece,8,yes
+addon,Framing,60,,,per_running_ft,1,yes
+addon,Urgent / express,20,,,percent,1,yes

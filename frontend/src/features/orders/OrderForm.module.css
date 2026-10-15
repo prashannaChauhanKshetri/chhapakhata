@@ -1,0 +1,63 @@
+.item {
+  background: var(--ck-surface);
+  transition: border-color 120ms ease;
+
+  &:focus-within {
+    border-color: var(--mantine-color-slate-4);
+  }
+}
+
+.itemResult {
+  margin-top: var(--mantine-spacing-sm);
+  padding-top: var(--mantine-spacing-sm);
+  border-top: 1px dashed var(--ck-border);
+}
+
+.moreToggle {
+  border-radius: var(--mantine-radius-sm);
+}
+
+.summary {
+  position: sticky;
+  top: calc(56px + var(--mantine-spacing-lg));
+
+  @mixin smaller-than $mantine-breakpoint-lg {
+    position: static;
+  }
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  font-size: var(--mantine-font-size-sm);
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-top: var(--mantine-spacing-sm);
+  border-top: 1px solid var(--mantine-color-slate-9);
+}
+
+/* Phones: keep the total and the main action within thumb reach. */
+.mobileBar {
+  display: none;
+
+  @mixin smaller-than $mantine-breakpoint-lg {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mantine-spacing-sm);
+    margin: var(--mantine-spacing-md) calc(var(--ck-gutter) * -1)
+      calc(var(--mantine-spacing-xl) * -1);
+    padding: var(--mantine-spacing-sm) var(--ck-gutter);
+    background: var(--ck-surface);
+    border-top: 1px solid var(--ck-border);
+    box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.06);
+  }
+}

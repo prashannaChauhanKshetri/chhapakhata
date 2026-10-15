@@ -1,0 +1,44 @@
+{
+	# The shop network has no public domain: Caddy issues certificates from its
+	# own local authority. Install its root certificate once on each device
+	# (see docs/deployment.md). Set SITE_ADDRESS=:80 to run plain HTTP instead.
+	admin off
+}
+
+{$SITE_ADDRESS:chhapakhata.local} {
+	tls internal
+
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy same-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /django-admin/* {
+		reverse_proxy api:8000
+	}
+	handle_path /static/* {
+		root * /data/static
+		file_server
+	}
+	handle_path /media/* {
+		root * /data/media
+		file_server
+	}
+
+	# The single-page app: unknown paths fall back to index.html.
+	handle {
+		root * /srv/app
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		try_files {path} /index.html
+		file_server
+	}
+}

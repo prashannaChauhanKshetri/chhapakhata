@@ -1,0 +1,7 @@
+item,kind,low_stock_level,quantity,roll_width_ft,roll_length_ft,remaining_sqft
+Star Flex,roll_media,400,,10,164,
+Star Flex,roll_media,400,,5,164,520
+Normal Flex,roll_media,300,,6,164,
+Vinyl,roll_media,200,,4,164,
+Eco-solvent ink,ink,2,6,,,
+Eyelets,eyelets,2,5,,,

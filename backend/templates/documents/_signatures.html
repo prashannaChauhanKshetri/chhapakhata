@@ -1,0 +1,13 @@
+<div class="signatures">
+  <div class="sign">
+    <div class="art"></div>
+    <div class="line">{{ left_label|default:"Customer's signature" }}</div>
+  </div>
+  <div class="sign">
+    <div class="art">
+      {% if stamp_uri %}<img class="stamp" src="{{ stamp_uri }}" alt="">{% endif %}
+      {% if signature_uri %}<img class="signature" src="{{ signature_uri }}" alt="">{% endif %}
+    </div>
+    <div class="line">For {{ shop.name }}</div>
+  </div>
+</div>

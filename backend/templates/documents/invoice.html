@@ -1,0 +1,103 @@
+{% extends "documents/base.html" %}
+{% load docs %}
+{% block title %}Invoice {{ invoice.invoice_no }}{% endblock %}
+{% block page_size %}{{ page_size }}{% endblock %}
+{% block page_margin %}{% if size == "a5" %}9mm 8mm 12mm 8mm{% else %}14mm 12mm 16mm 12mm{% endif %}{% endblock %}
+{% block body_class %}size-{{ size }}{% endblock %}
+{% block extra_style %}
+  .size-a5 body, body.size-a5 { font-size: 7.6pt; }
+  body.size-a5 .shop-name { font-size: 12pt; }
+  body.size-a5 .doc-title h1 { font-size: 11pt; }
+  body.size-a5 table.lines th, body.size-a5 table.lines td { padding: 3pt 4pt; }
+  body.size-a5 .signatures { margin-top: 22pt; }
+  body.size-a5 table.totals { width: 54%; }
+{% endblock %}
+{% block content %}
+{% if invoice.is_cancelled %}<div class="watermark">CANCELLED</div>{% endif %}
+
+<div class="doc-header">
+  {% include "documents/_shop_header.html" %}
+  <div class="doc-title">
+    <h1>{% if invoice.is_vat_invoice %}Tax Invoice{% else %}Invoice{% endif %}</h1>
+    <div class="sub">No. <strong>{{ invoice.invoice_no }}</strong></div>
+    {% if copy_number %}
+      <div class="copy-mark">Copy of original – {{ copy_number }}</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="info">
+  <div class="block">
+    <div class="label">Bill to</div>
+    <div class="strong">{{ invoice.customer_name }}</div>
+    {% if invoice.customer_address %}<div>{{ invoice.customer_address }}</div>{% endif %}
+    {% if invoice.customer_phone %}<div class="muted">Tel {{ invoice.customer_phone }}</div>{% endif %}
+    <div>Buyer's PAN: {{ invoice.customer_pan|default:"—" }}</div>
+  </div>
+  <div class="block">
+    <table class="kv">
+      <tr><td>Date (Miti)</td><td><strong>{{ invoice.invoice_date_bs }}</strong> BS</td></tr>
+      <tr><td>Date (AD)</td><td>{{ invoice.invoice_date|date:"d M Y" }}</td></tr>
+      <tr><td>Fiscal year</td><td>{{ invoice.fiscal_year }}</td></tr>
+      <tr><td>Order</td><td>{{ invoice.order.order_no }}</td></tr>
+    </table>
+  </div>
+</div>
+
+<table class="lines">
+  <thead>
+    <tr>
+      <th style="width: 6%">S.N.</th>
+      <th>Particulars</th>
+      <th class="num" style="width: 12%">Qty</th>
+      <th style="width: 8%">Unit</th>
+      <th class="num" style="width: 13%">Rate</th>
+      <th class="num" style="width: 16%">Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for line in lines %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ line.description }}{% if line.details %}<div class="detail">{{ line.details }}</div>{% endif %}</td>
+      <td class="num">{{ line.quantity|qty }}</td>
+      <td>{{ line.unit }}</td>
+      <td class="num">{{ line.rate|amount }}</td>
+      <td class="num">{{ line.amount|amount }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="totals-wrap">
+  <div class="words">
+    <div class="label">Amount in words</div>
+    <div class="strong">{{ invoice.amount_in_words }}</div>
+    {% if invoice.notes %}<div style="margin-top: 6pt"><span class="label">Note</span><br>{{ invoice.notes }}</div>{% endif %}
+    {% if invoice.is_cancelled %}
+      <div style="margin-top: 6pt; color: #B91C1C"><strong>Cancelled</strong> on {{ invoice.cancelled_at|date:"d M Y" }}: {{ invoice.cancel_reason }}</div>
+    {% endif %}
+  </div>
+  <table class="totals">
+    <tr><td>Sub-total</td><td>{{ invoice.subtotal|amount }}</td></tr>
+    {% if invoice.discount_amount %}<tr><td>Discount</td><td>− {{ invoice.discount_amount|amount }}</td></tr>{% endif %}
+    {% if invoice.is_vat_invoice %}
+      <tr><td>Taxable amount</td><td>{{ invoice.taxable_amount|amount }}</td></tr>
+      <tr><td>VAT {{ invoice.vat_rate|qty }}%</td><td>{{ invoice.vat_amount|amount }}</td></tr>
+    {% endif %}
+    {% if invoice.round_off %}<tr class="soft"><td>Round off</td><td>{{ invoice.round_off|amount }}</td></tr>{% endif %}
+    <tr class="grand"><td>Grand total</td><td>Rs. {{ invoice.total|amount }}</td></tr>
+    {% if not invoice.is_cancelled %}
+      <tr class="soft"><td>Paid</td><td>{{ paid|amount }}</td></tr>
+      <tr><td><strong>Balance due</strong></td><td><strong>{{ balance|amount }}</strong></td></tr>
+    {% endif %}
+  </table>
+</div>
+
+{% include "documents/_signatures.html" %}
+
+<div class="footer-note">
+  {% if shop.invoice_footer_note %}{{ shop.invoice_footer_note }} · {% endif %}
+  Issued by {{ invoice.issued_by }} · Printed {{ generated_at|date:"d M Y, H:i" }} ({{ generated_at_bs }} BS)
+</div>
+{% endblock %}

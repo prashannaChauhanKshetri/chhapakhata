@@ -1,0 +1,38 @@
+.page {
+  display: grid;
+  grid-template-columns: minmax(360px, 5fr) 7fr;
+  min-height: 100vh;
+  background: var(--ck-bg);
+
+  @mixin smaller-than $mantine-breakpoint-md {
+    grid-template-columns: 1fr;
+  }
+}
+
+.brandPanel {
+  display: flex;
+  align-items: flex-end;
+  padding: var(--mantine-spacing-xl) calc(var(--mantine-spacing-xl) * 1.5);
+  background: var(--ck-sidebar);
+}
+
+.eyebrow {
+  color: var(--mantine-color-slate-4);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.formPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--mantine-spacing-xl) var(--ck-gutter);
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--ck-surface);
+}

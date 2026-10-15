@@ -1,0 +1,41 @@
+{% extends "documents/base.html" %}
+{% block title %}{{ report.title }}{% endblock %}
+{% block page_size %}{% if landscape %}A4 landscape{% else %}A4{% endif %}{% endblock %}
+{% block extra_style %}
+  .summary { display: flex; flex-wrap: wrap; gap: 6pt; margin: 10pt 0 4pt; }
+  .metric { flex: 1 1 22%; border: 0.75pt solid #E2E8F0; border-radius: 4pt; padding: 6pt 8pt; }
+  .metric .v { font-size: 11pt; font-weight: 700; margin-top: 1pt; font-variant-numeric: tabular-nums; }
+  h2.section { font-size: 10pt; margin: 14pt 0 2pt; color: #334155; }
+  tr.total td { font-weight: 700; border-top: 1pt solid #334155; border-bottom: none; background: #F8FAFC; }
+{% endblock %}
+{% block content %}
+<div class="doc-header">
+  {% include "documents/_shop_header.html" %}
+  <div class="doc-title">
+    <h1>{{ report.title }}</h1>
+    <div class="sub">{{ report.period }}</div>
+  </div>
+</div>
+
+{% if summary %}
+<div class="summary">
+  {% for m in summary %}<div class="metric"><div class="label">{{ m.label }}</div><div class="v">{{ m.value }}</div></div>{% endfor %}
+</div>
+{% endif %}
+
+{% for table in tables %}
+  <h2 class="section">{{ table.title }}</h2>
+  <table class="lines">
+    <thead><tr>{% for c in table.columns %}<th{% if c.numeric %} class="num"{% endif %}>{{ c.label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for row in table.rows %}
+        <tr>{% for cell in row %}<td{% if cell.numeric %} class="num"{% endif %}>{{ cell.text }}</td>{% endfor %}</tr>
+      {% empty %}
+        <tr><td colspan="{{ table.columns|length }}" class="muted center">{{ table.empty_message }}</td></tr>
+      {% endfor %}
+      {% if table.totals %}<tr class="total">{% for cell in table.totals %}<td{% if cell.numeric %} class="num"{% endif %}>{{ cell.text }}</td>{% endfor %}</tr>{% endif %}
+    </tbody>
+  </table>
+{% endfor %}
+<div class="footer-note">Generated {{ generated_at|date:"d M Y, H:i" }} ({{ generated_at_bs }} BS)</div>
+{% endblock %}

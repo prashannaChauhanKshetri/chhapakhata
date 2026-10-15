@@ -1,0 +1,63 @@
+{% extends "documents/base.html" %}
+{% load docs %}
+{% block title %}Receipt {{ payment.receipt_no }}{% endblock %}
+{% block page_size %}{% if size == "80mm" %}80mm {{ thermal_height|default:"297mm" }}{% else %}A5 landscape{% endif %}{% endblock %}
+{% block page_margin %}10mm{% endblock %}
+{% block extra_style %}{% if size == "80mm" %}{% include "documents/_thermal_style.html" %}{% endif %}
+  .receipt-amount { font-size: 15pt; font-weight: 700; margin: 6pt 0 2pt; }
+{% endblock %}
+{% block content %}
+{% if size == "80mm" %}
+  <div class="t-center">
+    <div class="t-shop">{{ shop.name }}</div>
+    <div class="t-meta">{{ shop.address }}{% if shop.phone %}<br>Tel {{ shop.phone }}{% endif %}</div>
+    <div class="t-title">Payment Receipt</div>
+    {% if payment.status == "void" %}<div class="t-copy">VOID</div>{% endif %}
+  </div>
+  <div class="t-rule"></div>
+  <div class="t-row"><span>Receipt</span><span>{{ payment.receipt_no }}</span></div>
+  <div class="t-row"><span>Miti</span><span>{{ payment.payment_date|bs }} BS</span></div>
+  <div class="t-row"><span>Date</span><span>{{ payment.payment_date|date:"d M Y" }}</span></div>
+  <div class="t-row"><span>From</span><span>{{ payment.customer.name }}</span></div>
+  {% if payment.order %}<div class="t-row"><span>Order</span><span>{{ payment.order.order_no }}</span></div>{% endif %}
+  <div class="t-row"><span>Mode</span><span>{{ payment.mode_label }}</span></div>
+  {% if payment.reference_no %}<div class="t-row"><span>Ref.</span><span>{{ payment.reference_no }}</span></div>{% endif %}
+  {% if payment.cheque_no %}<div class="t-row"><span>Cheque</span><span>{{ payment.cheque_no }} · {{ payment.bank_name }}</span></div>{% endif %}
+  <div class="t-rule"></div>
+  <div class="t-row t-grand"><span>RECEIVED</span><span>Rs. {{ payment.amount|amount }}</span></div>
+  <div class="t-sub">{{ payment.amount|words }}</div>
+  <div class="t-row" style="margin-top: 3pt"><span>Balance after this</span><span>{{ customer_balance|amount }}</span></div>
+  <div class="t-foot">Received by {{ payment.received_by }}<br>Thank you.</div>
+{% else %}
+  {% if payment.status == "void" %}<div class="watermark">VOID</div>{% endif %}
+  <div class="doc-header">
+    {% include "documents/_shop_header.html" %}
+    <div class="doc-title">
+      <h1>Payment Receipt</h1>
+      <div class="sub">No. <strong>{{ payment.receipt_no }}</strong></div>
+    </div>
+  </div>
+  <div class="info">
+    <div class="block">
+      <div class="label">Received from</div>
+      <div class="strong">{{ payment.customer.name }}</div>
+      {% if payment.customer.phone %}<div class="muted">Tel {{ payment.customer.phone }}</div>{% endif %}
+      <div class="receipt-amount">Rs. {{ payment.amount|amount }}</div>
+      <div>{{ payment.amount|words }}</div>
+    </div>
+    <div class="block">
+      <table class="kv">
+        <tr><td>Date (Miti)</td><td><strong>{{ payment.payment_date|bs }}</strong> BS</td></tr>
+        <tr><td>Date (AD)</td><td>{{ payment.payment_date|date:"d M Y" }}</td></tr>
+        <tr><td>Mode</td><td>{{ payment.mode_label }}</td></tr>
+        {% if payment.bank_name %}<tr><td>Bank</td><td>{{ payment.bank_name }}</td></tr>{% endif %}
+        {% if payment.cheque_no %}<tr><td>Cheque</td><td>{{ payment.cheque_no }} ({{ payment.cheque_date|date:"d M Y" }})</td></tr>{% endif %}
+        {% if payment.reference_no %}<tr><td>Reference</td><td>{{ payment.reference_no }}</td></tr>{% endif %}
+        <tr><td>For</td><td>{% if payment.order %}Order {{ payment.order.order_no }}{% if payment.is_advance %} (advance){% endif %}{% else %}On account{% endif %}</td></tr>
+        <tr><td>Balance after this</td><td><strong>{{ customer_balance|amount }}</strong></td></tr>
+      </table>
+    </div>
+  </div>
+  {% include "documents/_signatures.html" with left_label="Received by "|add:payment.received_by.get_full_name %}
+{% endif %}
+{% endblock %}

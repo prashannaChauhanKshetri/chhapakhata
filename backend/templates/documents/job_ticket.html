@@ -1,0 +1,60 @@
+{% extends "documents/base.html" %}
+{% load docs %}
+{% block title %}Job tickets{% endblock %}
+{% block page_size %}A5{% endblock %}
+{% block page_margin %}9mm{% endblock %}
+{% block page_footer %}{% endblock %}
+{% block extra_style %}
+  body { font-size: 9pt; }
+  .ticket { page-break-after: always; }
+  .ticket:last-child { page-break-after: auto; }
+  .ticket-head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1.5pt solid #0F172A; padding-bottom: 6pt; }
+  .job-no { font-size: 22pt; font-weight: 700; letter-spacing: 0.5pt; }
+  .urgent { display: inline-block; padding: 2pt 6pt; border: 1pt solid #B91C1C; color: #B91C1C; font-weight: 700; font-size: 8pt; letter-spacing: 1pt; }
+  .grid { display: flex; flex-wrap: wrap; margin-top: 8pt; border: 0.75pt solid #E2E8F0; border-radius: 4pt; }
+  .cell { width: 50%; padding: 6pt 8pt; border-bottom: 0.75pt solid #E2E8F0; }
+  .cell.full { width: 100%; }
+  .value { font-size: 10.5pt; font-weight: 600; color: #0F172A; }
+  .checks { display: flex; gap: 8pt; margin-top: 10pt; }
+  .check { flex: 1; border: 0.75pt solid #CBD5E1; border-radius: 3pt; padding: 6pt; font-size: 7.5pt; text-align: center; color: #334155; }
+  .check .box { width: 10pt; height: 10pt; border: 0.75pt solid #334155; margin: 0 auto 3pt; }
+  .notes-box { min-height: 50pt; }
+{% endblock %}
+{% block content %}
+{% for job in jobs %}
+<div class="ticket">
+  <div class="ticket-head">
+    <div>
+      <div class="label">{{ shop.name }} · Job ticket</div>
+      <div class="job-no">{{ job.job_no }}</div>
+    </div>
+    <div class="right">
+      {% if job.priority %}<div class="urgent">URGENT</div><br>{% endif %}
+      <span class="muted">Order</span> <strong>{{ job.order.order_no }}</strong><br>
+      <span class="muted">Stage</span> {{ job.get_stage_display }}
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="cell"><div class="label">Customer</div><div class="value">{{ job.order.customer.name }}</div><div class="muted">{{ job.order.customer.phone }}</div></div>
+    <div class="cell"><div class="label">Deadline</div><div class="value">{% if job.deadline %}{{ job.deadline|date:"D d M, H:i" }}{% else %}Not set{% endif %}</div>{% if job.deadline %}<div class="muted">{{ job.deadline|bs }} BS</div>{% endif %}</div>
+    <div class="cell"><div class="label">Material</div><div class="value">{{ job.order_item.media_name }}</div>{% if job.order_item.description %}<div>{{ job.order_item.description }}</div>{% endif %}</div>
+    <div class="cell"><div class="label">Size × quantity</div><div class="value">{{ job.order_item.width|qty }} × {{ job.order_item.height|qty }} {{ job.order_item.unit }} × {{ job.order_item.quantity }}</div><div class="muted">{{ job.order_item.total_sqft|qty }} sq ft printed</div></div>
+    <div class="cell full"><div class="label">Finishing and add-ons</div>
+      <div class="value">{{ job.order_item.finishing|default:"—" }}</div>
+      {% with addons=job.order_item.addons.all %}{% if addons %}<div>{% for a in addons %}{{ a.name }}{% if a.basis == "per_piece" %} ({{ a.quantity|qty }} each){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}{% endwith %}
+    </div>
+    <div class="cell full"><div class="label">Design file</div><div>{{ job.design_file_ref|default:"—" }}</div></div>
+    <div class="cell full notes-box"><div class="label">Notes</div><div>{{ job.notes|linebreaksbr }}</div></div>
+  </div>
+
+  <div class="checks">
+    <div class="check"><div class="box"></div>Proof approved</div>
+    <div class="check"><div class="box"></div>Printed</div>
+    <div class="check"><div class="box"></div>Finished</div>
+    <div class="check"><div class="box"></div>Ready</div>
+  </div>
+  <div class="footer-note">Operator: {{ job.operator|default:"________________" }} · Printed {{ generated_at|date:"d M Y, H:i" }}</div>
+</div>
+{% endfor %}
+{% endblock %}

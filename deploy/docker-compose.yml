@@ -1,0 +1,86 @@
+# Production stack for the shop computer.
+#   cp .env.example .env   # then edit
+#   docker compose up -d --build
+name: chhapakhata
+
+x-backend: &backend
+  build:
+    context: ..
+    dockerfile: deploy/backend.Dockerfile
+  image: chhapakhata-backend:latest
+  env_file: .env
+  environment:
+    DATABASE_URL: postgres://chhapakhata:${POSTGRES_PASSWORD}@db:5432/chhapakhata
+  volumes:
+    - media:/data/media
+    - static:/data/static
+    - ${BACKUP_HOST_DIR:-./backups}:/data/backups
+    - logs:/data/logs
+    - ./rclone:/config/rclone:ro
+  depends_on:
+    db:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: chhapakhata
+      POSTGRES_USER: chhapakhata
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chhapakhata -d chhapakhata"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    command: >
+      postgres -c shared_buffers=256MB -c max_connections=50
+               -c synchronous_commit=on -c full_page_writes=on
+    restart: unless-stopped
+
+  api:
+    <<: *backend
+    command: ["api"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    <<: *backend
+    command: ["worker"]
+    depends_on:
+      api:
+        condition: service_started
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+    image: chhapakhata-web:latest
+    command: ["caddy", "run", "--config", "/etc/caddy/${CADDYFILE:-Caddyfile}", "--adapter", "caddyfile"]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-chhapakhata.local}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - static:/data/static:ro
+      - media:/data/media:ro
+      - caddy_data:/data/caddy
+      - caddy_config:/config
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  media:
+  static:
+  logs:
+  caddy_data:
+  caddy_config:

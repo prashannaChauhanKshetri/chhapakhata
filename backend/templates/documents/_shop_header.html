@@ -1,0 +1,12 @@
+<div class="brand">
+  {% if logo_uri %}<img src="{{ logo_uri }}" alt="">{% endif %}
+  <div>
+    <div class="shop-name">{{ shop.name }}</div>
+    <div class="shop-meta">
+      {% if shop.tagline %}{{ shop.tagline }}<br>{% endif %}
+      {{ shop.address }}{% if shop.phone %} · Tel {{ shop.phone }}{% endif %}
+      {% if shop.email %}<br>{{ shop.email }}{% endif %}
+      {% if shop.pan_vat_number %}<br><strong>{% if shop.is_vat_registered %}VAT{% else %}PAN{% endif %} No. {{ shop.pan_vat_number }}</strong>{% endif %}
+    </div>
+  </div>
+</div>

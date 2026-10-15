@@ -1,0 +1,4 @@
+# Generated from backend/schema.yml by `npm run api:types`
+src/api/schema.d.ts
+dist
+coverage

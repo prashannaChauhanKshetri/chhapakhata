@@ -1,0 +1,64 @@
+/* Global styles. Desktop-first: base rules target desktop; smaller-than mixins adapt down. */
+
+:root {
+  --ck-bg: #f8fafc;
+  --ck-surface: #ffffff;
+  --ck-border: #e2e8f0;
+  --ck-decor: #94a3b8;
+  --ck-text-muted: #64748b;
+  --ck-text-strong: #334155;
+  --ck-text: #0f172a;
+  --ck-sidebar: #0f172a;
+  --ck-gutter: var(--mantine-spacing-lg);
+}
+
+html,
+body {
+  background: var(--ck-bg);
+  color: var(--ck-text);
+}
+
+body {
+  font-size: var(--mantine-font-size-sm);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv11';
+}
+
+/* Aligned numbers in money and quantity columns. */
+.num,
+.mantine-datatable td[data-num='true'] {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Data tables: quiet header, clear row separation. */
+.mantine-datatable thead th {
+  background: var(--ck-bg);
+  color: var(--ck-text-strong);
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+@mixin smaller-than $mantine-breakpoint-sm {
+  :root {
+    --ck-gutter: var(--mantine-spacing-md);
+  }
+
+  /* 16px inputs on phones stop iOS from zooming into fields. */
+  .mantine-Input-input,
+  .mantine-PillsInput-input,
+  .mantine-Select-input,
+  .mantine-NumberInput-input {
+    font-size: 16px;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

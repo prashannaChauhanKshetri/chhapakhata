@@ -1,0 +1,88 @@
+{% load docs %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{% block title %}{{ shop.name }}{% endblock %}</title>
+<style>
+  @font-face { font-family: "Inter"; font-weight: 400; src: url("{{ fonts_uri }}/inter-latin-400-normal.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 500; src: url("{{ fonts_uri }}/inter-latin-500-normal.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 600; src: url("{{ fonts_uri }}/inter-latin-600-normal.woff") format("woff"); }
+  @font-face { font-family: "Inter"; font-weight: 700; src: url("{{ fonts_uri }}/inter-latin-700-normal.woff") format("woff"); }
+  @font-face { font-family: "Noto Sans Devanagari"; font-weight: 400; src: url("{{ fonts_uri }}/noto-sans-devanagari-devanagari-400-normal.woff") format("woff"); }
+  @font-face { font-family: "Noto Sans Devanagari"; font-weight: 600; src: url("{{ fonts_uri }}/noto-sans-devanagari-devanagari-600-normal.woff") format("woff"); }
+
+  @page {
+    size: {% block page_size %}A4{% endblock %};
+    margin: {% block page_margin %}14mm 12mm 16mm 12mm{% endblock %};
+    {% block page_footer %}
+    @bottom-left { content: "{% autoescape off %}{{ shop.name|css_string }}{% endautoescape %}"; font: 7pt "Inter", sans-serif; color: #94A3B8; }
+    @bottom-right { content: "Page " counter(page) " of " counter(pages); font: 7pt "Inter", sans-serif; color: #94A3B8; }
+    {% endblock %}
+  }
+
+  * { box-sizing: border-box; }
+  html { font-family: "Inter", "Noto Sans Devanagari", "Helvetica Neue", Arial, sans-serif; color: #0F172A; }
+  body { margin: 0; font-size: 9pt; line-height: 1.45; }
+  h1, h2, h3 { margin: 0; color: #0F172A; }
+  .muted { color: #64748B; }
+  .strong { color: #334155; font-weight: 600; }
+  .right { text-align: right; }
+  .center { text-align: center; }
+  .nowrap { white-space: nowrap; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* Shop header */
+  .doc-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 10pt; border-bottom: 1.5pt solid #0F172A; }
+  .brand { display: flex; gap: 10pt; align-items: flex-start; }
+  .brand img { max-height: 46pt; max-width: 90pt; }
+  .shop-name { font-size: 15pt; font-weight: 700; letter-spacing: -0.2pt; }
+  .shop-meta { font-size: 8pt; color: #334155; margin-top: 2pt; }
+  .doc-title { text-align: right; }
+  .doc-title h1 { font-size: 13pt; font-weight: 700; letter-spacing: 1.2pt; text-transform: uppercase; }
+  .doc-title .sub { font-size: 8pt; color: #64748B; margin-top: 2pt; }
+
+  .copy-mark { display: inline-block; margin-top: 4pt; padding: 2pt 6pt; border: 1pt solid #334155; border-radius: 3pt; font-size: 7.5pt; font-weight: 600; letter-spacing: 0.6pt; text-transform: uppercase; }
+
+  /* Info blocks */
+  .info { display: flex; gap: 14pt; margin: 12pt 0; }
+  .info .block { flex: 1; border: 0.75pt solid #E2E8F0; border-radius: 4pt; padding: 7pt 9pt; }
+  .label { font-size: 7pt; text-transform: uppercase; letter-spacing: 0.6pt; color: #64748B; margin-bottom: 2pt; }
+  .kv { width: 100%; border-collapse: collapse; }
+  .kv td { padding: 1.5pt 0; vertical-align: top; }
+  .kv td:first-child { color: #64748B; width: 42%; }
+
+  /* Line tables */
+  table.lines { width: 100%; border-collapse: collapse; margin-top: 4pt; }
+  table.lines th { font-size: 7.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4pt; color: #334155; background: #F8FAFC; border-top: 0.75pt solid #CBD5E1; border-bottom: 0.75pt solid #CBD5E1; padding: 5pt 6pt; text-align: left; }
+  table.lines td { padding: 5pt 6pt; border-bottom: 0.5pt solid #E2E8F0; vertical-align: top; }
+  table.lines .detail { font-size: 7.5pt; color: #64748B; margin-top: 1pt; }
+  table.lines tr { page-break-inside: avoid; }
+
+  /* Totals */
+  .totals-wrap { display: flex; justify-content: space-between; gap: 16pt; margin-top: 10pt; page-break-inside: avoid; }
+  .words { flex: 1; font-size: 8.5pt; }
+  table.totals { width: 46%; border-collapse: collapse; }
+  table.totals td { padding: 3pt 6pt; }
+  table.totals td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  table.totals tr.grand td { border-top: 1pt solid #0F172A; font-size: 10.5pt; font-weight: 700; padding-top: 5pt; }
+  table.totals tr.soft td { color: #64748B; }
+
+  /* Signatures */
+  .signatures { display: flex; justify-content: space-between; margin-top: 34pt; page-break-inside: avoid; }
+  .sign { width: 40%; text-align: center; position: relative; }
+  .sign .line { border-top: 0.75pt solid #334155; padding-top: 3pt; font-size: 8pt; color: #334155; }
+  .sign .art { height: 46pt; position: relative; }
+  .sign .art img.signature { max-height: 40pt; max-width: 120pt; }
+  .sign .art img.stamp { position: absolute; left: 50%; top: -6pt; margin-left: -30pt; max-height: 60pt; max-width: 60pt; opacity: 0.85; }
+
+  .footer-note { margin-top: 14pt; font-size: 7.5pt; color: #64748B; border-top: 0.5pt solid #E2E8F0; padding-top: 5pt; }
+
+  .watermark { position: fixed; top: 38%; left: 0; right: 0; text-align: center; font-size: 64pt; font-weight: 700; color: rgba(185, 28, 28, 0.13); transform: rotate(-24deg); letter-spacing: 6pt; }
+
+  {% block extra_style %}{% endblock %}
+</style>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+{% block content %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,92 @@
+{% extends "documents/base.html" %}
+{% load docs %}
+{% block title %}Quotation {{ order.order_no }}{% endblock %}
+{% block content %}
+<div class="doc-header">
+  {% include "documents/_shop_header.html" %}
+  <div class="doc-title">
+    <h1>{% if order.status == "quotation" %}Quotation{% else %}Order estimate{% endif %}</h1>
+    <div class="sub">No. <strong>{{ order.order_no }}</strong></div>
+  </div>
+</div>
+
+<div class="info">
+  <div class="block">
+    <div class="label">Prepared for</div>
+    <div class="strong">{{ order.customer.name }}</div>
+    {% if order.customer.address %}<div>{{ order.customer.address }}</div>{% endif %}
+    {% if order.customer.phone %}<div class="muted">Tel {{ order.customer.phone }}</div>{% endif %}
+    {% if order.customer.pan_no %}<div>PAN {{ order.customer.pan_no }}</div>{% endif %}
+  </div>
+  <div class="block">
+    <table class="kv">
+      <tr><td>Date (Miti)</td><td><strong>{{ order.order_date|bs }}</strong> BS</td></tr>
+      <tr><td>Date (AD)</td><td>{{ order.order_date|date:"d M Y" }}</td></tr>
+      {% if order.status == "quotation" %}<tr><td>Valid until</td><td>{{ valid_until|date:"d M Y" }} ({{ valid_until|bs }} BS)</td></tr>{% endif %}
+      {% if order.deadline %}<tr><td>Delivery by</td><td>{{ order.deadline|date:"d M Y, H:i" }}</td></tr>{% endif %}
+    </table>
+  </div>
+</div>
+
+<table class="lines">
+  <thead>
+    <tr>
+      <th style="width: 5%">S.N.</th>
+      <th>Item</th>
+      <th style="width: 15%">Size</th>
+      <th class="num" style="width: 7%">Qty</th>
+      <th class="num" style="width: 11%">Sq ft</th>
+      <th class="num" style="width: 11%">Rate</th>
+      <th class="num" style="width: 14%">Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for item in items %}
+    <tr>
+      <td>{{ item.line_no }}</td>
+      <td>
+        <strong>{{ item.media_name }}</strong>{% if item.description %} – {{ item.description }}{% endif %}
+        {% if item.finishing %}<div class="detail">Finishing: {{ item.finishing }}</div>{% endif %}
+        {% if item.min_applied %}<div class="detail">Minimum {{ item.min_sqft|qty }} sq ft charged per piece</div>{% endif %}
+      </td>
+      <td>{{ item.width|qty }} × {{ item.height|qty }} {{ item.unit }}</td>
+      <td class="num">{{ item.quantity }}</td>
+      <td class="num">{{ item.total_billable_sqft|qty }}</td>
+      <td class="num">{{ item.rate|amount }}</td>
+      <td class="num">{{ item.base_amount|amount }}</td>
+    </tr>
+    {% for addon in item.addons.all %}
+    <tr>
+      <td></td>
+      <td colspan="5"><span class="muted">+ {{ addon.name }}</span> <span class="detail">({{ addon.get_basis_display|lower }}{% if addon.basis == "fixed" or addon.basis == "per_piece" %}, {{ addon.quantity|qty }}{% endif %})</span></td>
+      <td class="num">{{ addon.amount|amount }}</td>
+    </tr>
+    {% endfor %}
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="totals-wrap">
+  <div class="words">
+    <div class="label">Amount in words</div>
+    <div class="strong">{{ order.total|words }}</div>
+    {% if shop.quotation_terms %}
+      <div style="margin-top: 8pt"><span class="label">Terms</span><br>{{ shop.quotation_terms|linebreaksbr }}</div>
+    {% endif %}
+    {% if order.notes %}<div style="margin-top: 6pt"><span class="label">Notes</span><br>{{ order.notes|linebreaksbr }}</div>{% endif %}
+  </div>
+  <table class="totals">
+    <tr><td>Sub-total</td><td>{{ order.subtotal|amount }}</td></tr>
+    {% if order.discount_amount %}<tr><td>Discount</td><td>− {{ order.discount_amount|amount }}</td></tr>{% endif %}
+    {% if order.vat_amount %}
+      <tr><td>Taxable amount</td><td>{{ order.taxable_amount|amount }}</td></tr>
+      <tr><td>VAT {{ order.vat_rate|qty }}%</td><td>{{ order.vat_amount|amount }}</td></tr>
+    {% endif %}
+    {% if order.round_off %}<tr class="soft"><td>Round off</td><td>{{ order.round_off|amount }}</td></tr>{% endif %}
+    <tr class="grand"><td>Total</td><td>Rs. {{ order.total|amount }}</td></tr>
+  </table>
+</div>
+
+{% include "documents/_signatures.html" with left_label="Accepted by customer" %}
+<div class="footer-note">This is a quotation, not a tax invoice. Prepared by {{ order.created_by }} · {{ generated_at|date:"d M Y, H:i" }}</div>
+{% endblock %}
