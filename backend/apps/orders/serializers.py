@@ -39,6 +39,8 @@ class JobRefSerializer(serializers.Serializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     addons = OrderItemAddOnSerializer(many=True, read_only=True)
+    rate_source_label = serializers.CharField(source="get_rate_source_display", read_only=True)
+    has_size = serializers.BooleanField(read_only=True)
     total_sqft = serializers.DecimalField(read_only=True, **MONEY)
     total_billable_sqft = serializers.DecimalField(read_only=True, **MONEY)
     min_applied = serializers.BooleanField(read_only=True)
@@ -53,9 +55,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
             "media_type",
             "media_name",
             "description",
+            "pricing_unit",
             "width",
             "height",
             "unit",
+            "has_size",
             "size_label",
             "quantity",
             "width_ft",
@@ -66,6 +70,9 @@ class OrderItemSerializer(serializers.ModelSerializer):
             "total_billable_sqft",
             "min_applied",
             "rate",
+            "rate_source",
+            "rate_source_label",
+            "card_rate",
             "min_sqft",
             "base_amount",
             "addons_amount",
@@ -85,6 +92,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderListSerializer(serializers.ModelSerializer):
     customer = CustomerRefSerializer(read_only=True)
     status_label = serializers.CharField(source="get_status_display", read_only=True)
+    source_label = serializers.CharField(source="get_source_display", read_only=True)
     order_date_bs = BSDateField(source="order_date")
     paid_amount = serializers.DecimalField(read_only=True, **MONEY)
     balance_due = serializers.SerializerMethodField()
@@ -100,6 +108,8 @@ class OrderListSerializer(serializers.ModelSerializer):
             "customer",
             "status",
             "status_label",
+            "source",
+            "source_label",
             "order_date",
             "order_date_bs",
             "deadline",
@@ -238,10 +248,28 @@ class OrderItemWriteSerializer(serializers.Serializer):
     description = serializers.CharField(
         max_length=200, required=False, allow_blank=True, default=""
     )
-    width = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal("0.01"))
-    height = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal("0.01"))
+    width = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=Decimal("0"),
+        default=Decimal("0"),
+        help_text="Leave 0 for per-piece items without a size.",
+    )
+    height = serializers.DecimalField(
+        max_digits=10, decimal_places=2, min_value=Decimal("0"), default=Decimal("0")
+    )
     unit = serializers.ChoiceField(choices=LengthUnit.choices, default=LengthUnit.FOOT)
     quantity = serializers.IntegerField(min_value=1, max_value=100000, default=1)
+    rate = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        min_value=Decimal("0"),
+        required=False,
+        allow_null=True,
+        default=None,
+        help_text="Charge this rate instead of the rate card (e.g. the customer's last rate). "
+        "Leave empty to use the rate card, or the rate the order was quoted at.",
+    )
     finishing = serializers.CharField(max_length=200, required=False, allow_blank=True, default="")
     design_file_ref = serializers.CharField(
         max_length=255, required=False, allow_blank=True, default=""
@@ -281,6 +309,12 @@ class OrderWriteSerializer(PricingInputSerializer):
 
 
 class PricePreviewRequestSerializer(PricingInputSerializer):
+    customer = serializers.PrimaryKeyRelatedField(
+        queryset=Customer.objects.all(),
+        required=False,
+        allow_null=True,
+        help_text="Lets the calculator recognise the customer's last rates.",
+    )
     order = serializers.PrimaryKeyRelatedField(
         queryset=Order.objects.all(),
         required=False,
@@ -308,6 +342,9 @@ class ItemResultSerializer(serializers.Serializer):
     min_applied = serializers.BooleanField()
     min_sqft = serializers.DecimalField(**MONEY)
     rate = serializers.DecimalField(**MONEY)
+    rate_source = serializers.CharField()
+    card_rate = serializers.DecimalField(**MONEY)
+    pricing_unit = serializers.CharField()
     quantity = serializers.IntegerField()
     base_amount = serializers.DecimalField(**MONEY)
     addons = AddOnResultSerializer(many=True)
@@ -323,6 +360,19 @@ class TotalsSerializer(serializers.Serializer):
     vat_amount = serializers.DecimalField(**MONEY)
     round_off = serializers.DecimalField(**MONEY)
     total = serializers.DecimalField(**MONEY)
+
+
+class CustomerRateSerializer(serializers.Serializer):
+    media_type = serializers.IntegerField(source="media_type_id")
+    media_name = serializers.CharField()
+    pricing_unit = serializers.CharField()
+    last_rate = serializers.DecimalField(source="rate", **MONEY)
+    card_rate = serializers.DecimalField(**MONEY, allow_null=True)
+    order = serializers.IntegerField(source="order_id")
+    order_no = serializers.CharField()
+    order_date = serializers.DateField()
+    order_date_bs = BSDateField(source="order_date")
+    times = serializers.IntegerField(help_text="Number of orders with this item")
 
 
 class PricePreviewSerializer(serializers.Serializer):

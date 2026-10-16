@@ -105,7 +105,9 @@ export function JobDrawer({ jobId, onClose }: { jobId: number | null; onClose: (
               },
               {
                 label: t('Size'),
-                value: `${job.item.size_label} × ${job.item.quantity} = ${formatQty(job.item.total_sqft)} sq ft`,
+                value: job.item.size_label
+                  ? `${job.item.size_label} × ${job.item.quantity} = ${formatQty(job.item.total_sqft)} sq ft`
+                  : `${job.item.quantity} pcs`,
               },
               { label: t('Finishing'), value: job.item.finishing || '—' },
               { label: t('Add-ons'), value: job.item.addons.join(', ') || '—' },

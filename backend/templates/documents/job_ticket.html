@@ -39,7 +39,7 @@
     <div class="cell"><div class="label">Customer</div><div class="value">{{ job.order.customer.name }}</div><div class="muted">{{ job.order.customer.phone }}</div></div>
     <div class="cell"><div class="label">Deadline</div><div class="value">{% if job.deadline %}{{ job.deadline|date:"D d M, H:i" }}{% else %}Not set{% endif %}</div>{% if job.deadline %}<div class="muted">{{ job.deadline|bs }} BS</div>{% endif %}</div>
     <div class="cell"><div class="label">Material</div><div class="value">{{ job.order_item.media_name }}</div>{% if job.order_item.description %}<div>{{ job.order_item.description }}</div>{% endif %}</div>
-    <div class="cell"><div class="label">Size × quantity</div><div class="value">{{ job.order_item.width|qty }} × {{ job.order_item.height|qty }} {{ job.order_item.unit }} × {{ job.order_item.quantity }}</div><div class="muted">{{ job.order_item.total_sqft|qty }} sq ft printed</div></div>
+    <div class="cell"><div class="label">Size × quantity</div><div class="value">{% if job.order_item.has_size %}{{ job.order_item.size_label }} × {% endif %}{{ job.order_item.quantity }}{% if not job.order_item.has_size %} pcs{% endif %}</div>{% if job.order_item.has_size %}<div class="muted">{{ job.order_item.total_sqft|qty }} sq ft printed</div>{% endif %}</div>
     <div class="cell full"><div class="label">Finishing and add-ons</div>
       <div class="value">{{ job.order_item.finishing|default:"—" }}</div>
       {% with addons=job.order_item.addons.all %}{% if addons %}<div>{% for a in addons %}{{ a.name }}{% if a.basis == "per_piece" %} ({{ a.quantity|qty }} each){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}{% endwith %}

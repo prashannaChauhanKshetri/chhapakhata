@@ -61,3 +61,20 @@ describe('order form payloads', () => {
     ).toBe(1);
   });
 });
+
+describe('per-piece items and rates', () => {
+  it('lets per-piece items skip the size', () => {
+    const photo = { ...emptyItem(), media_type: '7', per_piece: true, quantity: 4 };
+    expect(isItemComplete(photo)).toBe(true);
+    expect(isItemComplete({ ...photo, per_piece: false })).toBe(false);
+    // Half a size is still a mistake.
+    expect(isItemComplete({ ...photo, width: 2 })).toBe(false);
+    expect(itemPayload(photo)).toMatchObject({ width: '0', height: '0', rate: null });
+  });
+
+  it('sends a chosen rate, or null for the rate card', () => {
+    const item = { ...emptyItem(), media_type: '1', width: 3, height: 2 };
+    expect(itemPayload(item).rate).toBeNull();
+    expect(itemPayload({ ...item, rate: 30 }).rate).toBe('30');
+  });
+});

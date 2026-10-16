@@ -14,6 +14,8 @@ line total       = print amount + add-ons
 
 The minimum applies **per piece**: three 2 × 2 ft stickers (4 sq ft each) with a 5 sq ft minimum bill 15 sq ft.
 
+**Per-piece items.** A rate-card item can be priced *per piece* instead of per sq ft (photo prints, 3D letters, name plates). Then `print amount = rate × quantity`, the size is optional (leave both width and height empty), and the minimum sq ft rule does not apply. Add-ons work the same; per-sq-ft and per-running-ft add-ons use the size if one is given.
+
 | Add-on basis | Amount | Example |
 |---|---|---|
 | Fixed | rate × quantity (once per line) | Design: Rs 500 |
@@ -52,6 +54,21 @@ Order: 3 stickers 2 × 2 ft at Rs 35/sq ft with 4 eyelets each, 5 % discount, VA
 ## Rate changes
 
 Each order line stores the rate and minimum it was priced with. Editing an order keeps those for unchanged lines; new lines (or lines whose media changed) use today's rate card. Rate history is visible in Settings → Rate card → Rate history.
+
+## Customer's last rate and custom rates
+
+Each line has a **Rate** field. When a returning customer is chosen, picking an item they bought before fills in **the rate they paid last time** (from their most recent confirmed or delivered order, including imported history). Staff can switch back to the rate card with one click, or type a new rate.
+
+Each line records where its rate came from (`rate_source`): `card`, `previous` (the customer's last rate) or `custom`, along with the rate-card price at the time (`card_rate`).
+
+| Rate chosen | Allowed for front desk? |
+|---|---|
+| Rate card | Always |
+| Customer's last rate | Always (it was agreed before) |
+| Custom, at or above the rate card | Always |
+| Custom, below the rate card | Only if the reduction is within the user's discount limit (default 10 %); the owner has no limit |
+
+API: `GET /api/v1/customers/{id}/rates/` lists the last rate per item; `price-preview` accepts `customer` and returns `rate_source` and `card_rate` per line.
 
 ## Settings to confirm with the shop
 

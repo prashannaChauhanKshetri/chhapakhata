@@ -7,17 +7,31 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from apps.core.documents import PAGE_SIZES, pdf_response, render_pdf
+from apps.core.dates import local_today
+from apps.core.documents import PAGE_SIZES, pdf_response, render_pdf, xlsx_response
+from apps.core.params import output_format, parse_range
 from apps.core.permissions import Perm
 from apps.core.serializers import ReasonSerializer
+from apps.reports.exporters import report_to_pdf, report_to_xlsx
+from apps.reports.tables import Column, Metric, Report, Table, period_label
 
 from . import services
-from .models import Invoice, InvoiceStatus, Payment, PaymentMode, PaymentStatus
-from .selectors import order_paid_amount
+from .models import (
+    Invoice,
+    InvoiceStatus,
+    LedgerEntry,
+    LedgerEntryType,
+    Payment,
+    PaymentMode,
+    PaymentStatus,
+)
+from .selectors import ledger_summary, order_paid_amount
 from .serializers import (
     InvoiceCreateSerializer,
     InvoiceDetailSerializer,
     InvoiceListSerializer,
+    LedgerEntrySerializer,
+    LedgerSummarySerializer,
     PaymentCreateSerializer,
     PaymentSerializer,
 )
@@ -207,3 +221,97 @@ class PaymentViewSet(
             render_pdf("documents/receipt.html", context, thermal=size == "80mm"),
             f"receipt-{payment.receipt_no}",
         )
+
+
+class LedgerEntryFilter(django_filters.FilterSet):
+    date_from = django_filters.DateFilter(field_name="entry_date", lookup_expr="gte")
+    date_to = django_filters.DateFilter(field_name="entry_date", lookup_expr="lte")
+    entry_type = django_filters.MultipleChoiceFilter(choices=LedgerEntryType.choices)
+
+    class Meta:
+        model = LedgerEntry
+        fields = ["customer"]
+
+
+class LedgerViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    """The shop-wide customer ledger: every entry (day book) and per-customer balances."""
+
+    serializer_class = LedgerEntrySerializer
+    filterset_class = LedgerEntryFilter
+    search_fields = ["customer__name", "customer__phone", "narration"]
+    ordering_fields = ["entry_date", "created_at", "debit", "credit"]
+    ordering = ["-entry_date", "-id"]
+    required_perms = Perm.LEDGER_VIEW
+
+    def get_queryset(self):
+        return LedgerEntry.objects.select_related(
+            "customer", "invoice", "payment", "order", "created_by"
+        )
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("from", str, description="Start date (AD, YYYY-MM-DD)"),
+            OpenApiParameter("to", str, description="End date (AD, YYYY-MM-DD)"),
+            OpenApiParameter("search", str, description="Customer name or phone"),
+            OpenApiParameter("balance", str, enum=["due", "advance", "settled"]),
+            OpenApiParameter("export", str, enum=["json", "pdf", "xlsx"]),
+        ],
+        responses=LedgerSummarySerializer,
+    )
+    @action(detail=False, methods=["get"])
+    def summary(self, request):
+        """Opening balance, billed, received and closing balance per customer."""
+        params = request.query_params
+        date_from, date_to = parse_range(params, None, local_today())
+        balance = params.get("balance") or ""
+        if balance not in ("", "due", "advance", "settled"):
+            raise ValidationError({"balance": ["Choose due, advance or settled."]})
+        data = ledger_summary(
+            date_from, date_to, search=(params.get("search") or "").strip(), balance=balance
+        )
+        fmt = output_format(params)
+        if fmt == "json":
+            return Response(LedgerSummarySerializer(data).data)
+        totals = data["totals"]
+        report = Report(
+            slug="ledger-summary",
+            title="Customer balances",
+            period=period_label(date_from, date_to)
+            if date_from
+            else f"Up to {period_label(None, date_to)}",
+            summary=[
+                Metric("Customers", totals["customers"], "number"),
+                Metric("Opening balance", totals["opening_balance"]),
+                Metric("Billed", totals["debit"]),
+                Metric("Received", totals["credit"]),
+                Metric("Closing balance", totals["closing_balance"]),
+                Metric("Receivable (dues)", totals["receivable"]),
+                Metric("Advances held", totals["advances"]),
+            ],
+            tables=[
+                Table(
+                    "Balances",
+                    [
+                        Column("customer_name", "Customer"),
+                        Column("phone", "Phone"),
+                        Column("opening_balance", "Opening", "money"),
+                        Column("debit", "Billed", "money"),
+                        Column("credit", "Received", "money"),
+                        Column("closing_balance", "Closing", "money"),
+                        Column("last_payment_date", "Last payment", "date"),
+                    ],
+                    data["rows"],
+                    totals={
+                        "customer_name": "Total",
+                        "opening_balance": totals["opening_balance"],
+                        "debit": totals["debit"],
+                        "credit": totals["credit"],
+                        "closing_balance": totals["closing_balance"],
+                    },
+                    empty_message="No customer had ledger activity or a balance in this period.",
+                )
+            ],
+        )
+        if fmt == "xlsx":
+            return xlsx_response(report_to_xlsx(report), "customer-balances")
+        return pdf_response(report_to_pdf(report), "customer-balances")

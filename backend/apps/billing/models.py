@@ -198,6 +198,7 @@ class LedgerEntryType(models.TextChoices):
     PAYMENT = "payment", "Payment received"
     PAYMENT_VOID = "payment_void", "Payment voided"
     ADJUSTMENT = "adjustment", "Adjustment"
+    IMPORTED_WORK = "imported_work", "Work (imported)"
 
 
 class LedgerEntry(models.Model):
@@ -215,6 +216,14 @@ class LedgerEntry(models.Model):
     )
     payment = models.ForeignKey(
         Payment, null=True, blank=True, on_delete=models.PROTECT, related_name="ledger_entries"
+    )
+    order = models.ForeignKey(
+        "orders.Order",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="ledger_entries",
+        help_text="Set for work charged without an invoice (imported history).",
     )
     narration = models.CharField(max_length=255)
     created_by = models.ForeignKey(

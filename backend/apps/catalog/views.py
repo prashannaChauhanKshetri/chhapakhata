@@ -78,7 +78,7 @@ class _CatalogViewSet(viewsets.ModelViewSet):
 
 
 class MediaTypeViewSet(_CatalogViewSet):
-    """Printable media on the rate card, priced per sq ft."""
+    """Items on the rate card, priced per sq ft or per piece."""
 
     queryset = MediaType.objects.select_related("material")
     serializer_class = MediaTypeSerializer
@@ -88,7 +88,7 @@ class MediaTypeViewSet(_CatalogViewSet):
     @action(detail=True, methods=["get"])
     def history(self, request, pk=None):
         """Rate changes over time (who changed what, and when)."""
-        return self._history("rate_per_sqft", "min_sqft")
+        return self._history("rate", "min_sqft")
 
 
 class AddOnViewSet(_CatalogViewSet):

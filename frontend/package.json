@@ -22,6 +22,7 @@
     "fonts:pdf": "node scripts/copy-pdf-fonts.mjs"
   },
   "dependencies": {
+    "@dnd-kit/core": "6.3.1",
     "@fontsource-variable/inter": "5.3.0",
     "@fontsource/noto-sans-devanagari": "5.3.0",
     "@mantine/charts": "9.6.3",

@@ -10,7 +10,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { IconPlus, IconSearch } from '@tabler/icons-react';
+import { IconFileSpreadsheet, IconPlus, IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from 'mantine-datatable';
 import { useTranslation } from 'react-i18next';
@@ -86,11 +86,23 @@ export default function OrdersPage() {
         title={t('Orders')}
         description={t('Quotations, confirmed work and deliveries.')}
         actions={
-          <Can perm={Perm.ORDERS_MANAGE}>
-            <Button component={Link} to="/orders/new" leftSection={<IconPlus size={16} />}>
-              {t('New order')}
-            </Button>
-          </Can>
+          <>
+            <Can perm={Perm.REPORTS_ALL}>
+              <Button
+                variant="default"
+                component={Link}
+                to="/settings/import-export"
+                leftSection={<IconFileSpreadsheet size={16} />}
+              >
+                {t('Excel import / export')}
+              </Button>
+            </Can>
+            <Can perm={Perm.ORDERS_MANAGE}>
+              <Button component={Link} to="/orders/new" leftSection={<IconPlus size={16} />}>
+                {t('New order')}
+              </Button>
+            </Can>
+          </>
         }
       />
       <Card padding={0}>
@@ -147,6 +159,11 @@ export default function OrdersPage() {
                       {o.is_urgent && (
                         <Badge color="red" size="xs">
                           {t('Urgent')}
+                        </Badge>
+                      )}
+                      {o.source === 'import' && (
+                        <Badge color="slate" variant="outline" size="xs">
+                          {t('Imported')}
                         </Badge>
                       )}
                     </Group>

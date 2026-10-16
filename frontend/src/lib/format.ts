@@ -77,3 +77,13 @@ export function formatBytes(bytes: number): string {
 export function todayISO(): string {
   return dayjs().format('YYYY-MM-DD');
 }
+
+/**
+ * Ledger balance with its side: `1,200.00 Dr` (customer owes us), `300.00 Cr`
+ * (advance with us), `0.00` when settled.
+ */
+export function formatBalance(value: string | number | null | undefined): string {
+  const n = toNumber(value);
+  if (n === 0) return moneyFormat.format(0);
+  return `${moneyFormat.format(Math.abs(n))} ${n > 0 ? 'Dr' : 'Cr'}`;
+}

@@ -102,18 +102,28 @@ Backend image (WeasyPrint libraries, PostgreSQL 17 client, rclone, non-root user
 | 3.8 Initial data entry | `import_rate_card`, `import_customers`, `import_opening_stock` | — | `system/tests/test_imports.py` |
 | 3.8 Printer setup, training, user guide | [deployment.md](deployment.md), [user-guide](user-guide/) | — | at the shop |
 
-## 5. Quality status (15 October 2026)
+## 5. Quality status (16 October 2026)
 
 | Check | Result |
 |---|---|
-| Backend tests (pytest) | 148 passed |
+| Backend tests (pytest) | 172 passed |
 | Backend coverage | 88 % overall; services 80–100 % |
-| Frontend unit tests (Vitest) | 16 passed |
-| End-to-end (Playwright) | Counter → production with material → delivery, invoice and payment: passing |
+| Frontend unit tests (Vitest) | 18 passed |
+| End-to-end (Playwright) | Counter → production with material → delivery, invoice and payment; drag-and-drop on the board (allowed and refused moves): passing |
 | Lint / format / types | ruff, ESLint, Prettier, `tsc --strict`: clean |
 | OpenAPI schema | Generated and validated; TypeScript types generated from it |
 | Backup and restore | Real `pg_dump`, checksum verified, restore drill row counts identical |
 | Docker images | Compose file validated; **images not yet built** on a machine with Docker running |
+
+## 5a. Changes after the client's feedback (16 October 2026)
+
+| Request | What was built | Where |
+|---|---|---|
+| Import and export the shop's Excel work log | Upload with a dry-run preview (columns found, new customers and items, errors and notes per row), then import. Rows become delivered orders (one per date and customer), ledger charges without invoices, and receipts. Re-uploading skips rows already imported. Export writes orders in the same column layout; a blank template is downloadable. | `apps/system/work_log.py`, Settings → Import & export |
+| Rate = the customer's previous rate, or a new rate | Per-line rate field defaulting to the customer's last rate, one-click rate card, custom rates checked against the discount limit, `rate_source` and `card_rate` stored on each line | `apps/orders/selectors.py`, `services.py`, `ItemRow.tsx` |
+| Items sold per piece (seen in the sheet: photos, name plates, 3D letters) | Rate-card items priced per sq ft **or per piece**; size optional, no minimum | `catalog/pricing.py`, Settings → Rate card |
+| Draggable production board | Drag-and-drop with @dnd-kit (mouse, touch, keyboard). Drops follow the same role rules as the buttons; the material dialog opens when needed; the card moves at once and is confirmed by the server. | `production/BoardPage.tsx`, `useJobMover.ts` |
+| Better ledger: opening, closing and more | Statement with BS period presets, opening/closing rows, Dr/Cr balances, type totals, aging, linked references. New Ledger page with customer balances (opening, billed, received, closing, last payment) and a day book. PDF and Excel. | `billing/selectors.py`, `LedgerPage.tsx` |
 
 ## 6. Risks and open items
 
@@ -126,6 +136,8 @@ Backend image (WeasyPrint libraries, PostgreSQL 17 client, rclone, non-root user
 | Pricing conventions | Sq ft rounding, VAT-inclusive rates, front-desk discount limit | Confirm at the shop visit; all are settings |
 | Thermal printer model | 80 mm receipts print through the browser | Test with the actual printer driver during installation |
 | Nepali user guide | Drafted, needs native review | Team review before training |
+| Work-log column meanings | The sheet's "Payment S" column was read as the amount paid and "Payment M" as the payment mode | Confirm with the shop before importing the full sheet; the preview lists how every column was read |
+| Imported history and invoices | Imported work has no invoices, so VAT and invoiced-sales reports exclude it | Expected; confirm the client agrees |
 
 ## 7. Next steps to handover
 

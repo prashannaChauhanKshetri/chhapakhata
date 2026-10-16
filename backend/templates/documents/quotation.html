@@ -49,10 +49,10 @@
         {% if item.finishing %}<div class="detail">Finishing: {{ item.finishing }}</div>{% endif %}
         {% if item.min_applied %}<div class="detail">Minimum {{ item.min_sqft|qty }} sq ft charged per piece</div>{% endif %}
       </td>
-      <td>{{ item.width|qty }} × {{ item.height|qty }} {{ item.unit }}</td>
+      <td>{{ item.size_label|default:"—" }}</td>
       <td class="num">{{ item.quantity }}</td>
-      <td class="num">{{ item.total_billable_sqft|qty }}</td>
-      <td class="num">{{ item.rate|amount }}</td>
+      <td class="num">{% if item.is_per_piece %}—{% else %}{{ item.total_billable_sqft|qty }}{% endif %}</td>
+      <td class="num">{{ item.rate|amount }}{% if item.is_per_piece %}<div class="detail">per piece</div>{% endif %}</td>
       <td class="num">{{ item.base_amount|amount }}</td>
     </tr>
     {% for addon in item.addons.all %}

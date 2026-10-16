@@ -134,17 +134,22 @@ def issue_invoice(*, order: Order, user: Any, notes: str = "", request: Any = No
     for item in order.items.prefetch_related("addons").order_by("line_no"):
         line_no += 1
         description = item.media_name + (f" – {item.description}" if item.description else "")
-        details = f"{item.size_label} × {item.quantity} pcs"
-        if item.min_applied:
-            details += f" (min. {fmt_qty(item.min_sqft)} sq ft each)"
+        if item.is_per_piece:
+            details = item.size_label
+            quantity, unit = q2(Decimal(item.quantity)), "pcs"
+        else:
+            details = f"{item.size_label} × {item.quantity} pcs"
+            if item.min_applied:
+                details += f" (min. {fmt_qty(item.min_sqft)} sq ft each)"
+            quantity, unit = q2(item.billable_sqft * item.quantity), "sq ft"
         lines.append(
             InvoiceLine(
                 invoice=invoice,
                 line_no=line_no,
                 description=description[:200],
                 details=details[:200],
-                quantity=q2(item.billable_sqft * item.quantity),
-                unit="sq ft",
+                quantity=quantity,
+                unit=unit,
                 rate=item.rate,
                 amount=item.base_amount,
                 media_type_id=item.media_type_id,

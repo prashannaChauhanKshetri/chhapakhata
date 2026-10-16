@@ -22,7 +22,7 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.billing import services as billing
 from apps.billing.selectors import order_paid_amount
-from apps.catalog.models import AddOn, AddOnBasis, MediaType
+from apps.catalog.models import AddOn, AddOnBasis, MediaType, PricingUnit
 from apps.core.models import ShopSettings
 from apps.core.permissions import Role
 from apps.customers.models import Customer, CustomerType
@@ -171,8 +171,15 @@ class Command(BaseCommand):
             ("Glossy photo paper", D("65"), None),
         ]
         for order, (name, rate, material) in enumerate(media):
+            MediaType.objects.create(name=name, rate=rate, material=material, sort_order=order)
+        per_piece = [
+            ("Normal Photo", D("160")),
+            ("Name Plate", D("600")),
+            ("3D Letters", D("1200")),
+        ]
+        for order, (name, rate) in enumerate(per_piece, start=len(media)):
             MediaType.objects.create(
-                name=name, rate_per_sqft=rate, material=material, sort_order=order
+                name=name, rate=rate, pricing_unit=PricingUnit.PIECE, sort_order=order
             )
         addons = [
             ("Design / editing", AddOnBasis.FIXED, D("500"), D("1")),

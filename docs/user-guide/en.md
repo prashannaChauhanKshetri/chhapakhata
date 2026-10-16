@@ -14,12 +14,13 @@ Change your password any time: click your name (top right) → **Change password
 
 1. Click **New order** (top bar).
 2. **Customer:** type part of the name, phone or PAN. New customer? Click the **+** button next to the box.
-3. **Item:** choose the **Media** (e.g. Star Flex), enter **Width** and **Height**, pick the unit (ft, in or cm) and the **Qty**. The price appears under the item. A yellow **Min. 5 sq ft** badge means the item is small and is charged at the minimum.
-4. **Add-ons:** design, eyelets, framing, lamination, pockets, urgent. For eyelets, set how many per piece.
-5. More items? Press **Enter** on the last item or click **Add another item**.
-6. **Deliver by:** the promised date and time. Tick **Urgent job** to put it first on the board.
-7. **Discount:** choose % or Rs in the summary. Your limit is shown; larger discounts need the owner.
-8. Click **Confirm order** (work starts) or **Save as quotation** (customer is deciding). **Ctrl + S** also saves.
+3. **Item:** choose the **Media** (e.g. Star Flex), enter **Width** and **Height**, pick the unit (ft, in or cm) and the **Qty**. The price appears under the item. A yellow **Min. 5 sq ft** badge means the item is small and is charged at the minimum. For items sold **per piece** (photos, name plates, 3D letters) the size is optional; just enter the quantity.
+4. **Rate:** for a returning customer, the rate they paid last time is filled in (**Last time Rs …**). Click **Card Rs …** to use the rate card instead, or type a new rate. A rate below the rate card by more than your discount limit needs the owner.
+5. **Add-ons:** design, eyelets, framing, lamination, pockets, urgent. For eyelets, set how many per piece.
+6. More items? Press **Enter** on the last item or click **Add another item**.
+7. **Deliver by:** the promised date and time. Tick **Urgent job** to put it first on the board.
+8. **Discount:** choose % or Rs in the summary. Your limit is shown; larger discounts need the owner.
+9. Click **Confirm order** (work starts) or **Save as quotation** (customer is deciding). **Ctrl + S** also saves.
 
 ### Quotations
 
@@ -53,11 +54,12 @@ When the order shows **Ready for collection**, open it and click **Deliver**:
 
 ### Customer dues
 
-Open a customer to see the **balance** and the **Statement** tab. Choose dates, then **Print statement** or **Excel**. Payments towards old dues: **Receive payment** and leave **For order** empty.
+Open a customer to see the **balance** and the **Statement** tab. Pick a **Period** (this month, this fiscal year, all time or custom dates). The statement shows the opening balance, what was billed (Dr) and received (Cr), and the closing balance. **Dr** means the customer owes the shop; **Cr** means the shop holds an advance. Then **Print statement** or **Excel**. All customers at once: **Ledger** → **Customer balances** (or **Day book** for every entry). Payments towards old dues: **Receive payment** and leave **For order** empty.
 
 ## Production operators
 
 1. Open **Production**. Columns show each stage; red edge = overdue, amber edge = due today. On a phone, tap a stage at the top.
+   **Drag a card** to another column to move it (on a touch screen, press and hold first). Columns you may drop into get a dashed outline; others fade out. The buttons on each card still work.
 2. Tap **My jobs** to see the jobs assigned to you.
 3. Click **Printing** on a card when you start.
 4. When printing is done click **Finishing** (or **Ready** if no finishing is needed). A window asks for the **roll used** and the **sq ft used**, already filled in, plus any **wastage** (test prints, misprints). Save. Stock is deducted automatically.
@@ -72,6 +74,7 @@ Open a customer to see the **balance** and the **Statement** tab. Choose dates, 
 | Shop name, PAN/VAT, VAT on/off, logo, stamp, signature, invoice note | Settings → Shop |
 | Rates, minimum sq ft, add-ons (with rate history) | Settings → Rate card |
 | Staff accounts, roles, discount limits, password resets | Settings → Users |
+| Import the old Excel work log; export orders in the same layout | Settings → Import & export (or Orders → Excel import / export) |
 | Backups, online copy status, Excel export of all data | Settings → Backups & export |
 | Who did what | Settings → Activity log |
 | Record a purchase from a supplier | Purchases → Record purchase |

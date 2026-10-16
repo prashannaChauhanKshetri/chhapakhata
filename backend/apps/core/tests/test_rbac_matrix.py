@@ -54,7 +54,7 @@ def test_anonymous_is_rejected(api):
 
 def test_write_rules(api, owner, desk, operator, customer, star_flex, eyelets):
     # Rate card: owner only
-    body = {"name": "Mesh", "rate_per_sqft": "40"}
+    body = {"name": "Mesh", "rate": "40"}
     assert api(desk).post("/api/v1/media-types/", body, format="json").status_code == 403
     assert api(operator).post("/api/v1/media-types/", body, format="json").status_code == 403
     assert api(owner).post("/api/v1/media-types/", body, format="json").status_code == 201

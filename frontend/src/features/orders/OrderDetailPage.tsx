@@ -173,6 +173,11 @@ export default function OrderDetailPage() {
           <Group gap={6}>
             <StatusBadge value={order.status} map={ORDER_STATUS} />
             {order.is_urgent && <Badge color="red">{t('Urgent')}</Badge>}
+            {order.source === 'import' && (
+              <Badge color="slate" variant="outline">
+                {t('Imported')}
+              </Badge>
+            )}
           </Group>
         }
         description={`${order.customer.name}${order.customer.phone ? ` · ${order.customer.phone}` : ''}`}
@@ -321,7 +326,9 @@ export default function OrderDetailPage() {
                         </Table.Td>
                         <Table.Td>
                           <Text size="sm">
-                            {item.size_label} × {item.quantity}
+                            {item.size_label
+                              ? `${item.size_label} × ${item.quantity}`
+                              : t('{{n}} pcs', { n: item.quantity })}
                           </Text>
                           {item.min_applied && (
                             <Text size="xs" c="amber.8">
@@ -330,10 +337,23 @@ export default function OrderDetailPage() {
                           )}
                         </Table.Td>
                         <Table.Td ta="right" className="num">
-                          {formatQty(item.total_billable_sqft)}
+                          {item.pricing_unit === 'piece'
+                            ? '—'
+                            : formatQty(item.total_billable_sqft)}
                         </Table.Td>
                         <Table.Td ta="right" className="num">
                           {formatAmount(item.rate)}
+                          {item.pricing_unit === 'piece' && (
+                            <Text size="xs" c="dimmed">
+                              {t('per piece')}
+                            </Text>
+                          )}
+                          {order.source !== 'import' && item.rate_source !== 'card' && (
+                            <Text size="xs" c="dimmed">
+                              {item.rate_source === 'previous' ? t('last rate') : t('custom')}
+                              {item.card_rate ? ` · ${t('card')} ${formatQty(item.card_rate)}` : ''}
+                            </Text>
+                          )}
                         </Table.Td>
                         <Table.Td ta="right" className="num" fw={500}>
                           {formatAmount(item.line_total)}

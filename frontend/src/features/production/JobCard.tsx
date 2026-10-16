@@ -1,16 +1,13 @@
 import { Badge, Button, Group, Menu, Paper, Stack, Text, Tooltip } from '@mantine/core';
 import { IconArrowRight, IconChevronDown, IconCircleCheck, IconUser } from '@tabler/icons-react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Job } from '@/api/types';
-import { notifyError, notifySuccess } from '@/lib/forms';
 import { deadlineLabel, formatQty } from '@/lib/format';
 import { STAGES } from '@/lib/status';
 
 import classes from './Board.module.css';
-import { moveJob, needsMaterialForMove, openMoveJob } from './MoveJobForm';
+import { useJobMover } from './useJobMover';
 
 interface JobCardProps {
   job: Job;
@@ -19,35 +16,14 @@ interface JobCardProps {
 
 export function JobCard({ job, onOpen }: JobCardProps) {
   const { t } = useTranslation();
-  const client = useQueryClient();
-  const [busy, setBusy] = useState(false);
+  const mover = useJobMover();
+  const busy = mover.busyId === job.id;
   const next =
     job.allowed_stages.filter((s) => s > job.stage && s !== 6).sort((a, b) => a - b)[0] ??
     (job.allowed_stages.includes(6) && job.stage === 5 ? 6 : undefined);
   const others = job.allowed_stages.filter((s) => s !== next);
 
-  const move = async (toStage: number) => {
-    if (needsMaterialForMove(job, toStage)) {
-      openMoveJob(job, toStage);
-      return;
-    }
-    setBusy(true);
-    try {
-      await moveJob(job.id, toStage);
-      await Promise.all(
-        ['board', 'jobs', 'order', 'orders', 'dashboard'].map((k) =>
-          client.invalidateQueries({ queryKey: [k] }),
-        ),
-      );
-      notifySuccess(
-        t('{{job}} moved to {{stage}}', { job: job.job_no, stage: STAGES[toStage].short }),
-      );
-    } catch (error) {
-      notifyError(error, t('Could not move {{job}}', { job: job.job_no }));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const move = (toStage: number) => mover.move(job, toStage);
 
   const tone = job.is_overdue ? classes.overdue : job.is_due_today ? classes.dueToday : '';
 
@@ -93,8 +69,10 @@ export function JobCard({ job, onOpen }: JobCardProps) {
             {job.customer_name}
           </Text>
           <Text size="xs" c="dimmed" lineClamp={2}>
-            {job.item.media_name} · {job.item.size_label} × {job.item.quantity} (
-            {formatQty(job.item.total_sqft)} sq ft)
+            {job.item.media_name} ·{' '}
+            {job.item.size_label
+              ? `${job.item.size_label} × ${job.item.quantity} (${formatQty(job.item.total_sqft)} sq ft)`
+              : t('{{n}} pcs', { n: job.item.quantity })}
             {job.item.description ? ` · ${job.item.description}` : ''}
           </Text>
           {(job.item.finishing || job.item.addons.length > 0) && (

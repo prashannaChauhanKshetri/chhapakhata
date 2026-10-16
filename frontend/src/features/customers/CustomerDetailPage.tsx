@@ -6,12 +6,12 @@ import {
   Grid,
   Group,
   NumberInput,
+  SimpleGrid,
   Stack,
   Tabs,
   Text,
   Textarea,
 } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import {
@@ -23,7 +23,6 @@ import {
   IconReceipt2,
 } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import dayjs from 'dayjs';
 import { DataTable } from 'mantine-datatable';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -34,10 +33,17 @@ import { openFile } from '@/api/files';
 import { apiGet, withQuery } from '@/api/http';
 import type { Customer, OrderList, Paginated, Statement, StatementEntry } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
+import { Balance } from '@/components/Balance';
 import { KeyValue } from '@/components/KeyValue';
 import { Money } from '@/components/Money';
 import { PageHeader } from '@/components/PageHeader';
 import { PageLoader } from '@/components/PageLoader';
+import {
+  PeriodPicker,
+  type PeriodValue,
+  resolvePeriod,
+  usePeriods,
+} from '@/components/PeriodPicker';
 import { QueryError } from '@/components/QueryError';
 import { StatusBadge } from '@/components/StatusBadge';
 import { handleFormError, notifyError, notifySuccess } from '@/lib/forms';
@@ -107,17 +113,26 @@ function AdjustBalanceForm({ customer, onDone }: { customer: Customer; onDone: (
   );
 }
 
+type StatementRow = StatementEntry & { kind?: 'opening' | 'closing' };
+
+function entryLink(r: StatementEntry): string | null {
+  if (r.invoice_id) return `/invoices/${r.invoice_id}`;
+  if (r.order_id) return `/orders/${r.order_id}`;
+  return null;
+}
+
 function StatementPanel({ customerId }: { customerId: number }) {
   const { t } = useTranslation();
-  const [range, setRange] = useState<[string | null, string | null]>([
-    dayjs().subtract(3, 'month').startOf('month').format('YYYY-MM-DD'),
-    dayjs().format('YYYY-MM-DD'),
-  ]);
-  const query = { from: range[0] ?? undefined, to: range[1] ?? undefined };
+  const { data: periods } = usePeriods();
+  const [period, setPeriod] = useState<PeriodValue>({ key: 'this_fy', from: null, to: null });
+  const resolved = resolvePeriod(period, periods);
+  const waiting = resolved.key !== 'all' && resolved.key !== 'custom' && !resolved.to;
+  const query = { from: resolved.from ?? undefined, to: resolved.to ?? undefined };
   const { data, error, isFetching, refetch } = useQuery({
     queryKey: ['customer', customerId, 'statement', query],
     queryFn: () => apiGet<Statement>(`/api/v1/customers/${customerId}/statement/`, query),
     placeholderData: (previous) => previous,
+    enabled: !waiting,
   });
   const exportAs = (kind: 'pdf' | 'xlsx') =>
     openFile(withQuery(`/api/v1/customers/${customerId}/statement/`, { ...query, export: kind }), {
@@ -125,37 +140,45 @@ function StatementPanel({ customerId }: { customerId: number }) {
     }).catch((e) => notifyError(e, t('Could not create the statement')));
 
   if (error) return <QueryError error={error} onRetry={() => void refetch()} />;
-  const rows: (StatementEntry & { opening?: boolean })[] = data
+  const blank = { reference: '', invoice_id: null, payment_id: null, order_id: null };
+  const rows: StatementRow[] = data
     ? [
         {
-          id: 0,
+          ...blank,
+          id: -1,
+          kind: 'opening',
           date: data.date_from ?? '',
           date_bs: '',
           entry_type: 'opening',
           entry_type_label: t('Opening balance'),
-          reference: '',
-          narration: t('Balance brought forward'),
+          narration: data.date_from ? t('Brought forward') : t('Start of the ledger'),
           debit: '0',
           credit: '0',
           balance: data.opening_balance,
-          opening: true,
         },
         ...data.entries,
+        {
+          ...blank,
+          id: -2,
+          kind: 'closing',
+          date: data.date_to,
+          date_bs: '',
+          entry_type: 'closing',
+          entry_type_label: t('Closing balance'),
+          narration: t('Carried forward'),
+          debit: data.total_debit,
+          credit: data.total_credit,
+          balance: data.closing_balance,
+        },
       ]
     : [];
+  const closing = toNumber(data?.closing_balance);
+  const aging = data?.aging?.buckets.filter((b) => toNumber(b.amount) > 0) ?? [];
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" gap="sm" wrap="wrap">
-        <DatePickerInput
-          type="range"
-          label={t('Period')}
-          value={range}
-          onChange={(v) => setRange(v as [string | null, string | null])}
-          valueFormat="D MMM YYYY"
-          maxDate={dayjs().format('YYYY-MM-DD')}
-          w={300}
-        />
+      <Group justify="space-between" gap="sm" wrap="wrap" align="flex-end">
+        <PeriodPicker value={period} onChange={setPeriod} />
         <Group gap="xs">
           <Button
             variant="default"
@@ -173,27 +196,86 @@ function StatementPanel({ customerId }: { customerId: number }) {
           </Button>
         </Group>
       </Group>
-      <DataTable<StatementEntry & { opening?: boolean }>
+
+      {data && (
+        <SimpleGrid cols={{ base: 2, md: 4 }} spacing="sm">
+          <StatementFigure
+            label={t('Opening balance')}
+            hint={
+              data.date_from ? t('on {{date}}', { date: formatDate(data.date_from) }) : undefined
+            }
+          >
+            <Balance value={data.opening_balance} />
+          </StatementFigure>
+          <StatementFigure label={t('Billed (Dr)')}>
+            <Money value={data.total_debit} prefix={false} />
+          </StatementFigure>
+          <StatementFigure label={t('Received (Cr)')}>
+            <Money value={data.total_credit} prefix={false} />
+          </StatementFigure>
+          <StatementFigure
+            label={t('Closing balance')}
+            hint={
+              closing > 0
+                ? t('Customer owes the shop')
+                : closing < 0
+                  ? t('Advance with the shop')
+                  : t('Settled')
+            }
+            strong
+          >
+            <Balance value={data.closing_balance} c={closing > 0 ? 'red.7' : undefined} />
+          </StatementFigure>
+        </SimpleGrid>
+      )}
+
+      {data && (data.by_type.length > 0 || aging.length > 0) && (
+        <Group gap="lg" wrap="wrap">
+          {data.by_type.length > 0 && (
+            <Text size="xs" c="dimmed">
+              {data.by_type
+                .map(
+                  (b) =>
+                    `${b.label} ${b.count} · ${formatAmount(toNumber(b.debit) || toNumber(b.credit))}`,
+                )
+                .join('   |   ')}
+            </Text>
+          )}
+          {aging.length > 0 && (
+            <Text size="xs" c="dimmed">
+              {t('Due by age')}:{' '}
+              {aging.map((b) => `${b.label} days ${formatAmount(b.amount)}`).join(' · ')}
+            </Text>
+          )}
+        </Group>
+      )}
+
+      <DataTable<StatementRow>
         minHeight={200}
         withTableBorder
-        borderRadius="md"
         verticalSpacing="xs"
         fetching={isFetching && !data}
         records={rows}
         idAccessor={(r) => `${r.entry_type}-${r.id}`}
+        rowStyle={(r) =>
+          r.kind ? { background: 'var(--mantine-color-slate-0)', fontWeight: 500 } : undefined
+        }
         noRecordsText={t('No transactions in this period')}
         columns={[
           {
             accessor: 'date',
             title: t('Date'),
+            width: 130,
             render: (r) =>
-              r.opening ? (
+              r.kind ? (
                 <Text size="sm" c="dimmed">
-                  —
+                  {r.date ? formatDate(r.date) : '—'}
                 </Text>
               ) : (
                 <div>
-                  <Text size="sm">{r.date_bs} BS</Text>
+                  <Text size="sm" style={{ whiteSpace: 'nowrap' }}>
+                    {r.date_bs} BS
+                  </Text>
                   <Text size="xs" c="dimmed">
                     {formatDate(r.date)}
                   </Text>
@@ -202,56 +284,92 @@ function StatementPanel({ customerId }: { customerId: number }) {
           },
           {
             accessor: 'narration',
-            title: t('Details'),
-            render: (r) => (
-              <div>
-                <Text size="sm" fw={r.opening ? 500 : undefined}>
-                  {r.entry_type_label}
-                  {r.reference ? ` · ${r.reference}` : ''}
-                </Text>
-                <Text size="xs" c="dimmed" lineClamp={1}>
-                  {r.narration}
-                </Text>
-              </div>
-            ),
+            title: t('Particulars'),
+            render: (r) => {
+              const link = entryLink(r);
+              return (
+                <div>
+                  <Text size="sm" fw={r.kind ? 600 : undefined}>
+                    {r.entry_type_label}
+                    {r.reference && (
+                      <>
+                        {' · '}
+                        {link ? (
+                          <Anchor component={Link} to={link} size="sm">
+                            {r.reference}
+                          </Anchor>
+                        ) : (
+                          r.reference
+                        )}
+                      </>
+                    )}
+                  </Text>
+                  <Text size="xs" c="dimmed" lineClamp={1}>
+                    {r.narration}
+                  </Text>
+                </div>
+              );
+            },
           },
           {
             accessor: 'debit',
             title: t('Debit'),
             textAlign: 'right',
             render: (r) =>
-              toNumber(r.debit) ? <span className="num">{formatAmount(r.debit)}</span> : '',
+              r.kind !== 'opening' && toNumber(r.debit) ? (
+                <span className="num">{formatAmount(r.debit)}</span>
+              ) : (
+                ''
+              ),
           },
           {
             accessor: 'credit',
             title: t('Credit'),
             textAlign: 'right',
             render: (r) =>
-              toNumber(r.credit) ? <span className="num">{formatAmount(r.credit)}</span> : '',
+              r.kind !== 'opening' && toNumber(r.credit) ? (
+                <span className="num">{formatAmount(r.credit)}</span>
+              ) : (
+                ''
+              ),
           },
           {
             accessor: 'balance',
             title: t('Balance'),
             textAlign: 'right',
-            render: (r) => <Money value={r.balance} prefix={false} fw={500} size="sm" />,
+            render: (r) => <Balance value={r.balance} size="sm" fw={r.kind ? 600 : 500} />,
           },
         ]}
       />
-      {data && (
-        <Group justify="flex-end" gap="xl">
-          <Text size="sm" c="dimmed">
-            {t('Billed')} <Money value={data.total_debit} size="sm" c="slate.9" />
-          </Text>
-          <Text size="sm" c="dimmed">
-            {t('Received')} <Money value={data.total_credit} size="sm" c="slate.9" />
-          </Text>
-          <Text size="sm" fw={600}>
-            {toNumber(data.closing_balance) < 0 ? t('Advance with us') : t('Closing balance')}{' '}
-            <Money value={Math.abs(toNumber(data.closing_balance))} size="sm" />
-          </Text>
-        </Group>
-      )}
     </Stack>
+  );
+}
+
+function StatementFigure({
+  label,
+  hint,
+  strong,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  strong?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card padding="sm" withBorder bg={strong ? 'slate.0' : undefined}>
+      <Text size="xs" c="dimmed" fw={500}>
+        {label}
+      </Text>
+      <Text fz={20} fw={600} lh={1.3}>
+        {children}
+      </Text>
+      {hint && (
+        <Text size="xs" c="dimmed">
+          {hint}
+        </Text>
+      )}
+    </Card>
   );
 }
 
@@ -280,8 +398,12 @@ export default function CustomerDetailPage() {
   if (!customer) return <PageLoader />;
   const balance = toNumber(customer.balance);
   // Work in progress is billed when invoiced; show it so the counter sees the full picture.
+  // Imported work-log orders are already charged to the ledger, so they are not counted.
   const uninvoiced = (orders?.results ?? [])
-    .filter((o) => !o.invoice_no && !['quotation', 'cancelled'].includes(o.status))
+    .filter(
+      (o) =>
+        !o.invoice_no && o.source !== 'import' && !['quotation', 'cancelled'].includes(o.status),
+    )
     .reduce((sum, o) => sum + toNumber(o.balance_due), 0);
 
   const adjust = () => {

@@ -8,6 +8,7 @@ import { Perm, type PermName } from '@/lib/permissions';
 
 import { ActivityTab } from './ActivityTab';
 import { BackupsTab } from './BackupsTab';
+import { ImportTab } from './ImportTab';
 import { RateCardTab } from './RateCardTab';
 import { ShopSettingsTab } from './ShopSettingsTab';
 import { UsersTab } from './UsersTab';
@@ -26,6 +27,12 @@ const TABS: { value: string; label: string; perms: PermName[]; render: () => Rea
     render: () => <RateCardTab />,
   },
   { value: 'users', label: 'Users', perms: [Perm.USERS_MANAGE], render: () => <UsersTab /> },
+  {
+    value: 'import-export',
+    label: 'Import & export',
+    perms: [Perm.SETTINGS_MANAGE, Perm.REPORTS_ALL],
+    render: () => <ImportTab />,
+  },
   {
     value: 'backups',
     label: 'Backups & export',

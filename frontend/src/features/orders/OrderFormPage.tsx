@@ -24,7 +24,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { api, unwrap } from '@/api/client';
 import { ApiError } from '@/api/errors';
 import { apiGet } from '@/api/http';
-import type { Customer, OrderDetail, PricePreview } from '@/api/types';
+import type { Customer, CustomerRate, OrderDetail, PricePreview } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { PageHeader } from '@/components/PageHeader';
 import { PageLoader } from '@/components/PageLoader';
@@ -44,6 +44,17 @@ import {
   pricingPayload,
 } from './orderForm';
 import { useAddOns, useMediaTypes, useShopSettings } from './useCatalog';
+
+/** Per-piece rows may leave both width and height empty. `path` is e.g. "items.2.width". */
+function perPieceAt(values: OrderFormValues, path: string): boolean {
+  return values.items[Number(path.split('.')[1])]?.per_piece ?? false;
+}
+
+function otherSide(values: OrderFormValues, path: string) {
+  const [, index, side] = path.split('.');
+  const item = values.items[Number(index)];
+  return side === 'width' ? item?.height : item?.width;
+}
 
 function OrderFormInner({
   order,
@@ -68,22 +79,40 @@ function OrderFormInner({
     validate: {
       items: {
         media_type: (v) => (v ? null : t('Choose a media')),
-        width: (v) => (toNumber(v) > 0 ? null : t('Enter width')),
-        height: (v) => (toNumber(v) > 0 ? null : t('Enter height')),
+        width: (v, values, path) =>
+          toNumber(v) > 0 || (perPieceAt(values, path) && !toNumber(otherSide(values, path)))
+            ? null
+            : t('Enter width'),
+        height: (v, values, path) =>
+          toNumber(v) > 0 || (perPieceAt(values, path) && !toNumber(otherSide(values, path)))
+            ? null
+            : t('Enter height'),
         quantity: (v) => (toNumber(v) >= 1 ? null : t('At least 1')),
       },
     },
   });
 
+  // What this customer paid last time for each item, offered as the default rate.
+  const { data: customerRates = [] } = useQuery({
+    queryKey: ['customer', customer?.id, 'rates'],
+    queryFn: () => apiGet<CustomerRate[]>(`/api/v1/customers/${customer!.id}/rates/`),
+    enabled: !!customer,
+    staleTime: 60_000,
+  });
+  const lastRates = useMemo(
+    () => Object.fromEntries(customerRates.map((r) => [String(r.media_type), r])),
+    [customerRates],
+  );
+
   // Live pricing: the server is the only calculator, so the screen always matches the bill.
   const pricing = useMemo(() => pricingPayload(form.values), [form.values]);
   const [debouncedPricing] = useDebouncedValue(pricing, 250);
   const preview = useQuery({
-    queryKey: ['price-preview', order?.id ?? null, debouncedPricing],
+    queryKey: ['price-preview', order?.id ?? null, customer?.id ?? null, debouncedPricing],
     queryFn: () =>
       unwrap(
         api.POST('/api/v1/orders/price-preview/', {
-          body: { ...debouncedPricing, order: order?.id ?? null },
+          body: { ...debouncedPricing, order: order?.id ?? null, customer: customer?.id ?? null },
         }),
       ),
     enabled: debouncedPricing.items.length > 0,
@@ -349,6 +378,7 @@ function OrderFormInner({
                   mediaTypes={mediaTypes}
                   addOns={addOns}
                   result={resultsByIndex[index]}
+                  lastRates={lastRates}
                   canRemove={form.values.items.length > 1}
                   isLast={index === form.values.items.length - 1}
                   onEnterLast={addItem}

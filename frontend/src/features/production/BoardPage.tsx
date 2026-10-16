@@ -12,24 +12,92 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import {
+  DndContext,
+  type DragEndEvent,
+  DragOverlay,
+  type DragStartEvent,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 import { useDebouncedValue, useMediaQuery } from '@mantine/hooks';
+import { notifications } from '@mantine/notifications';
 import { IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { apiGet } from '@/api/http';
-import type { Board, Job } from '@/api/types';
+import type { Board, BoardColumn, Job } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
 import { PageHeader } from '@/components/PageHeader';
 import { QueryError } from '@/components/QueryError';
 import { StageBadge } from '@/components/StatusBadge';
+import { STAGES } from '@/lib/status';
 
 import { useMediaTypes } from '../orders/useCatalog';
 import classes from './Board.module.css';
 import { JobCard } from './JobCard';
 import { JobDrawer } from './JobDrawer';
+import { useJobMover } from './useJobMover';
+
+/** A card that can be picked up, when the user may move it anywhere. */
+function DraggableJob({ job, onOpen }: { job: Job; onOpen: (job: Job) => void }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: job.id,
+    data: { job },
+    disabled: job.allowed_stages.length === 0,
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={classes.draggable}
+      data-dragging={isDragging || undefined}
+      data-locked={job.allowed_stages.length === 0 || undefined}
+    >
+      <JobCard job={job} onOpen={onOpen} />
+    </div>
+  );
+}
+
+function StageColumn({
+  column,
+  dragging,
+  children,
+}: {
+  column: BoardColumn;
+  dragging: Job | null;
+  children: React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: column.stage, data: { stage: column.stage } });
+  const home = dragging?.stage === column.stage;
+  const allowed = !!dragging && dragging.allowed_stages.includes(column.stage);
+  const state = !dragging || home ? undefined : allowed ? (isOver ? 'over' : 'open') : 'closed';
+  return (
+    <section
+      ref={setNodeRef}
+      className={classes.column}
+      data-drop={state}
+      aria-label={column.label}
+    >
+      <Group justify="space-between" className={classes.columnHeader} wrap="nowrap">
+        <StageBadge stage={column.stage} />
+        <Text size="xs" fw={600} c="dimmed">
+          {column.count}
+        </Text>
+      </Group>
+      <div className={classes.columnBody}>{children}</div>
+    </section>
+  );
+}
 
 export default function BoardPage() {
   const { t } = useTranslation();
@@ -44,6 +112,39 @@ export default function BoardPage() {
   const [phoneStage, setPhoneStage] = useState('1');
   const [showDelivered, setShowDelivered] = useState(false);
   const { data: mediaTypes = [] } = useMediaTypes();
+  const mover = useJobMover();
+  const [dragging, setDragging] = useState<Job | null>(null);
+  // A short move (or a press on touch screens) starts a drag, so taps and buttons still work.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 6 } }),
+    useSensor(KeyboardSensor),
+  );
+  const onDragStart = (event: DragStartEvent) =>
+    setDragging((event.active.data.current?.job as Job | undefined) ?? null);
+  const onDragEnd = (event: DragEndEvent) => {
+    setDragging(null);
+    const job = event.active.data.current?.job as Job | undefined;
+    const stage = event.over?.data.current?.stage as number | undefined;
+    if (!job || stage === undefined || stage === job.stage) return;
+    if (!job.allowed_stages.includes(stage)) {
+      notifications.show({
+        color: 'amber',
+        title: t('{{job}} cannot move to {{stage}}', {
+          job: job.job_no,
+          stage: STAGES[stage].short,
+        }),
+        message:
+          job.allowed_stages.length > 0
+            ? t('From here it can go to: {{stages}}.', {
+                stages: job.allowed_stages.map((s) => STAGES[s].short).join(', '),
+              })
+            : t('Your role cannot move this job at its current stage.'),
+      });
+      return;
+    }
+    void mover.move(job, stage);
+  };
 
   const query = {
     search: debounced,
@@ -115,7 +216,9 @@ export default function BoardPage() {
     <>
       <PageHeader
         title={t('Production board')}
-        description={t('Every job by stage. Updates every 30 seconds.')}
+        description={t(
+          'Drag a card to another stage, or use its buttons. Updates every 30 seconds.',
+        )}
         badge={
           data ? (
             <Group gap={6}>
@@ -159,24 +262,47 @@ export default function BoardPage() {
           {renderCards(data.columns.find((c) => String(c.stage) === phoneStage)?.jobs ?? [])}
         </Stack>
       ) : (
-        <Box
-          className={classes.columns}
-          style={{ '--board-columns': showDelivered ? 6 : 5 } as React.CSSProperties}
+        <DndContext
+          sensors={sensors}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+          onDragCancel={() => setDragging(null)}
+          accessibility={{
+            screenReaderInstructions: {
+              draggable: t(
+                'To move a job, press space, use the arrow keys to choose a stage, then press space again.',
+              ),
+            },
+          }}
         >
-          {data.columns
-            .filter((column) => showDelivered || column.stage !== 6)
-            .map((column) => (
-              <section key={column.stage} className={classes.column} aria-label={column.label}>
-                <Group justify="space-between" className={classes.columnHeader} wrap="nowrap">
-                  <StageBadge stage={column.stage} />
-                  <Text size="xs" fw={600} c="dimmed">
-                    {column.count}
-                  </Text>
-                </Group>
-                <div className={classes.columnBody}>{renderCards(column.jobs)}</div>
-              </section>
-            ))}
-        </Box>
+          <Box
+            className={classes.columns}
+            style={{ '--board-columns': showDelivered ? 6 : 5 } as React.CSSProperties}
+          >
+            {data.columns
+              .filter((column) => showDelivered || column.stage !== 6)
+              .map((column) => (
+                <StageColumn key={column.stage} column={column} dragging={dragging}>
+                  {column.jobs.length === 0 ? (
+                    <Text size="sm" c="dimmed" ta="center" py="md">
+                      {t('No jobs')}
+                    </Text>
+                  ) : (
+                    column.jobs.map((job) => (
+                      <DraggableJob key={job.id} job={job} onOpen={(j) => setOpenJob(j.id)} />
+                    ))
+                  )}
+                </StageColumn>
+              ))}
+          </Box>
+          <DragOverlay dropAnimation={null}>
+            {dragging ? (
+              <div className={classes.overlay}>
+                <JobCard job={dragging} onOpen={() => undefined} />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
       <JobDrawer jobId={openJob} onClose={() => setOpenJob(null)} />
     </>

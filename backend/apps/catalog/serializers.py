@@ -11,6 +11,7 @@ from .models import AddOn, MediaType
 class MediaTypeSerializer(serializers.ModelSerializer):
     effective_min_sqft = serializers.SerializerMethodField()
     material_name = serializers.CharField(source="material.name", read_only=True, default=None)
+    pricing_unit_label = serializers.CharField(source="get_pricing_unit_display", read_only=True)
     material = serializers.PrimaryKeyRelatedField(
         queryset=StockItem.objects.filter(kind=StockKind.ROLL_MEDIA),
         allow_null=True,
@@ -22,7 +23,9 @@ class MediaTypeSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "name",
-            "rate_per_sqft",
+            "pricing_unit",
+            "pricing_unit_label",
+            "rate",
             "min_sqft",
             "effective_min_sqft",
             "material",

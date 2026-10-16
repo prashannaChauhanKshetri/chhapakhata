@@ -97,3 +97,35 @@ def bs_payload(value: dt.date | dt.datetime | None) -> dict[str, str | None]:
         return {"ad": None, "bs": None, "bs_long": None}
     day = as_date(value)
     return {"ad": day.isoformat(), "bs": bs_string(day), "bs_long": bs_long(day)}
+
+
+def named_periods(today: dt.date | None = None) -> list[dict[str, str]]:
+    """Common report periods in the shop's calendar (BS months, Nepal fiscal years)."""
+    today = today or local_today()
+    month_start, _ = bs_month_range(today)
+    last_month_start, last_month_end = bs_month_range(month_start - dt.timedelta(days=1))
+    fy = fiscal_year_for(today)
+    fy_start, fy_end = fiscal_year_range(fy)
+    last_fy = fiscal_year_for(fy_start - dt.timedelta(days=1))
+    last_fy_start, last_fy_end = fiscal_year_range(last_fy)
+
+    def month_label(day: dt.date) -> str:
+        bs = to_bs(day)
+        return f"{BS_MONTHS[bs.month - 1]} {bs.year}"
+
+    rows = [
+        ("today", "Today", today, today),
+        ("this_month", f"This month ({month_label(today)})", month_start, today),
+        (
+            "last_month",
+            f"Last month ({month_label(last_month_start)})",
+            last_month_start,
+            last_month_end,
+        ),
+        ("this_fy", f"This fiscal year ({fy})", fy_start, min(fy_end, today)),
+        ("last_fy", f"Last fiscal year ({last_fy})", last_fy_start, last_fy_end),
+    ]
+    return [
+        {"key": key, "label": label, "from": start.isoformat(), "to": end.isoformat()}
+        for key, label, start, end in rows
+    ]

@@ -5,6 +5,7 @@ import {
   Group,
   Menu,
   NumberInput,
+  SegmentedControl,
   Select,
   Stack,
   Switch,
@@ -52,7 +53,8 @@ function MediaTypeForm({ media, onDone }: { media?: MediaType; onDone: () => voi
   const form = useForm({
     initialValues: {
       name: media?.name ?? '',
-      rate_per_sqft: toNumber(media?.rate_per_sqft) || ('' as number | string),
+      pricing_unit: (media?.pricing_unit ?? 'sqft') as 'sqft' | 'piece',
+      rate: toNumber(media?.rate) || ('' as number | string),
       min_sqft:
         media?.min_sqft === null || media?.min_sqft === undefined
           ? ('' as number | string)
@@ -64,15 +66,16 @@ function MediaTypeForm({ media, onDone }: { media?: MediaType; onDone: () => voi
     },
     validate: {
       name: (v) => (v.trim() ? null : 'Enter a name'),
-      rate_per_sqft: (v) => (v === '' ? 'Enter the rate' : null),
+      rate: (v) => (v === '' ? 'Enter the rate' : null),
     },
   });
   const submit = form.onSubmit(async (values) => {
     setBusy(true);
     const body = {
       ...values,
-      rate_per_sqft: String(values.rate_per_sqft),
-      min_sqft: values.min_sqft === '' ? null : String(values.min_sqft),
+      rate: String(values.rate),
+      min_sqft:
+        values.min_sqft === '' || values.pricing_unit === 'piece' ? null : String(values.min_sqft),
       material: values.material ? Number(values.material) : null,
     };
     try {
@@ -99,21 +102,35 @@ function MediaTypeForm({ media, onDone }: { media?: MediaType; onDone: () => voi
           data-autofocus
           {...form.getInputProps('name')}
         />
+        <SegmentedControl
+          fullWidth
+          data={[
+            { value: 'sqft', label: 'Priced per sq ft' },
+            { value: 'piece', label: 'Priced per piece' },
+          ]}
+          {...form.getInputProps('pricing_unit')}
+        />
         <Group grow>
           <NumberInput
-            label="Rate per sq ft"
+            label={form.values.pricing_unit === 'piece' ? 'Rate per piece' : 'Rate per sq ft'}
             prefix="Rs. "
             min={0}
             decimalScale={2}
-            {...form.getInputProps('rate_per_sqft')}
+            {...form.getInputProps('rate')}
           />
-          <NumberInput
-            label="Minimum sq ft"
-            placeholder="Shop default"
-            min={0}
-            decimalScale={2}
-            {...form.getInputProps('min_sqft')}
-          />
+          {form.values.pricing_unit === 'sqft' ? (
+            <NumberInput
+              label="Minimum sq ft"
+              placeholder="Shop default"
+              min={0}
+              decimalScale={2}
+              {...form.getInputProps('min_sqft')}
+            />
+          ) : (
+            <Text size="xs" c="dimmed" mt={24}>
+              Size is optional and no minimum applies (e.g. photos, 3D letters, name plates).
+            </Text>
+          )}
         </Group>
         <Select
           label="Stock item used"
@@ -339,20 +356,32 @@ export function RateCardTab() {
               ),
             },
             {
-              accessor: 'rate_per_sqft',
-              title: t('Rate / sq ft'),
+              accessor: 'rate',
+              title: t('Rate'),
               textAlign: 'right',
-              render: (m) => <span className="num">{formatAmount(m.rate_per_sqft)}</span>,
+              render: (m) => (
+                <span className="num">
+                  {formatAmount(m.rate)}
+                  <Text span size="xs" c="dimmed">
+                    {m.pricing_unit === 'piece' ? t(' / piece') : t(' / sq ft')}
+                  </Text>
+                </span>
+              ),
             },
             {
               accessor: 'effective_min_sqft',
               title: t('Minimum'),
               textAlign: 'right',
-              render: (m) => (
-                <Text size="sm" className="num" c={m.min_sqft === null ? 'dimmed' : undefined}>
-                  {formatQty(m.effective_min_sqft)} sq ft{m.min_sqft === null ? ' *' : ''}
-                </Text>
-              ),
+              render: (m) =>
+                m.pricing_unit === 'piece' ? (
+                  <Text size="sm" c="dimmed">
+                    —
+                  </Text>
+                ) : (
+                  <Text size="sm" className="num" c={m.min_sqft === null ? 'dimmed' : undefined}>
+                    {formatQty(m.effective_min_sqft)} sq ft{m.min_sqft === null ? ' *' : ''}
+                  </Text>
+                ),
             },
             {
               accessor: 'material_name',

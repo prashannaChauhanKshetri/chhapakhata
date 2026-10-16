@@ -92,14 +92,12 @@ def star_flex_rolls(owner, star_flex_stock, supplier):
 
 @pytest.fixture
 def star_flex(db, star_flex_stock) -> MediaType:
-    return MediaType.objects.create(
-        name="Star Flex", rate_per_sqft=D("35"), material=star_flex_stock
-    )
+    return MediaType.objects.create(name="Star Flex", rate=D("35"), material=star_flex_stock)
 
 
 @pytest.fixture
 def vinyl(db) -> MediaType:
-    return MediaType.objects.create(name="Vinyl", rate_per_sqft=D("70"), min_sqft=D("2"))
+    return MediaType.objects.create(name="Vinyl", rate=D("70"), min_sqft=D("2"))
 
 
 @pytest.fixture

@@ -36,7 +36,7 @@ def test_confirm_creates_one_job_per_item(make_order, desk):
 
 def test_edit_keeps_quoted_rate_but_new_lines_use_current_rate(make_order, star_flex, desk):
     order = make_order(confirm=False)
-    star_flex.rate_per_sqft = D("40")
+    star_flex.rate = D("40")
     star_flex.save()
     existing = order.items.get()
     data = services.OrderInput(

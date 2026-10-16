@@ -17,6 +17,7 @@ const CustomerDetailPage = lazy(() => import('@/features/customers/CustomerDetai
 const InvoicesPage = lazy(() => import('@/features/billing/InvoicesPage'));
 const InvoiceDetailPage = lazy(() => import('@/features/billing/InvoiceDetailPage'));
 const PaymentsPage = lazy(() => import('@/features/billing/PaymentsPage'));
+const LedgerPage = lazy(() => import('@/features/billing/LedgerPage'));
 const InventoryPage = lazy(() => import('@/features/inventory/InventoryPage'));
 const StockItemPage = lazy(() => import('@/features/inventory/StockItemPage'));
 const PurchasesPage = lazy(() => import('@/features/inventory/PurchasesPage'));
@@ -55,6 +56,8 @@ export const router = createBrowserRouter([
       { path: 'invoices', element: guard(Perm.INVOICES_VIEW, <InvoicesPage />) },
       { path: 'invoices/:id', element: guard(Perm.INVOICES_VIEW, <InvoiceDetailPage />) },
       { path: 'payments', element: guard(Perm.PAYMENTS_VIEW, <PaymentsPage />) },
+      { path: 'ledger', element: <Navigate to="/ledger/balances" replace /> },
+      { path: 'ledger/:tab', element: guard(Perm.LEDGER_VIEW, <LedgerPage />) },
       { path: 'inventory', element: guard(Perm.INVENTORY_VIEW, <InventoryPage />) },
       { path: 'inventory/:id', element: guard(Perm.INVENTORY_VIEW, <StockItemPage />) },
       { path: 'purchases', element: guard(Perm.INVENTORY_MANAGE, <PurchasesPage />) },

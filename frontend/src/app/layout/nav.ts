@@ -1,4 +1,5 @@
 import {
+  IconBook2,
   IconBuildingWarehouse,
   IconChartBar,
   IconClipboardList,
@@ -51,6 +52,7 @@ export const NAV: NavSection[] = [
     items: [
       { label: 'Invoices', to: '/invoices', icon: IconFileInvoice, perms: [Perm.INVOICES_VIEW] },
       { label: 'Payments', to: '/payments', icon: IconReceipt2, perms: [Perm.PAYMENTS_VIEW] },
+      { label: 'Ledger', to: '/ledger', icon: IconBook2, perms: [Perm.LEDGER_VIEW] },
     ],
   },
   {

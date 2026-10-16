@@ -14,6 +14,10 @@ export type Customer = S['Customer'];
 export type CustomerRef = S['CustomerRef'];
 export type Statement = S['Statement'];
 export type StatementEntry = S['StatementEntry'];
+export type LedgerEntry = S['LedgerEntry'];
+export type LedgerSummary = S['LedgerSummary'];
+export type LedgerSummaryRow = S['LedgerSummaryRow'];
+export type Period = S['Period'];
 
 export type MediaType = S['MediaType'];
 export type AddOn = S['AddOn'];
@@ -26,6 +30,7 @@ export type OrderWrite = S['OrderWriteRequest'];
 export type OrderItemWrite = S['OrderItemWriteRequest'];
 export type PricePreview = S['PricePreview'];
 export type ItemResult = S['ItemResult'];
+export type CustomerRate = S['CustomerRate'];
 
 export type Job = S['Job'];
 export type JobDetail = S['JobDetail'];
@@ -46,6 +51,7 @@ export type Purchase = S['Purchase'];
 export type StockMovement = S['StockMovement'];
 
 export type BackupRun = S['BackupRun'];
+export type WorkLogImportResult = S['WorkLogImportResult'];
 
 export interface Paginated<T> {
   count: number;

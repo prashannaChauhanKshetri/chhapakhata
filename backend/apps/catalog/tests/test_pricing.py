@@ -159,3 +159,49 @@ def test_discount_validation():
 def test_discount_percent_helper():
     assert discount_percent(D("1000"), D("125")) == D("12.50")
     assert discount_percent(D("0"), D("0")) == D("0")
+
+
+# --- per-piece items ---
+
+
+def test_per_piece_item_ignores_size_and_minimum():
+    result = price_item(
+        ItemLine(
+            width=D("0"),
+            height=D("0"),
+            unit="ft",
+            quantity=4,
+            rate=D("160"),
+            min_sqft=D("5"),
+            per_piece=True,
+        )
+    )
+    assert result.base_amount == D("640.00")
+    assert result.sqft == D("0")
+    assert result.min_applied is False
+
+
+def test_per_piece_item_may_carry_a_size_for_reference():
+    result = price_item(
+        ItemLine(
+            width=D("2"),
+            height=D("1"),
+            unit="ft",
+            quantity=3,
+            rate=D("400"),
+            min_sqft=D("5"),
+            per_piece=True,
+        )
+    )
+    assert result.sqft == D("2.00")
+    assert result.base_amount == D("1200.00")
+
+
+def test_area_item_still_needs_a_size():
+    with pytest.raises(PricingError) as exc:
+        price_item(
+            ItemLine(
+                width=D("0"), height=D("0"), unit="ft", quantity=1, rate=D("35"), min_sqft=D("5")
+            )
+        )
+    assert exc.value.field == "width"

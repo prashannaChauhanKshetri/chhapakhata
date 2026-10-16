@@ -81,10 +81,31 @@ class StatementEntrySerializer(serializers.Serializer):
     entry_type = serializers.CharField()
     entry_type_label = serializers.CharField()
     reference = serializers.CharField()
+    invoice_id = serializers.IntegerField(allow_null=True)
+    payment_id = serializers.IntegerField(allow_null=True)
+    order_id = serializers.IntegerField(allow_null=True)
     narration = serializers.CharField()
     debit = serializers.DecimalField(max_digits=14, decimal_places=2)
     credit = serializers.DecimalField(max_digits=14, decimal_places=2)
     balance = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
+class StatementTypeTotalSerializer(serializers.Serializer):
+    entry_type = serializers.CharField()
+    label = serializers.CharField()
+    count = serializers.IntegerField()
+    debit = serializers.DecimalField(max_digits=14, decimal_places=2)
+    credit = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
+class AgingBucketSerializer(serializers.Serializer):
+    label = serializers.CharField()
+    amount = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
+class StatementAgingSerializer(serializers.Serializer):
+    oldest_due_date = serializers.DateField(allow_null=True)
+    buckets = AgingBucketSerializer(many=True)
 
 
 class StatementSerializer(serializers.Serializer):
@@ -97,3 +118,7 @@ class StatementSerializer(serializers.Serializer):
     total_debit = serializers.DecimalField(max_digits=14, decimal_places=2)
     total_credit = serializers.DecimalField(max_digits=14, decimal_places=2)
     closing_balance = serializers.DecimalField(max_digits=14, decimal_places=2)
+    by_type = StatementTypeTotalSerializer(many=True)
+    aging = StatementAgingSerializer(
+        allow_null=True, help_text="How old the closing due is (oldest invoices paid first)."
+    )

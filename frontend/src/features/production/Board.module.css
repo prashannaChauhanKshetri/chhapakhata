@@ -16,6 +16,44 @@
   border-radius: var(--mantine-radius-lg);
 }
 
+.column[data-drop='open'] {
+  border: 1px dashed var(--mantine-color-slate-5);
+}
+
+.column[data-drop='over'] {
+  border: 1px solid var(--mantine-color-slate-7);
+  background: var(--mantine-color-slate-2);
+}
+
+.column[data-drop='closed'] {
+  opacity: 0.5;
+}
+
+.draggable {
+  cursor: grab;
+  border-radius: var(--mantine-radius-md);
+  touch-action: manipulation;
+
+  &[data-locked] {
+    cursor: default;
+  }
+
+  &[data-dragging] {
+    opacity: 0.35;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mantine-color-slate-5);
+    outline-offset: 2px;
+  }
+}
+
+.overlay {
+  cursor: grabbing;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.18);
+  border-radius: var(--mantine-radius-md);
+}
+
 .columnHeader {
   padding: var(--mantine-spacing-sm) var(--mantine-spacing-sm) var(--mantine-spacing-xs);
 }

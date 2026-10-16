@@ -186,11 +186,16 @@ class OrderViewSet(
         serializer = PricePreviewRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        pricing = services.calculate(_order_input(data), order=data.get("order"))
+        pricing = services.calculate(
+            _order_input(data), order=data.get("order"), customer=data.get("customer")
+        )
         limit = request.user.discount_limit()
         payload = {
             "items": [
                 {
+                    "rate_source": meta.rate_source,
+                    "card_rate": meta.card_rate,
+                    "pricing_unit": meta.pricing_unit,
                     **{
                         f: getattr(r, f)
                         for f in (
@@ -211,7 +216,7 @@ class OrderViewSet(
                     "total_sqft": r.total_sqft,
                     "total_billable_sqft": r.total_billable_sqft,
                 }
-                for r in pricing.items
+                for r, meta in zip(pricing.items, pricing.lines, strict=True)
             ],
             "totals": pricing.totals,
             "warnings": list(pricing.warnings),

@@ -17,12 +17,28 @@ class LengthUnit(models.TextChoices):
     CM = "cm", "Centimetres"
 
 
+class PricingUnit(models.TextChoices):
+    SQFT = "sqft", "Per sq ft"
+    PIECE = "piece", "Per piece"
+
+
 class MediaType(TimeStampedModel):
-    """A printable material on the rate card, e.g. Star Flex at Rs 35 per sq ft."""
+    """An item on the rate card.
+
+    Most media are priced by area (Star Flex at Rs 35 per sq ft). Some work is
+    priced per piece instead (a photo print, 3D letters, a name plate); for
+    those the size is optional and the minimum sq ft rule does not apply.
+    """
 
     name = models.CharField(max_length=80, unique=True)
-    rate_per_sqft = models.DecimalField(
-        max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0"))]
+    pricing_unit = models.CharField(
+        max_length=5, choices=PricingUnit.choices, default=PricingUnit.SQFT
+    )
+    rate = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0"))],
+        help_text="Rate per sq ft, or per piece for per-piece items.",
     )
     min_sqft = models.DecimalField(
         "Minimum sq ft",
@@ -51,6 +67,10 @@ class MediaType(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def is_per_piece(self) -> bool:
+        return self.pricing_unit == PricingUnit.PIECE
 
 
 class AddOnBasis(models.TextChoices):

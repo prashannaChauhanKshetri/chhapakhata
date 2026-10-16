@@ -5,6 +5,9 @@ is easy to test. The proposal's formula, per item::
 
     total = [MAX(sq ft, minimum sq ft) × rate × quantity] + add-ons − discount
 
+Per-piece items (photos, 3D letters, name plates) are priced ``rate × quantity``;
+their size is optional and the minimum sq ft rule does not apply.
+
 Order level::
 
     subtotal = Σ line totals
@@ -107,6 +110,7 @@ class ItemLine:
     min_sqft: Decimal
     addons: Sequence[AddOnLine] = ()
     key: Hashable = None
+    per_piece: bool = False
 
 
 @dataclass(frozen=True)
@@ -183,10 +187,13 @@ def addon_amount(
 def price_item(line: ItemLine) -> ItemResult:
     width, height = to_decimal(line.width), to_decimal(line.height)
     rate, min_sqft = to_decimal(line.rate), to_decimal(line.min_sqft)
-    if width <= 0:
-        raise PricingError("Width must be greater than zero.", "width")
-    if height <= 0:
-        raise PricingError("Height must be greater than zero.", "height")
+    sized = width > 0 and height > 0
+    if not line.per_piece or width != 0 or height != 0:
+        # Per-piece items may leave the size empty (both zero); everything else needs it.
+        if width <= 0:
+            raise PricingError("Width must be greater than zero.", "width")
+        if height <= 0:
+            raise PricingError("Height must be greater than zero.", "height")
     if int(line.quantity) < 1:
         raise PricingError("Quantity must be at least 1.", "quantity")
     if rate < 0:
@@ -195,10 +202,15 @@ def price_item(line: ItemLine) -> ItemResult:
         raise PricingError("Minimum sq ft cannot be negative.", "min_sqft")
 
     quantity = int(line.quantity)
-    sqft = area_sqft(width, height, line.unit)
-    billable = max(sqft, q2(min_sqft))
-    base_amount = q2(billable * rate * quantity)
-    perimeter = perimeter_ft(width, height, line.unit)
+    sqft = area_sqft(width, height, line.unit) if sized else ZERO
+    perimeter = perimeter_ft(width, height, line.unit) if sized else ZERO
+    if line.per_piece:
+        min_sqft = ZERO
+        billable = sqft
+        base_amount = q2(rate * quantity)
+    else:
+        billable = max(sqft, q2(min_sqft))
+        base_amount = q2(billable * rate * quantity)
 
     addon_results = tuple(
         AddOnResult(

@@ -13,7 +13,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .activity import log_activity
-from .dates import bs_long, bs_month_range, bs_string, fiscal_year_for, from_bs, local_today
+from .dates import (
+    bs_long,
+    bs_month_range,
+    bs_string,
+    fiscal_year_for,
+    from_bs,
+    local_today,
+    named_periods,
+)
 from .models import ActivityLog, ShopSettings
 from .permissions import AUTHENTICATED, Perm
 from .serializers import ActivityLogSerializer, DateConversionSerializer, ShopSettingsSerializer
@@ -106,6 +114,23 @@ class DateConversionView(APIView):
                 "bs_month_end": month_end.isoformat(),
             }
         )
+
+
+class PeriodSerializer(serializers.Serializer):
+    key = serializers.CharField()
+    label = serializers.CharField()
+    date_from = serializers.DateField(source="from")
+    date_to = serializers.DateField(source="to")
+
+
+class PeriodsView(APIView):
+    """Named periods for date pickers: this BS month, last month, this and last fiscal year."""
+
+    required_perms = AUTHENTICATED
+
+    @extend_schema(responses=PeriodSerializer(many=True))
+    def get(self, request):
+        return Response(PeriodSerializer(named_periods(), many=True).data)
 
 
 class HealthView(APIView):

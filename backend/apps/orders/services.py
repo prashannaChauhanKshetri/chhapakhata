@@ -3,6 +3,11 @@
 Prices always come from :mod:`apps.catalog.pricing`. Rates are snapshotted on
 each item. When an order is edited, unchanged lines keep the rate they were
 quoted at; new lines and lines whose media changed use today's rate card.
+
+Staff may also charge a line at the customer's last rate for that item, or at
+a custom rate. A custom rate below the rate card counts against the user's
+discount limit; the customer's last rate does not, because it was already
+agreed once.
 """
 
 from __future__ import annotations
@@ -28,10 +33,11 @@ from apps.catalog.pricing import (
 from apps.core.activity import log_activity
 from apps.core.exceptions import BusinessError
 from apps.core.models import ShopSettings
-from apps.core.money import fmt_qty
+from apps.core.money import fmt_qty, q2
 from apps.core.sequences import DocType, next_number
 
-from .models import DiscountType, Order, OrderItem, OrderItemAddOn, OrderStatus
+from .models import DiscountType, Order, OrderItem, OrderItemAddOn, OrderStatus, RateSource
+from .selectors import LastRate, last_rates_for
 
 EDITABLE_STATUSES = {
     OrderStatus.QUOTATION,
@@ -59,6 +65,35 @@ class ItemInput:
     design_file_ref: str = ""
     addons: list[AddOnInput] = field(default_factory=list)
     id: int | None = None
+    rate: Decimal | None = None  # None = keep the quoted rate, or use the rate card
+
+
+@dataclass(frozen=True)
+class LineMeta:
+    """Where a line's rate came from, kept beside the pricing result."""
+
+    card_rate: Decimal
+    rate_source: str
+    pricing_unit: str
+    rate_changed: bool = False
+
+
+@dataclass(frozen=True)
+class PricedOrder:
+    pricing: OrderPricing
+    lines: tuple[LineMeta, ...]
+
+    @property
+    def items(self):
+        return self.pricing.items
+
+    @property
+    def totals(self):
+        return self.pricing.totals
+
+    @property
+    def warnings(self):
+        return self.pricing.warnings
 
 
 @dataclass
@@ -79,6 +114,7 @@ def item_input_from_data(data: dict[str, Any]) -> ItemInput:
         description=data.get("description", ""),
         finishing=data.get("finishing", ""),
         design_file_ref=data.get("design_file_ref", ""),
+        rate=data.get("rate"),
         addons=[
             AddOnInput(addon=a["addon"], quantity=a.get("quantity", Decimal("1")))
             for a in data.get("addons", [])
@@ -87,29 +123,50 @@ def item_input_from_data(data: dict[str, Any]) -> ItemInput:
 
 
 def _item_lines(
-    items: list[ItemInput], shop: ShopSettings, existing: dict[int, OrderItem] | None = None
-) -> list[ItemLine]:
+    items: list[ItemInput],
+    shop: ShopSettings,
+    existing: dict[int, OrderItem] | None = None,
+    last_rates: dict[int, LastRate] | None = None,
+) -> tuple[list[ItemLine], list[LineMeta]]:
     existing = existing or {}
-    lines = []
+    last_rates = last_rates or {}
+    lines: list[ItemLine] = []
+    metas: list[LineMeta] = []
     for index, item in enumerate(items):
-        if not item.media_type.is_active and not (
-            item.id in existing and existing[item.id].media_type_id == item.media_type.pk
+        media = item.media_type
+        if not media.is_active and not (
+            item.id in existing and existing[item.id].media_type_id == media.pk
         ):
             raise BusinessError(
-                {f"items.{index}.media_type": [f"{item.media_type.name} is no longer offered."]}
+                {f"items.{index}.media_type": [f"{media.name} is no longer offered."]}
             )
         previous = existing.get(item.id) if item.id else None
-        if previous is not None and previous.media_type_id == item.media_type.pk:
+        if previous is not None and previous.media_type_id == media.pk:
             rate, min_sqft = previous.rate, previous.min_sqft
+            pricing_unit = previous.pricing_unit
+            card_rate = previous.card_rate if previous.card_rate is not None else media.rate
+            source = previous.rate_source
             old_addons = {a.addon_id: a for a in previous.addons.all()}
         else:
-            rate = item.media_type.rate_per_sqft
-            min_sqft = (
-                item.media_type.min_sqft
-                if item.media_type.min_sqft is not None
-                else shop.default_min_sqft
-            )
+            rate = card_rate = media.rate
+            pricing_unit = media.pricing_unit
+            min_sqft = media.min_sqft if media.min_sqft is not None else shop.default_min_sqft
+            source = RateSource.CARD
             old_addons = {}
+
+        changed = False
+        if item.rate is not None and q2(item.rate) != rate:
+            if item.rate < 0:
+                raise BusinessError({f"items.{index}.rate": ["Rate cannot be negative."]})
+            rate, changed = q2(item.rate), True
+            last = last_rates.get(media.pk)
+            if rate == card_rate:
+                source = RateSource.CARD
+            elif last is not None and rate == last.rate:
+                source = RateSource.PREVIOUS
+            else:
+                source = RateSource.CUSTOM
+
         addon_lines = []
         for a in item.addons:
             old = old_addons.get(a.addon.pk)
@@ -132,14 +189,27 @@ def _item_lines(
                 min_sqft=min_sqft,
                 addons=tuple(addon_lines),
                 key=index,
+                per_piece=pricing_unit == "piece",
             )
         )
-    return lines
+        metas.append(
+            LineMeta(
+                card_rate=card_rate,
+                rate_source=source,
+                pricing_unit=pricing_unit,
+                rate_changed=changed,
+            )
+        )
+    return lines, metas
 
 
 def calculate(
-    data: OrderInput, *, order: Order | None = None, shop: ShopSettings | None = None
-) -> OrderPricing:
+    data: OrderInput,
+    *,
+    order: Order | None = None,
+    shop: ShopSettings | None = None,
+    customer: Any = None,
+) -> PricedOrder:
     """Price an order input. Raises ``BusinessError`` with form-friendly field paths."""
     if not data.items:
         raise BusinessError({"items": ["Add at least one item."]})
@@ -147,14 +217,20 @@ def calculate(
     existing = None
     if order is not None:
         existing = {i.pk: i for i in order.items.prefetch_related("addons")}
-    lines = _item_lines(data.items, shop, existing)
+        customer = customer or order.customer
+    last_rates = (
+        last_rates_for(customer, exclude_order=order)
+        if customer is not None and any(i.rate is not None for i in data.items)
+        else {}
+    )
+    lines, metas = _item_lines(data.items, shop, existing, last_rates)
     vat_rate = (
         order.vat_rate
         if order is not None and order.status != OrderStatus.QUOTATION
         else (shop.vat_rate if shop.is_vat_registered else Decimal("0"))
     )
     try:
-        return price_order(
+        pricing = price_order(
             lines,
             discount_type=data.discount_type,
             discount_value=data.discount_value,
@@ -163,12 +239,30 @@ def calculate(
         )
     except PricingError as exc:
         raise BusinessError({exc.field: [exc.message]}) from exc
+    return PricedOrder(pricing=pricing, lines=tuple(metas))
 
 
-def check_discount_limit(user: Any, pricing: OrderPricing) -> None:
+def check_discount_limit(user: Any, pricing: PricedOrder) -> None:
+    """Staff limits: the order discount, and custom rates below the rate card."""
     limit = user.discount_limit()
     if limit is None:
         return
+    for index, (meta, result) in enumerate(zip(pricing.lines, pricing.items, strict=True)):
+        if not meta.rate_changed or meta.rate_source != RateSource.CUSTOM:
+            continue
+        if meta.card_rate <= 0 or result.rate >= meta.card_rate:
+            continue
+        below = discount_percent(meta.card_rate, meta.card_rate - result.rate)
+        if below > limit:
+            raise BusinessError(
+                {
+                    f"items.{index}.rate": [
+                        f"Rs {fmt_qty(result.rate)} is {fmt_qty(below)}% below the rate card "
+                        f"(Rs {fmt_qty(meta.card_rate)}). Your limit is {fmt_qty(limit)}%; "
+                        "ask the owner to approve this rate."
+                    ]
+                }
+            )
     effective = discount_percent(pricing.totals.subtotal, pricing.totals.discount_amount)
     if effective > limit:
         raise BusinessError(
@@ -181,7 +275,7 @@ def check_discount_limit(user: Any, pricing: OrderPricing) -> None:
         )
 
 
-def _apply_totals(order: Order, pricing: OrderPricing) -> None:
+def _apply_totals(order: Order, pricing: PricedOrder) -> None:
     t = pricing.totals
     order.subtotal = t.subtotal
     order.discount_amount = t.discount_amount
@@ -192,7 +286,14 @@ def _apply_totals(order: Order, pricing: OrderPricing) -> None:
     order.total = t.total
 
 
-def _write_item(order: Order, line_no: int, data: ItemInput, result: Any, item: OrderItem | None):
+def _write_item(
+    order: Order,
+    line_no: int,
+    data: ItemInput,
+    result: Any,
+    meta: LineMeta,
+    item: OrderItem | None,
+) -> OrderItem:
     item = item or OrderItem(order=order)
     item.line_no = line_no
     item.media_type = data.media_type
@@ -206,7 +307,10 @@ def _write_item(order: Order, line_no: int, data: ItemInput, result: Any, item: 
     item.height_ft = result.height_ft
     item.sqft = result.sqft
     item.billable_sqft = result.billable_sqft
+    item.pricing_unit = meta.pricing_unit
     item.rate = result.rate
+    item.rate_source = meta.rate_source
+    item.card_rate = meta.card_rate
     item.min_sqft = result.min_sqft
     item.base_amount = result.base_amount
     item.addons_amount = result.addons_amount
@@ -252,7 +356,7 @@ def create_order(
         raise BusinessError({"customer": ["This customer is inactive."]})
     _validate_deadline(deadline, is_new=True)
     shop = ShopSettings.load()
-    pricing = calculate(data, shop=shop)
+    pricing = calculate(data, shop=shop, customer=customer)
     check_discount_limit(user, pricing)
 
     order = Order(
@@ -268,8 +372,10 @@ def create_order(
     )
     _apply_totals(order, pricing)
     order.save()
-    for line_no, (item_data, result) in enumerate(zip(data.items, pricing.items, strict=True), 1):
-        _write_item(order, line_no, item_data, result, None)
+    for line_no, (item_data, result, meta) in enumerate(
+        zip(data.items, pricing.items, pricing.lines, strict=True), 1
+    ):
+        _write_item(order, line_no, item_data, result, meta, None)
     log_activity(user, "order.created", order, message=f"Total {order.total}", request=request)
     if confirm:
         confirm_order(order=order, user=user, request=request)
@@ -329,11 +435,13 @@ def update_order(
         OrderItem.objects.filter(pk=pk).update(line_no=1000 + offset)
 
     deadline_changed = order.deadline != deadline
-    for line_no, (item_data, result) in enumerate(zip(data.items, pricing.items, strict=True), 1):
+    for line_no, (item_data, result, meta) in enumerate(
+        zip(data.items, pricing.items, pricing.lines, strict=True), 1
+    ):
         previous = existing.get(item_data.id) if item_data.id else None
         if previous is not None:
             previous.refresh_from_db()
-        item = _write_item(order, line_no, item_data, result, previous)
+        item = _write_item(order, line_no, item_data, result, meta, previous)
         job = getattr(item, "job", None) if previous is not None else None
         if job is not None:
             job.design_file_ref = item.design_file_ref

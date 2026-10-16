@@ -48,7 +48,7 @@ class Command(BaseCommand):
                         MediaType.objects.update_or_create(
                             name=name,
                             defaults={
-                                "rate_per_sqft": rate,
+                                "rate": rate,
                                 "min_sqft": decimal(row, "min_sqft"),
                                 "material": material,
                                 "is_active": boolean(row, "active"),

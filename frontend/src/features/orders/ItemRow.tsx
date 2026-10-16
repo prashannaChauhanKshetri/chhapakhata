@@ -2,6 +2,7 @@ import {
   ActionIcon,
   Badge,
   Box,
+  Chip,
   Collapse,
   Grid,
   Group,
@@ -19,7 +20,7 @@ import { IconChevronDown, IconChevronRight, IconCopy, IconTrash } from '@tabler/
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { AddOn, ItemResult, MediaType } from '@/api/types';
+import type { AddOn, CustomerRate, ItemResult, MediaType } from '@/api/types';
 import { formatAmount, formatQty, toNumber } from '@/lib/format';
 import { UNITS } from '@/lib/status';
 
@@ -32,6 +33,8 @@ interface ItemRowProps {
   mediaTypes: MediaType[];
   addOns: AddOn[];
   result?: ItemResult;
+  /** The customer's last rate for each media id, if they bought it before. */
+  lastRates: Record<string, CustomerRate>;
   canRemove: boolean;
   onEnterLast: () => void;
   isLast: boolean;
@@ -43,6 +46,7 @@ export function ItemRow({
   mediaTypes,
   addOns,
   result,
+  lastRates,
   canRemove,
   onEnterLast,
   isLast,
@@ -59,8 +63,20 @@ export function ItemRow({
     .filter((m) => m.is_active || String(m.id) === item.media_type)
     .map((m) => ({
       value: String(m.id),
-      label: `${m.name} · Rs ${formatQty(m.rate_per_sqft)}/sq ft`,
+      label: `${m.name} · Rs ${formatQty(m.rate)}/${m.pricing_unit === 'piece' ? 'piece' : 'sq ft'}`,
     }));
+  const last = item.media_type ? lastRates[item.media_type] : undefined;
+  const perUnit = item.per_piece ? t('piece') : t('sq ft');
+  const rateSource = result?.rate_source;
+
+  const chooseMedia = (value: string | null) => {
+    const chosen = mediaTypes.find((m) => String(m.id) === value);
+    form.setFieldValue(path('media_type'), value);
+    form.setFieldValue(path('per_piece'), chosen?.pricing_unit === 'piece');
+    // A returning customer gets the rate they paid last time; staff can switch back.
+    const previous = value ? lastRates[value] : undefined;
+    form.setFieldValue(path('rate'), previous ? toNumber(previous.last_rate) : '');
+  };
 
   const activeAddOns = addOns.filter(
     (a) => a.is_active || item.addons.some((x) => x.addon === String(a.id)),
@@ -136,11 +152,12 @@ export function ItemRow({
             data={mediaOptions}
             searchable
             {...form.getInputProps(path('media_type'))}
+            onChange={chooseMedia}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 6, sm: 3, lg: 2 }}>
           <NumberInput
-            label={t('Width')}
+            label={item.per_piece ? t('Width (optional)') : t('Width')}
             min={0}
             decimalScale={2}
             {...form.getInputProps(path('width'))}
@@ -148,7 +165,7 @@ export function ItemRow({
         </Grid.Col>
         <Grid.Col span={{ base: 6, sm: 3, lg: 2 }}>
           <NumberInput
-            label={t('Height')}
+            label={item.per_piece ? t('Height (optional)') : t('Height')}
             min={0}
             decimalScale={2}
             {...form.getInputProps(path('height'))}
@@ -166,7 +183,57 @@ export function ItemRow({
           />
         </Grid.Col>
 
-        <Grid.Col span={12}>
+        <Grid.Col span={{ base: 12, sm: 5, lg: 4 }}>
+          <NumberInput
+            label={t('Rate per {{unit}}', { unit: perUnit })}
+            prefix="Rs. "
+            min={0}
+            decimalScale={2}
+            placeholder={media ? formatAmount(media.rate) : undefined}
+            description={
+              rateSource === 'previous'
+                ? t("Customer's last rate")
+                : rateSource === 'custom'
+                  ? t('Custom rate')
+                  : media
+                    ? t('Rate card')
+                    : undefined
+            }
+            inputWrapperOrder={['label', 'input', 'description', 'error']}
+            {...form.getInputProps(path('rate'))}
+          />
+          {media && (
+            <Group gap={6} mt={6}>
+              <Chip
+                size="xs"
+                variant="outline"
+                checked={rateSource === 'card' || item.rate === ''}
+                onChange={() => form.setFieldValue(path('rate'), '')}
+              >
+                {t('Card Rs {{rate}}', { rate: formatQty(result?.card_rate ?? media.rate) })}
+              </Chip>
+              {last && (
+                <Tooltip
+                  label={t('{{order}} on {{date}} BS · bought {{n}} times', {
+                    order: last.order_no,
+                    date: last.order_date_bs,
+                    n: last.times,
+                  })}
+                >
+                  <Chip
+                    size="xs"
+                    variant="outline"
+                    checked={rateSource === 'previous'}
+                    onChange={() => form.setFieldValue(path('rate'), toNumber(last.last_rate))}
+                  >
+                    {t('Last time Rs {{rate}}', { rate: formatQty(last.last_rate) })}
+                  </Chip>
+                </Tooltip>
+              )}
+            </Group>
+          )}
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 7, lg: 8 }}>
           <MultiSelect
             label={t('Add-ons')}
             placeholder={
@@ -245,12 +312,21 @@ export function ItemRow({
         {result ? (
           <Group justify="space-between" gap="xs" wrap="wrap">
             <Text size="sm" c="dimmed" className="num">
-              {formatQty(result.sqft)} sq ft
-              {result.quantity > 1
-                ? ` × ${result.quantity} = ${formatQty(result.total_sqft)} sq ft`
-                : ''}
-              {' · '}
-              {formatQty(result.total_billable_sqft)} × Rs {formatQty(result.rate)}
+              {result.pricing_unit === 'piece' ? (
+                <>
+                  {result.quantity} {result.quantity === 1 ? t('piece') : t('pieces')} × Rs{' '}
+                  {formatQty(result.rate)}
+                </>
+              ) : (
+                <>
+                  {formatQty(result.sqft)} sq ft
+                  {result.quantity > 1
+                    ? ` × ${result.quantity} = ${formatQty(result.total_sqft)} sq ft`
+                    : ''}
+                  {' · '}
+                  {formatQty(result.total_billable_sqft)} × Rs {formatQty(result.rate)}
+                </>
+              )}
               {toNumber(result.addons_amount) > 0
                 ? ` + add-ons ${formatAmount(result.addons_amount)}`
                 : ''}
@@ -261,7 +337,11 @@ export function ItemRow({
           </Group>
         ) : (
           <Text size="sm" c="dimmed">
-            {media ? t('Enter width and height to see the price.') : t('Choose a media to start.')}
+            {!media
+              ? t('Choose a media to start.')
+              : item.per_piece
+                ? t('Enter the quantity to see the price.')
+                : t('Enter width and height to see the price.')}
           </Text>
         )}
       </Box>

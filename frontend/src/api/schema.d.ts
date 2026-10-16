@@ -211,6 +211,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customers/{id}/rates/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The last rate this customer was charged for each item, beside today's rate card. */
+        get: operations["customers_rates_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customers/{id}/statement/": {
         parameters: {
             query?: never;
@@ -451,6 +468,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ledger/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The shop-wide customer ledger: every entry (day book) and per-customer balances. */
+        get: operations["ledger_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ledger/summary/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Opening balance, billed, received and closing balance per customer. */
+        get: operations["ledger_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/media-types/": {
         parameters: {
             query?: never;
@@ -458,10 +509,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Printable media on the rate card, priced per sq ft. */
+        /** @description Items on the rate card, priced per sq ft or per piece. */
         get: operations["media_types_list"];
         put?: never;
-        /** @description Printable media on the rate card, priced per sq ft. */
+        /** @description Items on the rate card, priced per sq ft or per piece. */
         post: operations["media_types_create"];
         delete?: never;
         options?: never;
@@ -476,16 +527,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Printable media on the rate card, priced per sq ft. */
+        /** @description Items on the rate card, priced per sq ft or per piece. */
         get: operations["media_types_retrieve"];
-        /** @description Printable media on the rate card, priced per sq ft. */
+        /** @description Items on the rate card, priced per sq ft or per piece. */
         put: operations["media_types_update"];
         post?: never;
-        /** @description Printable media on the rate card, priced per sq ft. */
+        /** @description Items on the rate card, priced per sq ft or per piece. */
         delete: operations["media_types_destroy"];
         options?: never;
         head?: never;
-        /** @description Printable media on the rate card, priced per sq ft. */
+        /** @description Items on the rate card, priced per sq ft or per piece. */
         patch: operations["media_types_partial_update"];
         trace?: never;
     };
@@ -1089,6 +1140,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/work-log/export/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Download orders as a work-log sheet (same columns as the shop's Excel file). */
+        get: operations["system_work_log_export_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/work-log/import/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Upload the shop's Excel work log: check it first (dry run), then import. */
+        post: operations["system_work_log_import_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/work-log/template/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description An empty work-log sheet with the expected column headers. */
+        get: operations["system_work_log_template_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users/": {
         parameters: {
             query?: never;
@@ -1169,6 +1271,23 @@ export interface paths {
         };
         /** @description Convert between AD and BS dates and report the fiscal year. */
         get: operations["utils_date_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/utils/periods/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Named periods for date pickers: this BS month, last month, this and last fiscal year. */
+        get: operations["utils_periods_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1793,6 +1912,11 @@ export interface components {
             reason: string;
             roll?: number | null;
         };
+        AgingBucket: {
+            label: string;
+            /** Format: decimal */
+            amount: string;
+        };
         AuthChangePasswordCreateCurrentPasswordErrorComponent: {
             /**
              * @description * `current_password` - current_password (enum property replaced by openapi-typescript)
@@ -1999,6 +2123,26 @@ export interface components {
             id: number;
             name: string;
             phone: string;
+        };
+        CustomerName: {
+            id: number;
+            name: string;
+        };
+        CustomerRate: {
+            media_type: number;
+            media_name: string;
+            pricing_unit: string;
+            /** Format: decimal */
+            last_rate: string;
+            /** Format: decimal */
+            card_rate: string | null;
+            order: number;
+            order_no: string;
+            /** Format: date */
+            order_date: string;
+            readonly order_date_bs: string;
+            /** @description Number of orders with this item */
+            times: number;
         };
         CustomerRef: {
             readonly id: number;
@@ -2461,6 +2605,29 @@ export interface components {
              */
             type: "validation_error";
             errors: components["schemas"]["CustomersPartialUpdateError"][];
+        };
+        CustomersRatesListCustomerTypeErrorComponent: {
+            /**
+             * @description * `customer_type` - customer_type (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "customer_type";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             * @enum {string}
+             */
+            code: "invalid_choice";
+            detail: string;
+        };
+        CustomersRatesListError: components["schemas"]["CustomersRatesListCustomerTypeErrorComponent"];
+        CustomersRatesListErrorResponse400: components["schemas"]["CustomersRatesListValidationError"] | components["schemas"]["ParseErrorResponse"];
+        CustomersRatesListValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["CustomersRatesListError"][];
         };
         CustomersRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         CustomersStatementRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
@@ -3089,6 +3256,10 @@ export interface components {
             min_sqft: string;
             /** Format: decimal */
             rate: string;
+            rate_source: string;
+            /** Format: decimal */
+            card_rate: string;
+            pricing_unit: string;
             quantity: number;
             /** Format: decimal */
             base_amount: string;
@@ -3672,6 +3843,139 @@ export interface components {
             amount: string;
             narration: string;
         };
+        /** @description One line of the shop-wide day book. */
+        LedgerEntry: {
+            id: number;
+            /** Format: date */
+            entry_date: string;
+            readonly entry_date_bs: string;
+            entry_type: string;
+            entry_type_label: string;
+            readonly customer: components["schemas"]["CustomerName"];
+            readonly reference: string;
+            invoice_id: number | null;
+            payment_id: number | null;
+            order_id: number | null;
+            narration: string;
+            /** Format: decimal */
+            debit: string;
+            /** Format: decimal */
+            credit: string;
+            created_by: components["schemas"]["UserRef"] | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        LedgerListCustomerErrorComponent: {
+            /**
+             * @description * `customer` - customer (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "customer";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             * @enum {string}
+             */
+            code: "invalid_choice";
+            detail: string;
+        };
+        LedgerListDateFromErrorComponent: {
+            /**
+             * @description * `date_from` - date_from (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "date_from";
+            /**
+             * @description * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "invalid";
+            detail: string;
+        };
+        LedgerListDateToErrorComponent: {
+            /**
+             * @description * `date_to` - date_to (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "date_to";
+            /**
+             * @description * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "invalid";
+            detail: string;
+        };
+        LedgerListEntryTypeErrorComponent: {
+            /**
+             * @description * `entry_type` - entry_type (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "entry_type";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `invalid_list` - invalid_list
+             * @enum {string}
+             */
+            code: "invalid_choice" | "invalid_list";
+            detail: string;
+        };
+        LedgerListError: components["schemas"]["LedgerListCustomerErrorComponent"] | components["schemas"]["LedgerListDateFromErrorComponent"] | components["schemas"]["LedgerListDateToErrorComponent"] | components["schemas"]["LedgerListEntryTypeErrorComponent"];
+        LedgerListErrorResponse400: components["schemas"]["LedgerListValidationError"] | components["schemas"]["ParseErrorResponse"];
+        LedgerListValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["LedgerListError"][];
+        };
+        LedgerSummary: {
+            /** Format: date */
+            date_from: string | null;
+            /** Format: date */
+            date_to: string;
+            rows: components["schemas"]["LedgerSummaryRow"][];
+            totals: components["schemas"]["LedgerSummaryTotals"];
+        };
+        LedgerSummaryRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        LedgerSummaryRow: {
+            customer_id: number;
+            customer_name: string;
+            phone: string;
+            address: string;
+            /** Format: decimal */
+            opening_balance: string;
+            /** Format: decimal */
+            debit: string;
+            /** Format: decimal */
+            credit: string;
+            /** Format: decimal */
+            closing_balance: string;
+            /** Format: date */
+            last_entry_date: string | null;
+            /** Format: date */
+            last_payment_date: string | null;
+        };
+        LedgerSummaryTotals: {
+            customers: number;
+            /** Format: decimal */
+            opening_balance: string;
+            /** Format: decimal */
+            debit: string;
+            /** Format: decimal */
+            credit: string;
+            /** Format: decimal */
+            closing_balance: string;
+            /**
+             * Format: decimal
+             * @description Sum of closing dues
+             */
+            receivable: string;
+            /**
+             * Format: decimal
+             * @description Sum of advances held
+             */
+            advances: string;
+        };
         LoginRequest: {
             username: string;
             password: string;
@@ -3714,8 +4018,13 @@ export interface components {
         MediaType: {
             readonly id: number;
             name: string;
-            /** Format: decimal */
-            rate_per_sqft: string;
+            pricing_unit: components["schemas"]["PricingUnitEnum"];
+            readonly pricing_unit_label: string;
+            /**
+             * Format: decimal
+             * @description Rate per sq ft, or per piece for per-piece items.
+             */
+            rate: string;
             /**
              * Minimum sq ft
              * Format: decimal
@@ -3733,8 +4042,12 @@ export interface components {
         };
         MediaTypeRequest: {
             name: string;
-            /** Format: decimal */
-            rate_per_sqft: string;
+            pricing_unit?: components["schemas"]["PricingUnitEnum"];
+            /**
+             * Format: decimal
+             * @description Rate per sq ft, or per piece for per-piece items.
+             */
+            rate: string;
             /**
              * Minimum sq ft
              * Format: decimal
@@ -3763,7 +4076,7 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
-        MediaTypesCreateError: components["schemas"]["MediaTypesCreateNonFieldErrorsErrorComponent"] | components["schemas"]["MediaTypesCreateNameErrorComponent"] | components["schemas"]["MediaTypesCreateRatePerSqftErrorComponent"] | components["schemas"]["MediaTypesCreateMinSqftErrorComponent"] | components["schemas"]["MediaTypesCreateMaterialErrorComponent"] | components["schemas"]["MediaTypesCreateDescriptionErrorComponent"] | components["schemas"]["MediaTypesCreateIsActiveErrorComponent"] | components["schemas"]["MediaTypesCreateSortOrderErrorComponent"];
+        MediaTypesCreateError: components["schemas"]["MediaTypesCreateNonFieldErrorsErrorComponent"] | components["schemas"]["MediaTypesCreateNameErrorComponent"] | components["schemas"]["MediaTypesCreatePricingUnitErrorComponent"] | components["schemas"]["MediaTypesCreateRateErrorComponent"] | components["schemas"]["MediaTypesCreateMinSqftErrorComponent"] | components["schemas"]["MediaTypesCreateMaterialErrorComponent"] | components["schemas"]["MediaTypesCreateDescriptionErrorComponent"] | components["schemas"]["MediaTypesCreateIsActiveErrorComponent"] | components["schemas"]["MediaTypesCreateSortOrderErrorComponent"];
         MediaTypesCreateErrorResponse400: components["schemas"]["MediaTypesCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         MediaTypesCreateIsActiveErrorComponent: {
             /**
@@ -3845,12 +4158,26 @@ export interface components {
             code: "invalid" | "null";
             detail: string;
         };
-        MediaTypesCreateRatePerSqftErrorComponent: {
+        MediaTypesCreatePricingUnitErrorComponent: {
             /**
-             * @description * `rate_per_sqft` - rate_per_sqft (enum property replaced by openapi-typescript)
+             * @description * `pricing_unit` - pricing_unit (enum property replaced by openapi-typescript)
              * @enum {string}
              */
-            attr: "rate_per_sqft";
+            attr: "pricing_unit";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null";
+            detail: string;
+        };
+        MediaTypesCreateRateErrorComponent: {
+            /**
+             * @description * `rate` - rate (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "rate";
             /**
              * @description * `invalid` - invalid
              *     * `max_decimal_places` - max_decimal_places
@@ -3928,7 +4255,7 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
-        MediaTypesPartialUpdateError: components["schemas"]["MediaTypesPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateNameErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateRatePerSqftErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateMinSqftErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateMaterialErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateDescriptionErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateIsActiveErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateSortOrderErrorComponent"];
+        MediaTypesPartialUpdateError: components["schemas"]["MediaTypesPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateNameErrorComponent"] | components["schemas"]["MediaTypesPartialUpdatePricingUnitErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateRateErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateMinSqftErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateMaterialErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateDescriptionErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateIsActiveErrorComponent"] | components["schemas"]["MediaTypesPartialUpdateSortOrderErrorComponent"];
         MediaTypesPartialUpdateErrorResponse400: components["schemas"]["MediaTypesPartialUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         MediaTypesPartialUpdateIsActiveErrorComponent: {
             /**
@@ -4010,12 +4337,26 @@ export interface components {
             code: "invalid" | "null";
             detail: string;
         };
-        MediaTypesPartialUpdateRatePerSqftErrorComponent: {
+        MediaTypesPartialUpdatePricingUnitErrorComponent: {
             /**
-             * @description * `rate_per_sqft` - rate_per_sqft (enum property replaced by openapi-typescript)
+             * @description * `pricing_unit` - pricing_unit (enum property replaced by openapi-typescript)
              * @enum {string}
              */
-            attr: "rate_per_sqft";
+            attr: "pricing_unit";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null";
+            detail: string;
+        };
+        MediaTypesPartialUpdateRateErrorComponent: {
+            /**
+             * @description * `rate` - rate (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "rate";
             /**
              * @description * `invalid` - invalid
              *     * `max_decimal_places` - max_decimal_places
@@ -4073,7 +4414,7 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
-        MediaTypesUpdateError: components["schemas"]["MediaTypesUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["MediaTypesUpdateNameErrorComponent"] | components["schemas"]["MediaTypesUpdateRatePerSqftErrorComponent"] | components["schemas"]["MediaTypesUpdateMinSqftErrorComponent"] | components["schemas"]["MediaTypesUpdateMaterialErrorComponent"] | components["schemas"]["MediaTypesUpdateDescriptionErrorComponent"] | components["schemas"]["MediaTypesUpdateIsActiveErrorComponent"] | components["schemas"]["MediaTypesUpdateSortOrderErrorComponent"];
+        MediaTypesUpdateError: components["schemas"]["MediaTypesUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["MediaTypesUpdateNameErrorComponent"] | components["schemas"]["MediaTypesUpdatePricingUnitErrorComponent"] | components["schemas"]["MediaTypesUpdateRateErrorComponent"] | components["schemas"]["MediaTypesUpdateMinSqftErrorComponent"] | components["schemas"]["MediaTypesUpdateMaterialErrorComponent"] | components["schemas"]["MediaTypesUpdateDescriptionErrorComponent"] | components["schemas"]["MediaTypesUpdateIsActiveErrorComponent"] | components["schemas"]["MediaTypesUpdateSortOrderErrorComponent"];
         MediaTypesUpdateErrorResponse400: components["schemas"]["MediaTypesUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         MediaTypesUpdateIsActiveErrorComponent: {
             /**
@@ -4155,12 +4496,26 @@ export interface components {
             code: "invalid" | "null";
             detail: string;
         };
-        MediaTypesUpdateRatePerSqftErrorComponent: {
+        MediaTypesUpdatePricingUnitErrorComponent: {
             /**
-             * @description * `rate_per_sqft` - rate_per_sqft (enum property replaced by openapi-typescript)
+             * @description * `pricing_unit` - pricing_unit (enum property replaced by openapi-typescript)
              * @enum {string}
              */
-            attr: "rate_per_sqft";
+            attr: "pricing_unit";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null";
+            detail: string;
+        };
+        MediaTypesUpdateRateErrorComponent: {
+            /**
+             * @description * `rate` - rate (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "rate";
             /**
              * @description * `invalid` - invalid
              *     * `max_decimal_places` - max_decimal_places
@@ -4239,6 +4594,12 @@ export interface components {
          * @enum {string}
          */
         MovementTypeEnum: "opening" | "purchase" | "consumption" | "wastage" | "adjustment";
+        NewItem: {
+            name: string;
+            pricing_unit: string;
+            /** Format: decimal */
+            rate: string;
+        };
         /** @enum {unknown} */
         NullEnum: null;
         /**
@@ -4270,6 +4631,8 @@ export interface components {
             readonly customer: components["schemas"]["CustomerRef"];
             status: components["schemas"]["OrderStatusEnum"];
             readonly status_label: string;
+            source: components["schemas"]["SourceEnum"];
+            readonly source_label: string;
             /** Format: date */
             order_date: string;
             readonly order_date_bs: string;
@@ -4331,11 +4694,13 @@ export interface components {
             media_type: number;
             media_name: string;
             description: string;
+            pricing_unit: components["schemas"]["PricingUnitEnum"];
             /** Format: decimal */
             width: string;
             /** Format: decimal */
             height: string;
             unit: components["schemas"]["UnitEnum"];
+            readonly has_size: boolean;
             readonly size_label: string;
             quantity: number;
             /** Format: decimal */
@@ -4359,6 +4724,13 @@ export interface components {
             readonly min_applied: boolean;
             /** Format: decimal */
             rate: string;
+            rate_source: components["schemas"]["RateSourceEnum"];
+            readonly rate_source_label: string;
+            /**
+             * Format: decimal
+             * @description Rate-card price when the line was entered, for comparison.
+             */
+            card_rate: string | null;
             /** Format: decimal */
             min_sqft: string;
             /** Format: decimal */
@@ -4399,14 +4771,26 @@ export interface components {
             media_type: number;
             /** @default  */
             description?: string;
-            /** Format: decimal */
-            width: string;
-            /** Format: decimal */
-            height: string;
+            /**
+             * Format: decimal
+             * @description Leave 0 for per-piece items without a size.
+             * @default 0.00
+             */
+            width?: string;
+            /**
+             * Format: decimal
+             * @default 0.00
+             */
+            height?: string;
             /** @default ft */
             unit?: components["schemas"]["UnitEnum"];
             /** @default 1 */
             quantity?: number;
+            /**
+             * Format: decimal
+             * @description Charge this rate instead of the rate card (e.g. the customer's last rate). Leave empty to use the rate card, or the rate the order was quoted at.
+             */
+            rate?: string | null;
             /** @default  */
             finishing?: string;
             /** @default  */
@@ -4419,6 +4803,8 @@ export interface components {
             readonly customer: components["schemas"]["CustomerRef"];
             status: components["schemas"]["OrderStatusEnum"];
             readonly status_label: string;
+            source: components["schemas"]["SourceEnum"];
+            readonly source_label: string;
             /** Format: date */
             order_date: string;
             readonly order_date_bs: string;
@@ -4607,7 +4993,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersCreateError: components["schemas"]["OrdersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateCustomerErrorComponent"] | components["schemas"]["OrdersCreateDeadlineErrorComponent"] | components["schemas"]["OrdersCreateIsUrgentErrorComponent"] | components["schemas"]["OrdersCreateNotesErrorComponent"] | components["schemas"]["OrdersCreateConfirmErrorComponent"];
+        OrdersCreateError: components["schemas"]["OrdersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateCustomerErrorComponent"] | components["schemas"]["OrdersCreateDeadlineErrorComponent"] | components["schemas"]["OrdersCreateIsUrgentErrorComponent"] | components["schemas"]["OrdersCreateNotesErrorComponent"] | components["schemas"]["OrdersCreateConfirmErrorComponent"];
         OrdersCreateErrorResponse400: components["schemas"]["OrdersCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersCreateIsUrgentErrorComponent: {
             /**
@@ -4751,10 +5137,9 @@ export interface components {
              *     * `max_whole_digits` - max_whole_digits
              *     * `min_value` - min_value
              *     * `null` - null
-             *     * `required` - required
              * @enum {string}
              */
-            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null" | "required";
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
         OrdersCreateItemsINDEXIdErrorComponent: {
@@ -4819,6 +5204,24 @@ export interface components {
             code: "invalid" | "max_string_length" | "max_value" | "min_value" | "null";
             detail: string;
         };
+        OrdersCreateItemsINDEXRateErrorComponent: {
+            /**
+             * @description * `items.INDEX.rate` - items.INDEX.rate (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.INDEX.rate";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value";
+            detail: string;
+        };
         OrdersCreateItemsINDEXUnitErrorComponent: {
             /**
              * @description * `items.INDEX.unit` - items.INDEX.unit (enum property replaced by openapi-typescript)
@@ -4847,10 +5250,9 @@ export interface components {
              *     * `max_whole_digits` - max_whole_digits
              *     * `min_value` - min_value
              *     * `null` - null
-             *     * `required` - required
              * @enum {string}
              */
-            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null" | "required";
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
         OrdersCreateItemsNonFieldErrorsErrorComponent: {
@@ -5223,6 +5625,20 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["OrdersListError"][];
         };
+        OrdersPricePreviewCreateCustomerErrorComponent: {
+            /**
+             * @description * `customer` - customer (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "customer";
+            /**
+             * @description * `does_not_exist` - does_not_exist
+             *     * `incorrect_type` - incorrect_type
+             * @enum {string}
+             */
+            code: "does_not_exist" | "incorrect_type";
+            detail: string;
+        };
         OrdersPricePreviewCreateDiscountTypeErrorComponent: {
             /**
              * @description * `discount_type` - discount_type (enum property replaced by openapi-typescript)
@@ -5256,7 +5672,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersPricePreviewCreateError: components["schemas"]["OrdersPricePreviewCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateOrderErrorComponent"];
+        OrdersPricePreviewCreateError: components["schemas"]["OrdersPricePreviewCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateCustomerErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateOrderErrorComponent"];
         OrdersPricePreviewCreateErrorResponse400: components["schemas"]["OrdersPricePreviewCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent: {
             /**
@@ -5386,10 +5802,9 @@ export interface components {
              *     * `max_whole_digits` - max_whole_digits
              *     * `min_value` - min_value
              *     * `null` - null
-             *     * `required` - required
              * @enum {string}
              */
-            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null" | "required";
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
         OrdersPricePreviewCreateItemsINDEXIdErrorComponent: {
@@ -5454,6 +5869,24 @@ export interface components {
             code: "invalid" | "max_string_length" | "max_value" | "min_value" | "null";
             detail: string;
         };
+        OrdersPricePreviewCreateItemsINDEXRateErrorComponent: {
+            /**
+             * @description * `items.INDEX.rate` - items.INDEX.rate (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.INDEX.rate";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value";
+            detail: string;
+        };
         OrdersPricePreviewCreateItemsINDEXUnitErrorComponent: {
             /**
              * @description * `items.INDEX.unit` - items.INDEX.unit (enum property replaced by openapi-typescript)
@@ -5482,10 +5915,9 @@ export interface components {
              *     * `max_whole_digits` - max_whole_digits
              *     * `min_value` - min_value
              *     * `null` - null
-             *     * `required` - required
              * @enum {string}
              */
-            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null" | "required";
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
         OrdersPricePreviewCreateItemsNonFieldErrorsErrorComponent: {
@@ -5620,7 +6052,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersUpdateError: components["schemas"]["OrdersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateDiscountTypeErrorComponent"] | components["schemas"]["OrdersUpdateDiscountValueErrorComponent"] | components["schemas"]["OrdersUpdateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateCustomerErrorComponent"] | components["schemas"]["OrdersUpdateDeadlineErrorComponent"] | components["schemas"]["OrdersUpdateIsUrgentErrorComponent"] | components["schemas"]["OrdersUpdateNotesErrorComponent"] | components["schemas"]["OrdersUpdateConfirmErrorComponent"];
+        OrdersUpdateError: components["schemas"]["OrdersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateDiscountTypeErrorComponent"] | components["schemas"]["OrdersUpdateDiscountValueErrorComponent"] | components["schemas"]["OrdersUpdateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateCustomerErrorComponent"] | components["schemas"]["OrdersUpdateDeadlineErrorComponent"] | components["schemas"]["OrdersUpdateIsUrgentErrorComponent"] | components["schemas"]["OrdersUpdateNotesErrorComponent"] | components["schemas"]["OrdersUpdateConfirmErrorComponent"];
         OrdersUpdateErrorResponse400: components["schemas"]["OrdersUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersUpdateIsUrgentErrorComponent: {
             /**
@@ -5764,10 +6196,9 @@ export interface components {
              *     * `max_whole_digits` - max_whole_digits
              *     * `min_value` - min_value
              *     * `null` - null
-             *     * `required` - required
              * @enum {string}
              */
-            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null" | "required";
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
         OrdersUpdateItemsINDEXIdErrorComponent: {
@@ -5832,6 +6263,24 @@ export interface components {
             code: "invalid" | "max_string_length" | "max_value" | "min_value" | "null";
             detail: string;
         };
+        OrdersUpdateItemsINDEXRateErrorComponent: {
+            /**
+             * @description * `items.INDEX.rate` - items.INDEX.rate (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.INDEX.rate";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value";
+            detail: string;
+        };
         OrdersUpdateItemsINDEXUnitErrorComponent: {
             /**
              * @description * `items.INDEX.unit` - items.INDEX.unit (enum property replaced by openapi-typescript)
@@ -5860,10 +6309,9 @@ export interface components {
              *     * `max_whole_digits` - max_whole_digits
              *     * `min_value` - min_value
              *     * `null` - null
-             *     * `required` - required
              * @enum {string}
              */
-            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null" | "required";
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
         OrdersUpdateItemsNonFieldErrorsErrorComponent: {
@@ -5964,6 +6412,21 @@ export interface components {
             previous: string | null;
             results: components["schemas"]["Customer"][];
         };
+        PaginatedCustomerRateList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["CustomerRate"][];
+        };
         PaginatedInvoiceListList: {
             /** @example 123 */
             count: number;
@@ -5993,6 +6456,21 @@ export interface components {
              */
             previous: string | null;
             results: components["schemas"]["Job"][];
+        };
+        PaginatedLedgerEntryList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["LedgerEntry"][];
         };
         PaginatedOrderListList: {
             /** @example 123 */
@@ -6144,8 +6622,12 @@ export interface components {
         };
         PatchedMediaTypeRequest: {
             name?: string;
-            /** Format: decimal */
-            rate_per_sqft?: string;
+            pricing_unit?: components["schemas"]["PricingUnitEnum"];
+            /**
+             * Format: decimal
+             * @description Rate per sq ft, or per piece for per-piece items.
+             */
+            rate?: string;
             /**
              * Minimum sq ft
              * Format: decimal
@@ -6648,6 +7130,14 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["PaymentsVoidCreateError"][];
         };
+        Period: {
+            key: string;
+            label: string;
+            /** Format: date */
+            date_from: string;
+            /** Format: date */
+            date_to: string;
+        };
         PricePreview: {
             items: components["schemas"]["ItemResult"][];
             totals: components["schemas"]["Totals"];
@@ -6666,9 +7156,17 @@ export interface components {
              */
             discount_value?: string;
             items: components["schemas"]["OrderItemWriteRequest"][];
+            /** @description Lets the calculator recognise the customer's last rates. */
+            customer?: number | null;
             /** @description When editing, keeps the rates the order was quoted at. */
             order?: number | null;
         };
+        /**
+         * @description * `sqft` - Per sq ft
+         *     * `piece` - Per piece
+         * @enum {string}
+         */
+        PricingUnitEnum: "sqft" | "piece";
         /**
          * @description * `0` - Normal
          *     * `1` - Urgent
@@ -6998,6 +7496,13 @@ export interface components {
             min_sqft: string | null;
             is_active: boolean;
         };
+        /**
+         * @description * `card` - Rate card
+         *     * `previous` - Customer's last rate
+         *     * `custom` - Custom rate
+         * @enum {string}
+         */
+        RateSourceEnum: "card" | "previous" | "custom";
         /** @description A short reason, required for cancellations, voids and adjustments. */
         ReasonRequest: {
             reason: string;
@@ -7137,6 +7642,10 @@ export interface components {
             errors: components["schemas"]["RollsListError"][];
         };
         RollsRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        RowMessage: {
+            row: number;
+            message: string;
+        };
         /**
          * @description * `server_error` - Server Error
          * @enum {string}
@@ -7635,6 +8144,12 @@ export interface components {
             /** Format: date-time */
             readonly updated_at: string;
         };
+        /**
+         * @description * `counter` - Entered in ChhapaKhata
+         *     * `import` - Imported work log
+         * @enum {string}
+         */
+        SourceEnum: "counter" | "import";
         Statement: {
             customer_id: number;
             customer_name: string;
@@ -7651,6 +8166,14 @@ export interface components {
             total_credit: string;
             /** Format: decimal */
             closing_balance: string;
+            by_type: components["schemas"]["StatementTypeTotal"][];
+            /** @description How old the closing due is (oldest invoices paid first). */
+            aging: components["schemas"]["StatementAging"] | null;
+        };
+        StatementAging: {
+            /** Format: date */
+            oldest_due_date: string | null;
+            buckets: components["schemas"]["AgingBucket"][];
         };
         StatementEntry: {
             id: number;
@@ -7660,6 +8183,9 @@ export interface components {
             entry_type: string;
             entry_type_label: string;
             reference: string;
+            invoice_id: number | null;
+            payment_id: number | null;
+            order_id: number | null;
             narration: string;
             /** Format: decimal */
             debit: string;
@@ -7667,6 +8193,15 @@ export interface components {
             credit: string;
             /** Format: decimal */
             balance: string;
+        };
+        StatementTypeTotal: {
+            entry_type: string;
+            label: string;
+            count: number;
+            /** Format: decimal */
+            debit: string;
+            /** Format: decimal */
+            credit: string;
         };
         StockItem: {
             readonly id: number;
@@ -8956,6 +9491,9 @@ export interface components {
         SystemBackupsRunCreateErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemBackupsStatusRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemExportRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        SystemWorkLogExportRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        SystemWorkLogImportCreateErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        SystemWorkLogTemplateRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         Totals: {
             /** Format: decimal */
             subtotal: string;
@@ -9661,6 +10199,7 @@ export interface components {
             errors: components["schemas"]["UsersUpdateError"][];
         };
         UtilsDateRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        UtilsPeriodsListErrorResponse400: components["schemas"]["ParseErrorResponse"];
         /**
          * @description * `validation_error` - Validation Error
          * @enum {string}
@@ -9674,6 +10213,61 @@ export interface components {
          * @enum {string}
          */
         WalletEnum: "esewa" | "khalti" | "fonepay" | "other_qr";
+        WorkLogImportResult: {
+            /** @description True when nothing was saved */
+            dry_run: boolean;
+            file_name: string;
+            header_row: number;
+            columns: {
+                [key: string]: string;
+            };
+            rows_read: number;
+            rows_imported: number;
+            rows_skipped_duplicate: number;
+            rows_skipped_error: number;
+            rows_already_in_system: number;
+            orders: number;
+            payments: number;
+            new_customers: string[];
+            matched_customers: number;
+            new_items: components["schemas"]["NewItem"][];
+            totals: components["schemas"]["WorkLogTotals"];
+            /** Format: date */
+            date_from: string | null;
+            /** Format: date */
+            date_to: string | null;
+            errors: components["schemas"]["RowMessage"][];
+            warnings: components["schemas"]["RowMessage"][];
+        };
+        WorkLogTotals: {
+            /** Format: decimal */
+            amount: string;
+            /** Format: decimal */
+            discount: string;
+            /** Format: decimal */
+            vat: string;
+            /** Format: decimal */
+            paid: string;
+            /** Format: decimal */
+            balance: string;
+        };
+        WorkLogUploadRequest: {
+            /**
+             * Format: binary
+             * @description The work log as .xlsx or .csv
+             */
+            file: string;
+            /**
+             * @description Check the file and show what would be imported, without saving.
+             * @default true
+             */
+            dry_run?: boolean;
+            /**
+             * @description Import the valid rows and leave out rows with errors.
+             * @default false
+             */
+            skip_errors?: boolean;
+        };
     };
     responses: never;
     parameters: never;
@@ -11356,6 +11950,108 @@ export interface operations {
             };
         };
     };
+    customers_rates_list: {
+        parameters: {
+            query?: {
+                /**
+                 * @description * `individual` - Individual
+                 *     * `business` - Business / Organisation
+                 */
+                customer_type?: "business" | "individual";
+                has_due?: boolean;
+                is_active?: boolean;
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this customer. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedCustomerRateList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomersRatesListErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
     customers_statement_retrieve: {
         parameters: {
             query?: {
@@ -12737,6 +13433,203 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobsBoardRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    ledger_list: {
+        parameters: {
+            query?: {
+                customer?: number;
+                date_from?: string;
+                date_to?: string;
+                /**
+                 * @description * `opening` - Opening balance
+                 *     * `invoice` - Invoice
+                 *     * `invoice_cancel` - Invoice cancelled
+                 *     * `payment` - Payment received
+                 *     * `payment_void` - Payment voided
+                 *     * `adjustment` - Adjustment
+                 *     * `imported_work` - Work (imported)
+                 */
+                entry_type?: ("adjustment" | "imported_work" | "invoice" | "invoice_cancel" | "opening" | "payment" | "payment_void")[];
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedLedgerEntryList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerListErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    ledger_summary_retrieve: {
+        parameters: {
+            query?: {
+                balance?: "advance" | "due" | "settled";
+                export?: "json" | "pdf" | "xlsx";
+                /** @description Start date (AD, YYYY-MM-DD) */
+                from?: string;
+                /** @description Customer name or phone */
+                search?: string;
+                /** @description End date (AD, YYYY-MM-DD) */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerSummary"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerSummaryRetrieveErrorResponse400"];
                 };
             };
             401: {
@@ -17593,6 +18486,264 @@ export interface operations {
             };
         };
     };
+    system_work_log_export_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Start date (AD, YYYY-MM-DD) */
+                from?: string;
+                /** @description End date (AD, YYYY-MM-DD) */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemWorkLogExportRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    system_work_log_import_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["WorkLogUploadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkLogImportResult"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemWorkLogImportCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    system_work_log_template_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemWorkLogTemplateRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
     users_list: {
         parameters: {
             query?: {
@@ -18265,6 +19416,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UtilsDateRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    utils_periods_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Period"][];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UtilsPeriodsListErrorResponse400"];
                 };
             };
             401: {

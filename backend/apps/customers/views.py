@@ -9,11 +9,14 @@ from rest_framework.response import Response
 
 from apps.billing import services as billing_services
 from apps.billing.selectors import balance_subquery, customer_statement
+from apps.catalog.models import MediaType
 from apps.core.activity import log_activity
 from apps.core.dates import local_today
 from apps.core.documents import pdf_response, render_pdf, xlsx_response
 from apps.core.params import output_format, parse_range
 from apps.core.permissions import Perm
+from apps.orders.selectors import last_rates_for
+from apps.orders.serializers import CustomerRateSerializer
 from apps.reports.exporters import report_to_xlsx
 from apps.reports.tables import Column, Metric, Report, Table, period_label
 
@@ -62,6 +65,7 @@ class CustomerViewSet(
         "partial_update": Perm.CUSTOMERS_MANAGE,
         "statement": Perm.LEDGER_VIEW,
         "adjust_balance": Perm.LEDGER_MANAGE,
+        "rates": Perm.ORDERS_VIEW,
     }
 
     def get_queryset(self):
@@ -146,6 +150,17 @@ class CustomerViewSet(
             )
             return xlsx_response(report_to_xlsx(report), f"statement-{customer.name}")
         return Response(StatementSerializer(data).data)
+
+    @extend_schema(responses=CustomerRateSerializer(many=True))
+    @action(detail=True, methods=["get"])
+    def rates(self, request, pk=None):
+        """The last rate this customer was charged for each item, beside today's rate card."""
+        customer = self.get_object()
+        last = last_rates_for(customer)
+        card = dict(MediaType.objects.filter(pk__in=last).values_list("pk", "rate"))
+        rows = sorted(last.values(), key=lambda r: r.order_date, reverse=True)
+        data = [{**r.__dict__, "card_rate": card.get(r.media_type_id)} for r in rows]
+        return Response(CustomerRateSerializer(data, many=True).data)
 
     @extend_schema(request=LedgerAdjustmentSerializer, responses=CustomerSerializer)
     @action(detail=True, methods=["post"], url_path="adjust-balance")

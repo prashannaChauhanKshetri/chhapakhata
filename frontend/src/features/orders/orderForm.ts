@@ -13,6 +13,10 @@ export interface ItemValue {
   key: string;
   id: number | null;
   media_type: string | null;
+  /** Priced per piece: size optional, no minimum. Copied from the media when chosen. */
+  per_piece: boolean;
+  /** Empty = rate card (or the rate the order was quoted at). */
+  rate: number | string;
   description: string;
   width: number | string;
   height: number | string;
@@ -43,6 +47,8 @@ export function emptyItem(
     key: newKey(),
     id: null,
     media_type: mediaType,
+    per_piece: false,
+    rate: '',
     description: '',
     width: '',
     height: '',
@@ -80,9 +86,11 @@ export function initialValues(order?: OrderDetail): OrderFormValues {
       key: newKey(),
       id: item.id,
       media_type: String(item.media_type),
+      per_piece: item.pricing_unit === 'piece',
+      rate: toNumber(item.rate),
       description: item.description ?? '',
-      width: toNumber(item.width),
-      height: toNumber(item.height),
+      width: item.has_size ? toNumber(item.width) : '',
+      height: item.has_size ? toNumber(item.height) : '',
       unit: item.unit as ItemValue['unit'],
       quantity: item.quantity,
       finishing: item.finishing ?? '',
@@ -93,12 +101,9 @@ export function initialValues(order?: OrderDetail): OrderFormValues {
 }
 
 export function isItemComplete(item: ItemValue): boolean {
-  return (
-    !!item.media_type &&
-    toNumber(item.width) > 0 &&
-    toNumber(item.height) > 0 &&
-    toNumber(item.quantity) >= 1
-  );
+  const sized = toNumber(item.width) > 0 && toNumber(item.height) > 0;
+  const noSize = toNumber(item.width) === 0 && toNumber(item.height) === 0;
+  return !!item.media_type && (sized || (item.per_piece && noSize)) && toNumber(item.quantity) >= 1;
 }
 
 export function itemPayload(item: ItemValue): OrderItemWrite {
@@ -106,10 +111,11 @@ export function itemPayload(item: ItemValue): OrderItemWrite {
     id: item.id,
     media_type: Number(item.media_type),
     description: item.description.trim(),
-    width: String(item.width),
-    height: String(item.height),
+    width: String(toNumber(item.width)),
+    height: String(toNumber(item.height)),
     unit: item.unit,
     quantity: Math.max(1, Math.round(toNumber(item.quantity))),
+    rate: item.rate === '' ? null : String(toNumber(item.rate)),
     finishing: item.finishing.trim(),
     design_file_ref: item.design_file_ref.trim(),
     addons: item.addons.map((a) => ({

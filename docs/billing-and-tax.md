@@ -19,11 +19,21 @@ Receipts are numbered per fiscal year (`RCT-2083/84-0001`) and print as A5 or 3-
 
 ## Customer ledger
 
-Append-only entries: opening balance, invoice (debit), invoice cancelled (credit), payment (credit), payment voided (debit), owner adjustment. **Balance = Σdebit − Σcredit**; positive means the customer owes, negative is an advance held.
+Append-only entries: opening balance, invoice (debit), invoice cancelled (credit), work imported from the old Excel log (debit, no invoice), payment (credit), payment voided (debit), owner adjustment. **Balance = Σdebit − Σcredit**; positive (**Dr**) means the customer owes, negative (**Cr**) is an advance held.
+
+Where to see it:
+
+- **Customer → Statement:** a period picker in the Nepali calendar (this BS month, last month, this or last fiscal year, all time, custom dates). It shows the opening balance (brought forward), billed (Dr), received (Cr) and closing balance (carried forward), with a running Dr/Cr balance, totals by entry type and the age of what is still due. References link to the invoice or order. Print (PDF) or Excel.
+- **Ledger → Customer balances:** every customer's opening, billed, received and closing balance for a period, with filters for due, advance or settled, the last payment date, and totals (receivable and advances held). Print or Excel. API: `GET /api/v1/ledger/summary/`.
+- **Ledger → Day book:** every ledger entry for all customers, newest first, filterable by period, type and customer. API: `GET /api/v1/ledger/`.
 
 Work that is confirmed but not yet invoiced is not in the ledger. The customer page shows it separately ("Plus Rs … on orders not yet invoiced"). The deliver dialog issues the invoice by default, so delivered work is always billed.
 
 Pending dues are aged first-in-first-out: payments clear the oldest debits first, then the remainder is bucketed into 0–30, 31–60, 61–90 and 90+ days.
+
+## Imported work log
+
+The shop's old Excel work log can be imported (Settings → Import & export). Imported rows become delivered orders marked **Imported**. Each order is charged to the ledger as "Work (imported)" **without an invoice**, so no invoice numbers are used and the invoice sequence stays unbroken. The Payment column becomes receipts dated that day. Invoice-based reports (VAT, invoiced sales) therefore exclude imported history, while collections and dues include it.
 
 ## IRD notes (confirm with the client's auditor)
 

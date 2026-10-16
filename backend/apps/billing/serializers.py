@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.core.serializers import BSDateField, UserRefSerializer
@@ -157,3 +158,71 @@ class PaymentCreateSerializer(serializers.Serializer):
     cheque_date = serializers.DateField(required=False, allow_null=True)
     payment_date = serializers.DateField(required=False, allow_null=True)
     notes = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+
+class CustomerNameSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class LedgerEntrySerializer(serializers.Serializer):
+    """One line of the shop-wide day book."""
+
+    id = serializers.IntegerField()
+    entry_date = serializers.DateField()
+    entry_date_bs = BSDateField(source="entry_date")
+    entry_type = serializers.CharField()
+    entry_type_label = serializers.CharField(source="get_entry_type_display")
+    customer = serializers.SerializerMethodField()
+    reference = serializers.SerializerMethodField()
+    invoice_id = serializers.IntegerField(allow_null=True)
+    payment_id = serializers.IntegerField(allow_null=True)
+    order_id = serializers.IntegerField(allow_null=True)
+    narration = serializers.CharField()
+    debit = serializers.DecimalField(**MONEY)
+    credit = serializers.DecimalField(**MONEY)
+    created_by = UserRefSerializer(allow_null=True)
+    created_at = serializers.DateTimeField()
+
+    @extend_schema_field(CustomerNameSerializer)
+    def get_customer(self, obj) -> dict:
+        return {"id": obj.customer_id, "name": obj.customer.name}
+
+    def get_reference(self, obj) -> str:
+        if obj.invoice_id:
+            return obj.invoice.invoice_no
+        if obj.payment_id:
+            return obj.payment.receipt_no
+        if obj.order_id:
+            return obj.order.order_no
+        return ""
+
+
+class LedgerSummaryRowSerializer(serializers.Serializer):
+    customer_id = serializers.IntegerField()
+    customer_name = serializers.CharField()
+    phone = serializers.CharField()
+    address = serializers.CharField()
+    opening_balance = serializers.DecimalField(**MONEY)
+    debit = serializers.DecimalField(**MONEY)
+    credit = serializers.DecimalField(**MONEY)
+    closing_balance = serializers.DecimalField(**MONEY)
+    last_entry_date = serializers.DateField(allow_null=True)
+    last_payment_date = serializers.DateField(allow_null=True)
+
+
+class LedgerSummaryTotalsSerializer(serializers.Serializer):
+    customers = serializers.IntegerField()
+    opening_balance = serializers.DecimalField(**MONEY)
+    debit = serializers.DecimalField(**MONEY)
+    credit = serializers.DecimalField(**MONEY)
+    closing_balance = serializers.DecimalField(**MONEY)
+    receivable = serializers.DecimalField(**MONEY, help_text="Sum of closing dues")
+    advances = serializers.DecimalField(**MONEY, help_text="Sum of advances held")
+
+
+class LedgerSummarySerializer(serializers.Serializer):
+    date_from = serializers.DateField(allow_null=True)
+    date_to = serializers.DateField()
+    rows = LedgerSummaryRowSerializer(many=True)
+    totals = LedgerSummaryTotalsSerializer()

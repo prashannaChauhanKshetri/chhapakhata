@@ -2627,6 +2627,182 @@ paths:
               schema:
                 $ref: '#/components/schemas/Customer'
           description: ''
+  /api/v1/customers/{id}/rates/:
+    get:
+      operationId: customers_rates_list
+      description: The last rate this customer was charged for each item, beside today's
+        rate card.
+      parameters:
+      - in: query
+        name: customer_type
+        schema:
+          type: string
+          enum:
+          - business
+          - individual
+        description: |-
+          * `individual` - Individual
+          * `business` - Business / Organisation
+      - in: query
+        name: has_due
+        schema:
+          type: boolean
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this customer.
+        required: true
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - customers
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomersRatesListErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCustomerRateList'
+          description: ''
   /api/v1/customers/{id}/statement/:
     get:
       operationId: customers_statement_retrieve
@@ -4933,10 +5109,358 @@ paths:
               schema:
                 $ref: '#/components/schemas/Board'
           description: ''
+  /api/v1/ledger/:
+    get:
+      operationId: ledger_list
+      description: 'The shop-wide customer ledger: every entry (day book) and per-customer
+        balances.'
+      parameters:
+      - in: query
+        name: customer
+        schema:
+          type: integer
+      - in: query
+        name: date_from
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: date_to
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: entry_type
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - adjustment
+            - imported_work
+            - invoice
+            - invoice_cancel
+            - opening
+            - payment
+            - payment_void
+        description: |-
+          * `opening` - Opening balance
+          * `invoice` - Invoice
+          * `invoice_cancel` - Invoice cancelled
+          * `payment` - Payment received
+          * `payment_void` - Payment voided
+          * `adjustment` - Adjustment
+          * `imported_work` - Work (imported)
+        explode: true
+        style: form
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - ledger
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerListErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedLedgerEntryList'
+          description: ''
+  /api/v1/ledger/summary/:
+    get:
+      operationId: ledger_summary_retrieve
+      description: Opening balance, billed, received and closing balance per customer.
+      parameters:
+      - in: query
+        name: balance
+        schema:
+          type: string
+          enum:
+          - advance
+          - due
+          - settled
+      - in: query
+        name: export
+        schema:
+          type: string
+          enum:
+          - json
+          - pdf
+          - xlsx
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: Start date (AD, YYYY-MM-DD)
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Customer name or phone
+      - in: query
+        name: to
+        schema:
+          type: string
+        description: End date (AD, YYYY-MM-DD)
+      tags:
+      - ledger
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerSummaryRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerSummary'
+          description: ''
   /api/v1/media-types/:
     get:
       operationId: media_types_list
-      description: Printable media on the rate card, priced per sq ft.
+      description: Items on the rate card, priced per sq ft or per piece.
       parameters:
       - in: query
         name: is_active
@@ -5080,7 +5604,7 @@ paths:
           description: ''
     post:
       operationId: media_types_create
-      description: Printable media on the rate card, priced per sq ft.
+      description: Items on the rate card, priced per sq ft or per piece.
       tags:
       - media-types
       requestBody:
@@ -5218,7 +5742,7 @@ paths:
   /api/v1/media-types/{id}/:
     get:
       operationId: media_types_retrieve
-      description: Printable media on the rate card, priced per sq ft.
+      description: Items on the rate card, priced per sq ft or per piece.
       parameters:
       - in: path
         name: id
@@ -5350,7 +5874,7 @@ paths:
           description: ''
     put:
       operationId: media_types_update
-      description: Printable media on the rate card, priced per sq ft.
+      description: Items on the rate card, priced per sq ft or per piece.
       parameters:
       - in: path
         name: id
@@ -5494,7 +6018,7 @@ paths:
           description: ''
     patch:
       operationId: media_types_partial_update
-      description: Printable media on the rate card, priced per sq ft.
+      description: Items on the rate card, priced per sq ft or per piece.
       parameters:
       - in: path
         name: id
@@ -5637,7 +6161,7 @@ paths:
           description: ''
     delete:
       operationId: media_types_destroy
-      description: Printable media on the rate card, priced per sq ft.
+      description: Items on the rate card, priced per sq ft or per piece.
       parameters:
       - in: path
         name: id
@@ -12537,6 +13061,405 @@ paths:
                 type: string
                 format: binary
           description: ''
+  /api/v1/system/work-log/export/:
+    get:
+      operationId: system_work_log_export_retrieve
+      description: Download orders as a work-log sheet (same columns as the shop's
+        Excel file).
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: Start date (AD, YYYY-MM-DD)
+      - in: query
+        name: to
+        schema:
+          type: string
+        description: End date (AD, YYYY-MM-DD)
+      tags:
+      - system
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemWorkLogExportRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/system/work-log/import/:
+    post:
+      operationId: system_work_log_import_create
+      description: 'Upload the shop''s Excel work log: check it first (dry run), then
+        import.'
+      tags:
+      - system
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkLogUploadRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemWorkLogImportCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkLogImportResult'
+          description: ''
+  /api/v1/system/work-log/template/:
+    get:
+      operationId: system_work_log_template_retrieve
+      description: An empty work-log sheet with the expected column headers.
+      tags:
+      - system
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemWorkLogTemplateRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/v1/users/:
     get:
       operationId: users_list
@@ -13701,6 +14624,135 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DateConversion'
+          description: ''
+  /api/v1/utils/periods/:
+    get:
+      operationId: utils_periods_list
+      description: 'Named periods for date pickers: this BS month, last month, this
+        and last fiscal year.'
+      tags:
+      - utils
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilsPeriodsListErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Period'
           description: ''
 components:
   schemas:
@@ -14896,6 +15948,18 @@ components:
       required:
       - counted_quantity
       - reason
+    AgingBucket:
+      type: object
+      properties:
+        label:
+          type: string
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - label
     AuthChangePasswordCreateCurrentPasswordErrorComponent:
       type: object
       properties:
@@ -15374,6 +16438,58 @@ components:
       - id
       - name
       - phone
+    CustomerName:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    CustomerRate:
+      type: object
+      properties:
+        media_type:
+          type: integer
+        media_name:
+          type: string
+        pricing_unit:
+          type: string
+        last_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        card_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        order:
+          type: integer
+        order_no:
+          type: string
+        order_date:
+          type: string
+          format: date
+        order_date_bs:
+          type: string
+          readOnly: true
+        times:
+          type: integer
+          description: Number of orders with this item
+      required:
+      - card_rate
+      - last_rate
+      - media_name
+      - media_type
+      - order
+      - order_date
+      - order_date_bs
+      - order_no
+      - pricing_unit
+      - times
     CustomerRef:
       type: object
       properties:
@@ -16249,6 +17365,53 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CustomersPartialUpdateError'
+      required:
+      - errors
+      - type
+    CustomersRatesListCustomerTypeErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - customer_type
+          type: string
+          description: '* `customer_type` - customer_type'
+        code:
+          enum:
+          - invalid_choice
+          type: string
+          description: '* `invalid_choice` - invalid_choice'
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    CustomersRatesListError:
+      oneOf:
+      - $ref: '#/components/schemas/CustomersRatesListCustomerTypeErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          customer_type: '#/components/schemas/CustomersRatesListCustomerTypeErrorComponent'
+    CustomersRatesListErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/CustomersRatesListValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/CustomersRatesListValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    CustomersRatesListValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomersRatesListError'
       required:
       - errors
       - type
@@ -17590,6 +18753,14 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        rate_source:
+          type: string
+        card_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        pricing_unit:
+          type: string
         quantity:
           type: integer
         base_amount:
@@ -17613,12 +18784,15 @@ components:
       - addons_amount
       - base_amount
       - billable_sqft
+      - card_rate
       - height_ft
       - line_total
       - min_applied
       - min_sqft
+      - pricing_unit
       - quantity
       - rate
+      - rate_source
       - sqft
       - total_billable_sqft
       - total_sqft
@@ -18847,6 +20021,297 @@ components:
       required:
       - amount
       - narration
+    LedgerEntry:
+      type: object
+      description: One line of the shop-wide day book.
+      properties:
+        id:
+          type: integer
+        entry_date:
+          type: string
+          format: date
+        entry_date_bs:
+          type: string
+          readOnly: true
+        entry_type:
+          type: string
+        entry_type_label:
+          type: string
+        customer:
+          allOf:
+          - $ref: '#/components/schemas/CustomerName'
+          readOnly: true
+        reference:
+          type: string
+          readOnly: true
+        invoice_id:
+          type: integer
+          nullable: true
+        payment_id:
+          type: integer
+          nullable: true
+        order_id:
+          type: integer
+          nullable: true
+        narration:
+          type: string
+        debit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        credit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/UserRef'
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - created_by
+      - credit
+      - customer
+      - debit
+      - entry_date
+      - entry_date_bs
+      - entry_type
+      - entry_type_label
+      - id
+      - invoice_id
+      - narration
+      - order_id
+      - payment_id
+      - reference
+    LedgerListCustomerErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - customer
+          type: string
+          description: '* `customer` - customer'
+        code:
+          enum:
+          - invalid_choice
+          type: string
+          description: '* `invalid_choice` - invalid_choice'
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    LedgerListDateFromErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - date_from
+          type: string
+          description: '* `date_from` - date_from'
+        code:
+          enum:
+          - invalid
+          type: string
+          description: '* `invalid` - invalid'
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    LedgerListDateToErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - date_to
+          type: string
+          description: '* `date_to` - date_to'
+        code:
+          enum:
+          - invalid
+          type: string
+          description: '* `invalid` - invalid'
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    LedgerListEntryTypeErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - entry_type
+          type: string
+          description: '* `entry_type` - entry_type'
+        code:
+          enum:
+          - invalid_choice
+          - invalid_list
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `invalid_list` - invalid_list
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    LedgerListError:
+      oneOf:
+      - $ref: '#/components/schemas/LedgerListCustomerErrorComponent'
+      - $ref: '#/components/schemas/LedgerListDateFromErrorComponent'
+      - $ref: '#/components/schemas/LedgerListDateToErrorComponent'
+      - $ref: '#/components/schemas/LedgerListEntryTypeErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          customer: '#/components/schemas/LedgerListCustomerErrorComponent'
+          date_from: '#/components/schemas/LedgerListDateFromErrorComponent'
+          date_to: '#/components/schemas/LedgerListDateToErrorComponent'
+          entry_type: '#/components/schemas/LedgerListEntryTypeErrorComponent'
+    LedgerListErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/LedgerListValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/LedgerListValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    LedgerListValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerListError'
+      required:
+      - errors
+      - type
+    LedgerSummary:
+      type: object
+      properties:
+        date_from:
+          type: string
+          format: date
+          nullable: true
+        date_to:
+          type: string
+          format: date
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerSummaryRow'
+        totals:
+          $ref: '#/components/schemas/LedgerSummaryTotals'
+      required:
+      - date_from
+      - date_to
+      - rows
+      - totals
+    LedgerSummaryRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    LedgerSummaryRow:
+      type: object
+      properties:
+        customer_id:
+          type: integer
+        customer_name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        opening_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        debit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        credit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        closing_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        last_entry_date:
+          type: string
+          format: date
+          nullable: true
+        last_payment_date:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - address
+      - closing_balance
+      - credit
+      - customer_id
+      - customer_name
+      - debit
+      - last_entry_date
+      - last_payment_date
+      - opening_balance
+      - phone
+    LedgerSummaryTotals:
+      type: object
+      properties:
+        customers:
+          type: integer
+        opening_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        debit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        credit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        closing_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        receivable:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          description: Sum of closing dues
+        advances:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          description: Sum of advances held
+      required:
+      - advances
+      - closing_balance
+      - credit
+      - customers
+      - debit
+      - opening_balance
+      - receivable
     LoginRequest:
       type: object
       properties:
@@ -18974,10 +20439,16 @@ components:
         name:
           type: string
           maxLength: 80
-        rate_per_sqft:
+        pricing_unit:
+          $ref: '#/components/schemas/PricingUnitEnum'
+        pricing_unit_label:
+          type: string
+          readOnly: true
+        rate:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Rate per sq ft, or per piece for per-piece items.
         min_sqft:
           type: string
           format: decimal
@@ -19016,7 +20487,9 @@ components:
       - material_name
       - min_sqft
       - name
-      - rate_per_sqft
+      - pricing_unit
+      - pricing_unit_label
+      - rate
       - sort_order
       - updated_at
     MediaTypeRequest:
@@ -19026,10 +20499,13 @@ components:
           type: string
           minLength: 1
           maxLength: 80
-        rate_per_sqft:
+        pricing_unit:
+          $ref: '#/components/schemas/PricingUnitEnum'
+        rate:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Rate per sq ft, or per piece for per-piece items.
         min_sqft:
           type: string
           format: decimal
@@ -19051,7 +20527,7 @@ components:
           minimum: 0
       required:
       - name
-      - rate_per_sqft
+      - rate
     MediaTypesCreateDescriptionErrorComponent:
       type: object
       properties:
@@ -19084,7 +20560,8 @@ components:
       oneOf:
       - $ref: '#/components/schemas/MediaTypesCreateNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/MediaTypesCreateNameErrorComponent'
-      - $ref: '#/components/schemas/MediaTypesCreateRatePerSqftErrorComponent'
+      - $ref: '#/components/schemas/MediaTypesCreatePricingUnitErrorComponent'
+      - $ref: '#/components/schemas/MediaTypesCreateRateErrorComponent'
       - $ref: '#/components/schemas/MediaTypesCreateMinSqftErrorComponent'
       - $ref: '#/components/schemas/MediaTypesCreateMaterialErrorComponent'
       - $ref: '#/components/schemas/MediaTypesCreateDescriptionErrorComponent'
@@ -19095,7 +20572,8 @@ components:
         mapping:
           non_field_errors: '#/components/schemas/MediaTypesCreateNonFieldErrorsErrorComponent'
           name: '#/components/schemas/MediaTypesCreateNameErrorComponent'
-          rate_per_sqft: '#/components/schemas/MediaTypesCreateRatePerSqftErrorComponent'
+          pricing_unit: '#/components/schemas/MediaTypesCreatePricingUnitErrorComponent'
+          rate: '#/components/schemas/MediaTypesCreateRateErrorComponent'
           min_sqft: '#/components/schemas/MediaTypesCreateMinSqftErrorComponent'
           material: '#/components/schemas/MediaTypesCreateMaterialErrorComponent'
           description: '#/components/schemas/MediaTypesCreateDescriptionErrorComponent'
@@ -19240,14 +20718,36 @@ components:
       - attr
       - code
       - detail
-    MediaTypesCreateRatePerSqftErrorComponent:
+    MediaTypesCreatePricingUnitErrorComponent:
       type: object
       properties:
         attr:
           enum:
-          - rate_per_sqft
+          - pricing_unit
           type: string
-          description: '* `rate_per_sqft` - rate_per_sqft'
+          description: '* `pricing_unit` - pricing_unit'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    MediaTypesCreateRateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - rate
+          type: string
+          description: '* `rate` - rate'
         code:
           enum:
           - invalid
@@ -19405,7 +20905,8 @@ components:
       oneOf:
       - $ref: '#/components/schemas/MediaTypesPartialUpdateNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/MediaTypesPartialUpdateNameErrorComponent'
-      - $ref: '#/components/schemas/MediaTypesPartialUpdateRatePerSqftErrorComponent'
+      - $ref: '#/components/schemas/MediaTypesPartialUpdatePricingUnitErrorComponent'
+      - $ref: '#/components/schemas/MediaTypesPartialUpdateRateErrorComponent'
       - $ref: '#/components/schemas/MediaTypesPartialUpdateMinSqftErrorComponent'
       - $ref: '#/components/schemas/MediaTypesPartialUpdateMaterialErrorComponent'
       - $ref: '#/components/schemas/MediaTypesPartialUpdateDescriptionErrorComponent'
@@ -19416,7 +20917,8 @@ components:
         mapping:
           non_field_errors: '#/components/schemas/MediaTypesPartialUpdateNonFieldErrorsErrorComponent'
           name: '#/components/schemas/MediaTypesPartialUpdateNameErrorComponent'
-          rate_per_sqft: '#/components/schemas/MediaTypesPartialUpdateRatePerSqftErrorComponent'
+          pricing_unit: '#/components/schemas/MediaTypesPartialUpdatePricingUnitErrorComponent'
+          rate: '#/components/schemas/MediaTypesPartialUpdateRateErrorComponent'
           min_sqft: '#/components/schemas/MediaTypesPartialUpdateMinSqftErrorComponent'
           material: '#/components/schemas/MediaTypesPartialUpdateMaterialErrorComponent'
           description: '#/components/schemas/MediaTypesPartialUpdateDescriptionErrorComponent'
@@ -19561,14 +21063,36 @@ components:
       - attr
       - code
       - detail
-    MediaTypesPartialUpdateRatePerSqftErrorComponent:
+    MediaTypesPartialUpdatePricingUnitErrorComponent:
       type: object
       properties:
         attr:
           enum:
-          - rate_per_sqft
+          - pricing_unit
           type: string
-          description: '* `rate_per_sqft` - rate_per_sqft'
+          description: '* `pricing_unit` - pricing_unit'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    MediaTypesPartialUpdateRateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - rate
+          type: string
+          description: '* `rate` - rate'
         code:
           enum:
           - invalid
@@ -19674,7 +21198,8 @@ components:
       oneOf:
       - $ref: '#/components/schemas/MediaTypesUpdateNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/MediaTypesUpdateNameErrorComponent'
-      - $ref: '#/components/schemas/MediaTypesUpdateRatePerSqftErrorComponent'
+      - $ref: '#/components/schemas/MediaTypesUpdatePricingUnitErrorComponent'
+      - $ref: '#/components/schemas/MediaTypesUpdateRateErrorComponent'
       - $ref: '#/components/schemas/MediaTypesUpdateMinSqftErrorComponent'
       - $ref: '#/components/schemas/MediaTypesUpdateMaterialErrorComponent'
       - $ref: '#/components/schemas/MediaTypesUpdateDescriptionErrorComponent'
@@ -19685,7 +21210,8 @@ components:
         mapping:
           non_field_errors: '#/components/schemas/MediaTypesUpdateNonFieldErrorsErrorComponent'
           name: '#/components/schemas/MediaTypesUpdateNameErrorComponent'
-          rate_per_sqft: '#/components/schemas/MediaTypesUpdateRatePerSqftErrorComponent'
+          pricing_unit: '#/components/schemas/MediaTypesUpdatePricingUnitErrorComponent'
+          rate: '#/components/schemas/MediaTypesUpdateRateErrorComponent'
           min_sqft: '#/components/schemas/MediaTypesUpdateMinSqftErrorComponent'
           material: '#/components/schemas/MediaTypesUpdateMaterialErrorComponent'
           description: '#/components/schemas/MediaTypesUpdateDescriptionErrorComponent'
@@ -19830,14 +21356,36 @@ components:
       - attr
       - code
       - detail
-    MediaTypesUpdateRatePerSqftErrorComponent:
+    MediaTypesUpdatePricingUnitErrorComponent:
       type: object
       properties:
         attr:
           enum:
-          - rate_per_sqft
+          - pricing_unit
           type: string
-          description: '* `rate_per_sqft` - rate_per_sqft'
+          description: '* `pricing_unit` - pricing_unit'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    MediaTypesUpdateRateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - rate
+          type: string
+          description: '* `rate` - rate'
         code:
           enum:
           - invalid
@@ -19976,6 +21524,21 @@ components:
         * `consumption` - Used in job
         * `wastage` - Wastage
         * `adjustment` - Adjustment
+    NewItem:
+      type: object
+      properties:
+        name:
+          type: string
+        pricing_unit:
+          type: string
+        rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+      required:
+      - name
+      - pricing_unit
+      - rate
     NullEnum:
       enum:
       - null
@@ -20046,6 +21609,11 @@ components:
         status:
           $ref: '#/components/schemas/OrderStatusEnum'
         status_label:
+          type: string
+          readOnly: true
+        source:
+          $ref: '#/components/schemas/SourceEnum'
+        source_label:
           type: string
           readOnly: true
         order_date:
@@ -20184,6 +21752,8 @@ components:
       - paid_amount
       - payments
       - round_off
+      - source
+      - source_label
       - status
       - status_label
       - subtotal
@@ -20234,6 +21804,8 @@ components:
         description:
           type: string
           maxLength: 200
+        pricing_unit:
+          $ref: '#/components/schemas/PricingUnitEnum'
         width:
           type: string
           format: decimal
@@ -20244,6 +21816,9 @@ components:
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
         unit:
           $ref: '#/components/schemas/UnitEnum'
+        has_size:
+          type: boolean
+          readOnly: true
         size_label:
           type: string
           readOnly: true
@@ -20286,6 +21861,17 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        rate_source:
+          $ref: '#/components/schemas/RateSourceEnum'
+        rate_source_label:
+          type: string
+          readOnly: true
+        card_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Rate-card price when the line was entered, for comparison.
         min_sqft:
           type: string
           format: decimal
@@ -20324,9 +21910,11 @@ components:
       - addons_amount
       - base_amount
       - billable_sqft
+      - card_rate
       - description
       - design_file_ref
       - finishing
+      - has_size
       - height
       - height_ft
       - id
@@ -20337,8 +21925,11 @@ components:
       - media_type
       - min_applied
       - min_sqft
+      - pricing_unit
       - quantity
       - rate
+      - rate_source
+      - rate_source_label
       - size_label
       - sqft
       - total_billable_sqft
@@ -20411,10 +22002,13 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          default: '0.00'
+          description: Leave 0 for per-piece items without a size.
         height:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          default: '0.00'
         unit:
           allOf:
           - $ref: '#/components/schemas/UnitEnum'
@@ -20424,6 +22018,14 @@ components:
           maximum: 100000
           minimum: 1
           default: 1
+        rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          description: Charge this rate instead of the rate card (e.g. the customer's
+            last rate). Leave empty to use the rate card, or the rate the order was
+            quoted at.
         finishing:
           type: string
           default: ''
@@ -20437,9 +22039,7 @@ components:
           items:
             $ref: '#/components/schemas/OrderItemAddOnWriteRequest'
       required:
-      - height
       - media_type
-      - width
     OrderList:
       type: object
       properties:
@@ -20456,6 +22056,11 @@ components:
         status:
           $ref: '#/components/schemas/OrderStatusEnum'
         status_label:
+          type: string
+          readOnly: true
+        source:
+          $ref: '#/components/schemas/SourceEnum'
+        source_label:
           type: string
           readOnly: true
         order_date:
@@ -20511,6 +22116,8 @@ components:
       - order_date_bs
       - order_no
       - paid_amount
+      - source
+      - source_label
       - status
       - status_label
       - total
@@ -20840,6 +22447,7 @@ components:
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXHeightErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXUnitErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXQuantityErrorComponent'
+      - $ref: '#/components/schemas/OrdersCreateItemsINDEXRateErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXFinishingErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXDesignFileRefErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXAddonsNonFieldErrorsErrorComponent'
@@ -20866,6 +22474,7 @@ components:
           items.INDEX.height: '#/components/schemas/OrdersCreateItemsINDEXHeightErrorComponent'
           items.INDEX.unit: '#/components/schemas/OrdersCreateItemsINDEXUnitErrorComponent'
           items.INDEX.quantity: '#/components/schemas/OrdersCreateItemsINDEXQuantityErrorComponent'
+          items.INDEX.rate: '#/components/schemas/OrdersCreateItemsINDEXRateErrorComponent'
           items.INDEX.finishing: '#/components/schemas/OrdersCreateItemsINDEXFinishingErrorComponent'
           items.INDEX.design_file_ref: '#/components/schemas/OrdersCreateItemsINDEXDesignFileRefErrorComponent'
           items.INDEX.addons.non_field_errors: '#/components/schemas/OrdersCreateItemsINDEXAddonsNonFieldErrorsErrorComponent'
@@ -21111,7 +22720,6 @@ components:
           - max_whole_digits
           - min_value
           - 'null'
-          - required
           type: string
           description: |-
             * `invalid` - invalid
@@ -21121,7 +22729,6 @@ components:
             * `max_whole_digits` - max_whole_digits
             * `min_value` - min_value
             * `null` - null
-            * `required` - required
         detail:
           type: string
       required:
@@ -21228,6 +22835,36 @@ components:
       - attr
       - code
       - detail
+    OrdersCreateItemsINDEXRateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.INDEX.rate
+          type: string
+          description: '* `items.INDEX.rate` - items.INDEX.rate'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - min_value
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `min_value` - min_value
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     OrdersCreateItemsINDEXUnitErrorComponent:
       type: object
       properties:
@@ -21267,7 +22904,6 @@ components:
           - max_whole_digits
           - min_value
           - 'null'
-          - required
           type: string
           description: |-
             * `invalid` - invalid
@@ -21277,7 +22913,6 @@ components:
             * `max_whole_digits` - max_whole_digits
             * `min_value` - min_value
             * `null` - null
-            * `required` - required
         detail:
           type: string
       required:
@@ -21944,6 +23579,28 @@ components:
       required:
       - errors
       - type
+    OrdersPricePreviewCreateCustomerErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - customer
+          type: string
+          description: '* `customer` - customer'
+        code:
+          enum:
+          - does_not_exist
+          - incorrect_type
+          type: string
+          description: |-
+            * `does_not_exist` - does_not_exist
+            * `incorrect_type` - incorrect_type
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     OrdersPricePreviewCreateDiscountTypeErrorComponent:
       type: object
       properties:
@@ -22012,12 +23669,14 @@ components:
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXHeightErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXUnitErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXQuantityErrorComponent'
+      - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXRateErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXFinishingErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXDesignFileRefErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXAddonsNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXAddonsINDEXQuantityErrorComponent'
+      - $ref: '#/components/schemas/OrdersPricePreviewCreateCustomerErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateOrderErrorComponent'
       discriminator:
         propertyName: attr
@@ -22034,12 +23693,14 @@ components:
           items.INDEX.height: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXHeightErrorComponent'
           items.INDEX.unit: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXUnitErrorComponent'
           items.INDEX.quantity: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXQuantityErrorComponent'
+          items.INDEX.rate: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXRateErrorComponent'
           items.INDEX.finishing: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXFinishingErrorComponent'
           items.INDEX.design_file_ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXDesignFileRefErrorComponent'
           items.INDEX.addons.non_field_errors: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXAddonsNonFieldErrorsErrorComponent'
           items.INDEX.addons.INDEX.non_field_errors: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent'
           items.INDEX.addons.INDEX.addon: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent'
           items.INDEX.addons.INDEX.quantity: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXAddonsINDEXQuantityErrorComponent'
+          customer: '#/components/schemas/OrdersPricePreviewCreateCustomerErrorComponent'
           order: '#/components/schemas/OrdersPricePreviewCreateOrderErrorComponent'
     OrdersPricePreviewCreateErrorResponse400:
       oneOf:
@@ -22253,7 +23914,6 @@ components:
           - max_whole_digits
           - min_value
           - 'null'
-          - required
           type: string
           description: |-
             * `invalid` - invalid
@@ -22263,7 +23923,6 @@ components:
             * `max_whole_digits` - max_whole_digits
             * `min_value` - min_value
             * `null` - null
-            * `required` - required
         detail:
           type: string
       required:
@@ -22370,6 +24029,36 @@ components:
       - attr
       - code
       - detail
+    OrdersPricePreviewCreateItemsINDEXRateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.INDEX.rate
+          type: string
+          description: '* `items.INDEX.rate` - items.INDEX.rate'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - min_value
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `min_value` - min_value
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     OrdersPricePreviewCreateItemsINDEXUnitErrorComponent:
       type: object
       properties:
@@ -22409,7 +24098,6 @@ components:
           - max_whole_digits
           - min_value
           - 'null'
-          - required
           type: string
           description: |-
             * `invalid` - invalid
@@ -22419,7 +24107,6 @@ components:
             * `max_whole_digits` - max_whole_digits
             * `min_value` - min_value
             * `null` - null
-            * `required` - required
         detail:
           type: string
       required:
@@ -22662,6 +24349,7 @@ components:
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXHeightErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXUnitErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXQuantityErrorComponent'
+      - $ref: '#/components/schemas/OrdersUpdateItemsINDEXRateErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXFinishingErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXDesignFileRefErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXAddonsNonFieldErrorsErrorComponent'
@@ -22688,6 +24376,7 @@ components:
           items.INDEX.height: '#/components/schemas/OrdersUpdateItemsINDEXHeightErrorComponent'
           items.INDEX.unit: '#/components/schemas/OrdersUpdateItemsINDEXUnitErrorComponent'
           items.INDEX.quantity: '#/components/schemas/OrdersUpdateItemsINDEXQuantityErrorComponent'
+          items.INDEX.rate: '#/components/schemas/OrdersUpdateItemsINDEXRateErrorComponent'
           items.INDEX.finishing: '#/components/schemas/OrdersUpdateItemsINDEXFinishingErrorComponent'
           items.INDEX.design_file_ref: '#/components/schemas/OrdersUpdateItemsINDEXDesignFileRefErrorComponent'
           items.INDEX.addons.non_field_errors: '#/components/schemas/OrdersUpdateItemsINDEXAddonsNonFieldErrorsErrorComponent'
@@ -22933,7 +24622,6 @@ components:
           - max_whole_digits
           - min_value
           - 'null'
-          - required
           type: string
           description: |-
             * `invalid` - invalid
@@ -22943,7 +24631,6 @@ components:
             * `max_whole_digits` - max_whole_digits
             * `min_value` - min_value
             * `null` - null
-            * `required` - required
         detail:
           type: string
       required:
@@ -23050,6 +24737,36 @@ components:
       - attr
       - code
       - detail
+    OrdersUpdateItemsINDEXRateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.INDEX.rate
+          type: string
+          description: '* `items.INDEX.rate` - items.INDEX.rate'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - min_value
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `min_value` - min_value
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     OrdersUpdateItemsINDEXUnitErrorComponent:
       type: object
       properties:
@@ -23089,7 +24806,6 @@ components:
           - max_whole_digits
           - min_value
           - 'null'
-          - required
           type: string
           description: |-
             * `invalid` - invalid
@@ -23099,7 +24815,6 @@ components:
             * `max_whole_digits` - max_whole_digits
             * `min_value` - min_value
             * `null` - null
-            * `required` - required
         detail:
           type: string
       required:
@@ -23265,6 +24980,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Customer'
+    PaginatedCustomerRateList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerRate'
     PaginatedInvoiceListList:
       type: object
       required:
@@ -23315,6 +25055,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Job'
+    PaginatedLedgerEntryList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
     PaginatedOrderListList:
       type: object
       required:
@@ -23594,10 +25359,13 @@ components:
           type: string
           minLength: 1
           maxLength: 80
-        rate_per_sqft:
+        pricing_unit:
+          $ref: '#/components/schemas/PricingUnitEnum'
+        rate:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: Rate per sq ft, or per piece for per-piece items.
         min_sqft:
           type: string
           format: decimal
@@ -24608,6 +26376,24 @@ components:
       required:
       - errors
       - type
+    Period:
+      type: object
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        date_from:
+          type: string
+          format: date
+        date_to:
+          type: string
+          format: date
+      required:
+      - date_from
+      - date_to
+      - key
+      - label
     PricePreview:
       type: object
       properties:
@@ -24652,12 +26438,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderItemWriteRequest'
+        customer:
+          type: integer
+          nullable: true
+          description: Lets the calculator recognise the customer's last rates.
         order:
           type: integer
           nullable: true
           description: When editing, keeps the rates the order was quoted at.
       required:
       - items
+    PricingUnitEnum:
+      enum:
+      - sqft
+      - piece
+      type: string
+      description: |-
+        * `sqft` - Per sq ft
+        * `piece` - Per piece
     PriorityEnum:
       enum:
       - 0
@@ -25333,6 +27131,16 @@ components:
       - is_active
       - min_sqft
       - rate
+    RateSourceEnum:
+      enum:
+      - card
+      - previous
+      - custom
+      type: string
+      description: |-
+        * `card` - Rate card
+        * `previous` - Customer's last rate
+        * `custom` - Custom rate
     ReasonRequest:
       type: object
       description: A short reason, required for cancellations, voids and adjustments.
@@ -25644,6 +27452,16 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    RowMessage:
+      type: object
+      properties:
+        row:
+          type: integer
+        message:
+          type: string
+      required:
+      - message
+      - row
     ServerErrorEnum:
       enum:
       - server_error
@@ -26570,6 +28388,14 @@ components:
       - tagline
       - updated_at
       - vat_rate
+    SourceEnum:
+      enum:
+      - counter
+      - import
+      type: string
+      description: |-
+        * `counter` - Entered in ChhapaKhata
+        * `import` - Imported work log
     Statement:
       type: object
       properties:
@@ -26604,7 +28430,18 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        by_type:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatementTypeTotal'
+        aging:
+          allOf:
+          - $ref: '#/components/schemas/StatementAging'
+          nullable: true
+          description: How old the closing due is (oldest invoices paid first).
       required:
+      - aging
+      - by_type
       - closing_balance
       - customer_id
       - customer_name
@@ -26614,6 +28451,20 @@ components:
       - opening_balance
       - total_credit
       - total_debit
+    StatementAging:
+      type: object
+      properties:
+        oldest_due_date:
+          type: string
+          format: date
+          nullable: true
+        buckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgingBucket'
+      required:
+      - buckets
+      - oldest_due_date
     StatementEntry:
       type: object
       properties:
@@ -26630,6 +28481,15 @@ components:
           type: string
         reference:
           type: string
+        invoice_id:
+          type: integer
+          nullable: true
+        payment_id:
+          type: integer
+          nullable: true
+        order_id:
+          type: integer
+          nullable: true
         narration:
           type: string
         debit:
@@ -26653,8 +28513,34 @@ components:
       - entry_type
       - entry_type_label
       - id
+      - invoice_id
       - narration
+      - order_id
+      - payment_id
       - reference
+    StatementTypeTotal:
+      type: object
+      properties:
+        entry_type:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
+        debit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        credit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - count
+      - credit
+      - debit
+      - entry_type
+      - label
     StockItem:
       type: object
       properties:
@@ -29132,6 +31018,27 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    SystemWorkLogExportRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    SystemWorkLogImportCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    SystemWorkLogTemplateRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
     Totals:
       type: object
       properties:
@@ -30475,6 +32382,13 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    UtilsPeriodsListErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
     ValidationErrorEnum:
       enum:
       - validation_error
@@ -30492,6 +32406,128 @@ components:
         * `khalti` - Khalti
         * `fonepay` - Fonepay
         * `other_qr` - Other QR
+    WorkLogImportResult:
+      type: object
+      properties:
+        dry_run:
+          type: boolean
+          description: True when nothing was saved
+        file_name:
+          type: string
+        header_row:
+          type: integer
+        columns:
+          type: object
+          additionalProperties:
+            type: string
+        rows_read:
+          type: integer
+        rows_imported:
+          type: integer
+        rows_skipped_duplicate:
+          type: integer
+        rows_skipped_error:
+          type: integer
+        rows_already_in_system:
+          type: integer
+        orders:
+          type: integer
+        payments:
+          type: integer
+        new_customers:
+          type: array
+          items:
+            type: string
+        matched_customers:
+          type: integer
+        new_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewItem'
+        totals:
+          $ref: '#/components/schemas/WorkLogTotals'
+        date_from:
+          type: string
+          format: date
+          nullable: true
+        date_to:
+          type: string
+          format: date
+          nullable: true
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/RowMessage'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/RowMessage'
+      required:
+      - columns
+      - date_from
+      - date_to
+      - dry_run
+      - errors
+      - file_name
+      - header_row
+      - matched_customers
+      - new_customers
+      - new_items
+      - orders
+      - payments
+      - rows_already_in_system
+      - rows_imported
+      - rows_read
+      - rows_skipped_duplicate
+      - rows_skipped_error
+      - totals
+      - warnings
+    WorkLogTotals:
+      type: object
+      properties:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        discount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        vat:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        paid:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - balance
+      - discount
+      - paid
+      - vat
+    WorkLogUploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          description: The work log as .xlsx or .csv
+        dry_run:
+          type: boolean
+          default: true
+          description: Check the file and show what would be imported, without saving.
+        skip_errors:
+          type: boolean
+          default: false
+          description: Import the valid rows and leave out rows with errors.
+      required:
+      - file
   securitySchemes:
     cookieAuth:
       type: apiKey
