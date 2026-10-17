@@ -9,10 +9,23 @@ import { initReactI18next } from 'react-i18next';
 void i18n.use(initReactI18next).init({
   lng: 'en',
   fallbackLng: 'en',
-  resources: { en: { translation: {} } },
+  resources: {
+    en: {
+      // English text is the key; only singular forms of counted messages are listed.
+      translation: {
+        '{{count}} customers · {{amount}} over 90 days_one':
+          '{{count}} customer · {{amount}} over 90 days',
+        '{{count}} invoices_one': '{{count}} invoice',
+        '{{count}} items_one': '{{count}} item',
+        '{{count}} jobs_one': '{{count}} job',
+        '{{count}} payments_one': '{{count}} payment',
+      },
+    },
+  },
   keySeparator: false,
   nsSeparator: false,
   returnEmptyString: false,
+  showSupportNotice: false,
   interpolation: { escapeValue: false },
 });
 

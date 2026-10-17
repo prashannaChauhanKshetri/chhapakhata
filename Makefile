@@ -1,5 +1,5 @@
 # Common development tasks. Run `make help` for the list.
-.PHONY: help setup db seed backend frontend lan-backend lan-frontend test test-backend test-frontend e2e lint schema build
+.PHONY: help setup db seed backend frontend lan-backend lan-frontend lan-app lan-cert lan-cert-check lan-ca test test-backend test-frontend e2e lint schema build
 
 help:
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
@@ -29,15 +29,42 @@ lan-backend: ## Like `backend`, but accepts requests from phones on the same Wi-
 	@test -n "$(LAN_IP)" || (echo "Not connected to a network" && exit 1)
 	cd backend && \
 	  ALLOWED_HOSTS=localhost,127.0.0.1,$(LAN_IP) \
-	  CSRF_TRUSTED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://$(LAN_IP):5173 \
+	  CSRF_TRUSTED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,https://localhost:5173,https://$(LAN_IP):5173,https://localhost:4173,https://$(LAN_IP):4173 \
 	  uv run python manage.py runserver 127.0.0.1:8000
 
-lan-frontend: ## Like `frontend`, but open to phones on the same Wi-Fi (prints the address)
+lan-cert: ## HTTPS certificate for this computer's Wi-Fi address (made automatically when needed)
 	@test -n "$(LAN_IP)" || (echo "Not connected to a network" && exit 1)
+	@scripts/dev-cert.sh $(LAN_IP)
+
+lan-cert-check:
+	@test -n "$(LAN_IP)" || (echo "Not connected to a network" && exit 1)
+	@test -f .certs/dev.pem -a "$$(cat .certs/dev.ip 2>/dev/null)" = "$(LAN_IP)" || scripts/dev-cert.sh $(LAN_IP)
+
+lan-frontend: lan-cert-check ## Like `frontend`, over HTTPS for phones on the same Wi-Fi (prints the address)
 	@echo ""
-	@echo "  On a phone or another computer on the same Wi-Fi, open:  http://$(LAN_IP):5173"
+	@echo "  On a phone on the same Wi-Fi, open:  https://$(LAN_IP):5173"
+	@echo "  (first time on a phone: run 'make lan-ca' and install the certificate)"
 	@echo ""
-	cd frontend && npm run dev -- --host 0.0.0.0
+	cd frontend && VITE_HTTPS=1 npm run dev -- --host 0.0.0.0
+
+lan-app: lan-cert-check ## The installable app (production build) for phones: Add to Home Screen, works offline
+	cd frontend && npm run build
+	@echo ""
+	@echo "  On a phone on the same Wi-Fi, open:  https://$(LAN_IP):4173"
+	@echo "  Then choose 'Install app' (Android) or Share > Add to Home Screen (iPhone)."
+	@echo ""
+	cd frontend && VITE_HTTPS=1 npx vite preview --host 0.0.0.0 --port 4173
+
+lan-ca: lan-cert-check ## Let a phone download the certificate authority to trust the HTTPS address (once per phone)
+	@mkdir -p .certs/share && cp .certs/chhapakhata-dev-ca.crt .certs/share/
+	@echo ""
+	@echo "  On the phone, open:  http://$(LAN_IP):8099/chhapakhata-dev-ca.crt"
+	@echo "  Android: Settings > Security > Encryption & credentials > Install a certificate > CA certificate"
+	@echo "  iPhone:  Settings > Profile Downloaded > Install, then"
+	@echo "           Settings > General > About > Certificate Trust Settings > turn on ChhapaKhata Dev CA"
+	@echo "  Press Ctrl+C here when done."
+	@echo ""
+	@cd .certs/share && python3 -m http.server 8099 --bind 0.0.0.0
 
 test: test-backend test-frontend ## Run all unit and API tests
 

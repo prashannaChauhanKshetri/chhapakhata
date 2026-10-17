@@ -33,3 +33,6 @@ frontend/blob-report/
 Thumbs.db
 .idea/
 *.swp
+
+# Local HTTPS certificates for the dev server (private keys)
+.certs/

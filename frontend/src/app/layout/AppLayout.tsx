@@ -11,9 +11,17 @@ import {
   Text,
   UnstyledButton,
 } from '@mantine/core';
-import { useDisclosure, useNetwork } from '@mantine/hooks';
+import { useDisclosure } from '@mantine/hooks';
 import { modals, ModalsProvider } from '@mantine/modals';
-import { IconChevronDown, IconKey, IconLogout, IconPlus, IconWifiOff } from '@tabler/icons-react';
+import {
+  IconChevronDown,
+  IconDeviceMobileDown,
+  IconKey,
+  IconKeyboard,
+  IconLogout,
+  IconPlus,
+  IconWifiOff,
+} from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -24,10 +32,13 @@ import type { DateConversion, ShopSettings } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { ChangePasswordForm } from '@/auth/ChangePasswordForm';
 import { PageLoader } from '@/components/PageLoader';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDateTime } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
 
+import { useConnection } from '../offline';
+import { useInstall } from '../pwa';
 import classes from './AppLayout.module.css';
+import { openShortcuts, useAppShortcuts } from './Shortcuts';
 import { NAV } from './nav';
 
 export function AppLayout() {
@@ -35,7 +46,9 @@ export function AppLayout() {
   const { user, canAny, can, logout } = useAuth();
   const [opened, { toggle, close }] = useDisclosure(false);
   const location = useLocation();
-  const network = useNetwork();
+  const { connection, lastOnlineAt } = useConnection();
+  const installer = useInstall();
+  useAppShortcuts();
 
   const { data: today } = useQuery({
     queryKey: ['utils', 'today'],
@@ -124,6 +137,21 @@ export function AppLayout() {
                   <Menu.Item leftSection={<IconKey size={16} />} onClick={openChangePassword}>
                     {t('Change password')}
                   </Menu.Item>
+                  <Menu.Item
+                    leftSection={<IconKeyboard size={16} />}
+                    onClick={openShortcuts}
+                    visibleFrom="sm"
+                  >
+                    {t('Keyboard shortcuts')}
+                  </Menu.Item>
+                  {installer.canInstall && (
+                    <Menu.Item
+                      leftSection={<IconDeviceMobileDown size={16} />}
+                      onClick={installer.install}
+                    >
+                      {t('Install app on this device')}
+                    </Menu.Item>
+                  )}
                   <Menu.Divider />
                   <Menu.Item leftSection={<IconLogout size={16} />} onClick={() => void logout()}>
                     {t('Sign out')}
@@ -177,11 +205,18 @@ export function AppLayout() {
         </AppShell.Navbar>
 
         <AppShell.Main className={classes.main}>
-          {!network.online && (
-            <Group className={classes.offline} gap="xs" justify="center">
+          {connection !== 'online' && (
+            <Group className={classes.offline} gap="xs" justify="center" role="status">
               <IconWifiOff size={16} />
               <Text size="sm">
-                {t('This device is offline. Check the shop network connection.')}
+                {connection === 'no-network'
+                  ? t('This device is offline.')
+                  : t('The shop computer is not answering.')}{' '}
+                {lastOnlineAt
+                  ? t('Showing what was saved at {{time}}; changes cannot be saved yet.', {
+                      time: formatDateTime(new Date(lastOnlineAt)),
+                    })
+                  : t('Changes cannot be saved yet.')}
               </Text>
             </Group>
           )}

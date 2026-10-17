@@ -19,8 +19,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { ensureCsrfCookie } from '@/api/client';
+import { ensureCsrfCookie, fetchWithTimeout } from '@/api/client';
 import { ApiError } from '@/api/errors';
+import { FILE_TIMEOUT_MS } from '@/api/files';
 import type { ShopSettings } from '@/api/types';
 import { PageLoader } from '@/components/PageLoader';
 import { SectionCard } from '@/components/SectionCard';
@@ -87,12 +88,16 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
         if (file) body.append(key, file);
         if (remove[key]) body.append(`remove_${key}`, 'true');
       });
-      const response = await fetch('/api/v1/settings/shop/', {
-        method: 'PATCH',
-        body,
-        credentials: 'same-origin',
-        headers: { 'X-CSRFToken': await ensureCsrfCookie() },
-      });
+      const response = await fetchWithTimeout(
+        '/api/v1/settings/shop/',
+        {
+          method: 'PATCH',
+          body,
+          credentials: 'same-origin',
+          headers: { 'X-CSRFToken': await ensureCsrfCookie() },
+        },
+        FILE_TIMEOUT_MS,
+      );
       if (!response.ok) throw await ApiError.fromResponse(response);
       await client.invalidateQueries({ queryKey: ['settings', 'shop'] });
       setFiles({});

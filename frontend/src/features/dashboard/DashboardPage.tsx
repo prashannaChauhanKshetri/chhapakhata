@@ -309,6 +309,54 @@ export default function DashboardPage() {
             </Grid.Col>
           )}
 
+          {data?.dues_follow_up && data.dues_follow_up.length > 0 && (
+            <Grid.Col span={{ base: 12, md: 6 }}>
+              <SectionCard
+                title={
+                  <div>
+                    <Text fw={600}>{t('Dues to follow up')}</Text>
+                    <Text size="sm" c="dimmed">
+                      {t('Oldest unpaid first')}
+                    </Text>
+                  </div>
+                }
+                actions={
+                  <Anchor component={Link} to="/ledger/balances" size="sm">
+                    {t('All balances')}
+                  </Anchor>
+                }
+              >
+                <Stack gap={0}>
+                  {data.dues_follow_up.map((d) => (
+                    <Group
+                      key={d.customer_id}
+                      justify="space-between"
+                      py={8}
+                      wrap="nowrap"
+                      style={{ borderBottom: '1px solid var(--ck-border)' }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <Anchor
+                          component={Link}
+                          to={`/customers/${d.customer_id}`}
+                          size="sm"
+                          fw={500}
+                        >
+                          {d.name}
+                        </Anchor>
+                        <Text size="xs" c="dimmed" lineClamp={1}>
+                          {t('Due since {{date}} BS', { date: d.oldest_due_date_bs })}
+                          {d.phone ? ` · ${d.phone}` : ''}
+                        </Text>
+                      </div>
+                      <Money value={d.balance} size="sm" c="red.7" />
+                    </Group>
+                  ))}
+                </Stack>
+              </SectionCard>
+            </Grid.Col>
+          )}
+
           {data?.recent_payments && (
             <Grid.Col span={{ base: 12, md: 6 }}>
               <SectionCard

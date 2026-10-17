@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { api, onUnauthenticated, unwrap } from '@/api/client';
+import { clearSavedData } from '@/app/offline';
 import { ApiError } from '@/api/errors';
 import type { Me } from '@/api/types';
 import type { PermName } from '@/lib/permissions';
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // sign in never sees the previous user's data.
         client.setQueryData(ME_KEY, null);
         client.removeQueries({ predicate: (query) => query.queryKey[0] !== ME_KEY[0] });
+        clearSavedData();
       }),
     [client],
   );
@@ -58,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await client.cancelQueries();
     client.setQueryData(ME_KEY, null);
     client.removeQueries({ predicate: (query) => query.queryKey[0] !== ME_KEY[0] });
+    clearSavedData();
   }, [client]);
 
   const value = useMemo<AuthState>(() => {

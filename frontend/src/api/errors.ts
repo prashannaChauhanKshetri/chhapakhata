@@ -46,6 +46,12 @@ export class ApiError extends Error {
     return this.message;
   }
 
+  static readonly TIMEOUT_MESSAGE =
+    'The server took too long to answer. Check the connection to the shop computer and try again.';
+
+  static readonly OFFLINE_WRITE_MESSAGE =
+    'Offline: the shop computer cannot be reached, so this was not saved. Try again when the connection is back.';
+
   static statusMessage(status: number): string {
     if (status === 0) return 'Cannot reach the server. Check that the shop computer is on.';
     if (status === 403) return 'You do not have permission to do this.';

@@ -1,4 +1,5 @@
 import {
+  Alert,
   Anchor,
   Button,
   Card,
@@ -16,6 +17,7 @@ import { Link, useNavigate } from 'react-router';
 
 import { apiGet } from '@/api/http';
 import type { Customer, Paginated } from '@/api/types';
+import { useAuth } from '@/auth/AuthContext';
 import { Can } from '@/auth/Can';
 import { Money } from '@/components/Money';
 import { PageHeader } from '@/components/PageHeader';
@@ -28,6 +30,8 @@ import { openCustomerModal } from './CustomerForm';
 export default function CustomersPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { can } = useAuth();
+  const canAdd = can(Perm.CUSTOMERS_MANAGE);
   const list = useListState(['has_due', 'is_active'] as const, 'name');
   const { data, error, isFetching, refetch } = useQuery({
     queryKey: ['customers', list.query],
@@ -70,6 +74,31 @@ export default function CustomersPage() {
             ]}
           />
         </Group>
+        {canAdd && data?.count === 0 && list.debouncedSearch.trim().length >= 2 && (
+          <Alert
+            mx="md"
+            mb="md"
+            color="slate"
+            variant="light"
+            title={t('No customer called “{{name}}”', { name: list.debouncedSearch.trim() })}
+          >
+            <Group justify="space-between" gap="sm">
+              <Text size="sm">{t('Add them now. Only the name is needed; PAN is optional.')}</Text>
+              <Button
+                size="xs"
+                leftSection={<IconUserPlus size={14} />}
+                onClick={() =>
+                  openCustomerModal({
+                    initialName: list.debouncedSearch.trim(),
+                    onSaved: (c) => navigate(`/customers/${c.id}`),
+                  })
+                }
+              >
+                {t('Add “{{name}}”', { name: list.debouncedSearch.trim() })}
+              </Button>
+            </Group>
+          </Alert>
+        )}
         {error ? (
           <Stack p="md">
             <QueryError error={error} onRetry={() => void refetch()} />

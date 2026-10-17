@@ -22,6 +22,7 @@ const InventoryPage = lazy(() => import('@/features/inventory/InventoryPage'));
 const StockItemPage = lazy(() => import('@/features/inventory/StockItemPage'));
 const PurchasesPage = lazy(() => import('@/features/inventory/PurchasesPage'));
 const PurchaseFormPage = lazy(() => import('@/features/inventory/PurchaseFormPage'));
+const InsightsPage = lazy(() => import('@/features/insights/InsightsPage'));
 const ReportsPage = lazy(() => import('@/features/reports/ReportsPage'));
 const ReportPage = lazy(() => import('@/features/reports/ReportPage'));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
       { path: 'inventory/:id', element: guard(Perm.INVENTORY_VIEW, <StockItemPage />) },
       { path: 'purchases', element: guard(Perm.INVENTORY_MANAGE, <PurchasesPage />) },
       { path: 'purchases/new', element: guard(Perm.INVENTORY_MANAGE, <PurchaseFormPage />) },
+      { path: 'insights', element: guard(Perm.REPORTS_ALL, <InsightsPage />) },
       { path: 'reports', element: guard(REPORT_PERMS, <ReportsPage />) },
       { path: 'reports/:slug', element: guard(REPORT_PERMS, <ReportPage />) },
       { path: 'settings', element: <Navigate to="/settings/shop" replace /> },

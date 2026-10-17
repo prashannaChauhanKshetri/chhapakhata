@@ -53,7 +53,16 @@ docker compose cp web:/data/caddy/pki/authorities/local/root.crt ./chhapakhata-r
 - Android: Settings → Security → Encryption & credentials → Install a certificate → CA certificate.
 - iPhone: AirDrop/email the file, install the profile, then Settings → General → About → Certificate Trust Settings → enable.
 
-If this is not possible, use the plain-HTTP fallback (`CADDYFILE=Caddyfile.http`, `SECURE_COOKIES=false`, origins with `http://`) on a WPA2-protected network only.
+If this is not possible, use the plain-HTTP fallback (`CADDYFILE=Caddyfile.http`, `SECURE_COOKIES=false`, origins with `http://`) on a WPA2-protected network only. Over plain HTTP, phones cannot install the app or open it offline; everything else works.
+
+### Install the app on phones and tablets
+
+With the certificate trusted, open `https://<SITE_ADDRESS>` on the device and sign in:
+
+- **Android / Chrome / Edge:** account menu → **Install app on this device**.
+- **iPhone / iPad:** Safari → Share → **Add to Home Screen**.
+
+The installed app opens full screen from its icon. It keeps working when the Wi-Fi drops or the shop computer is off: it opens, and shows the orders, jobs and balances last loaded (kept on the device for 24 hours and removed on sign-out), with a banner saying so. Changes can only be saved while the shop computer answers, because order, invoice and receipt numbers and stock are allocated there. After an update, staff see **New version ready → Reload now**.
 
 ## 5. Printers
 

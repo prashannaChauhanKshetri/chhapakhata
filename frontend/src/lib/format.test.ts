@@ -25,7 +25,8 @@ describe('money formatting', () => {
   });
 
   it('compacts large values for tiles', () => {
-    expect(formatNPRCompact(99999)).toBe('Rs. 99,999.00');
+    expect(formatNPRCompact(99999.6)).toBe('Rs. 1,00,000');
+    expect(formatNPRCompact(2725.18)).toBe('Rs. 2,725');
     expect(formatNPRCompact(125000)).toBe('Rs. 1.25 L');
     expect(formatNPRCompact(30000000)).toBe('Rs. 3 Cr');
   });

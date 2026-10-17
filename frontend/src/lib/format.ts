@@ -24,6 +24,11 @@ export function formatNPR(value: string | number | null | undefined): string {
   return `${n < 0 ? '-' : ''}Rs. ${moneyFormat.format(Math.abs(n))}`;
 }
 
+/** `1, 'order'` → `1 order`; `3, 'order'` → `3 orders`. */
+export function plural(count: number, one: string, many = `${one}s`): string {
+  return `${qtyFormat.format(count)} ${count === 1 ? one : many}`;
+}
+
 /** Compact form for KPI tiles: Rs. 1.25 L, Rs. 3.4 Cr. */
 export function formatNPRCompact(value: string | number | null | undefined): string {
   const n = toNumber(value);
@@ -31,7 +36,8 @@ export function formatNPRCompact(value: string | number | null | undefined): str
   const sign = n < 0 ? '-' : '';
   if (abs >= 1e7) return `${sign}Rs. ${(abs / 1e7).toFixed(2).replace(/\.?0+$/, '')} Cr`;
   if (abs >= 1e5) return `${sign}Rs. ${(abs / 1e5).toFixed(2).replace(/\.?0+$/, '')} L`;
-  return formatNPR(n);
+  // Tiles are summaries: whole rupees below a lakh (exact paise stay in tables).
+  return `${sign}Rs. ${qtyFormat.format(Math.round(abs))}`;
 }
 
 /** `12.50` → `12.5`, `8.00` → `8` */

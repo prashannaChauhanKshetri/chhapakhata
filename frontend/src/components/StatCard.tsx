@@ -33,7 +33,7 @@ export function StatCard({
           {loading ? (
             <Skeleton h={30} w={120} />
           ) : (
-            <Text fz={28} fw={600} lh={1.15} c={color}>
+            <Text fz={{ base: 22, sm: 28 }} fw={600} lh={1.15} c={color} className="num">
               {value}
             </Text>
           )}

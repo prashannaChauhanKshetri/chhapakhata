@@ -26,9 +26,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-import { ensureCsrfCookie } from '@/api/client';
+import { ensureCsrfCookie, fetchWithTimeout } from '@/api/client';
 import { ApiError } from '@/api/errors';
-import { openFile } from '@/api/files';
+import { FILE_TIMEOUT_MS, openFile } from '@/api/files';
 import { withQuery } from '@/api/http';
 import type { WorkLogImportResult } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
@@ -70,12 +70,16 @@ async function uploadWorkLog(file: File, dryRun: boolean, skipErrors: boolean) {
   body.append('file', file);
   body.append('dry_run', String(dryRun));
   body.append('skip_errors', String(skipErrors));
-  const response = await fetch('/api/v1/system/work-log/import/', {
-    method: 'POST',
-    body,
-    credentials: 'same-origin',
-    headers: { 'X-CSRFToken': await ensureCsrfCookie() },
-  });
+  const response = await fetchWithTimeout(
+    '/api/v1/system/work-log/import/',
+    {
+      method: 'POST',
+      body,
+      credentials: 'same-origin',
+      headers: { 'X-CSRFToken': await ensureCsrfCookie() },
+    },
+    FILE_TIMEOUT_MS,
+  );
   if (!response.ok) throw await ApiError.fromResponse(response);
   return (await response.json()) as WorkLogImportResult;
 }

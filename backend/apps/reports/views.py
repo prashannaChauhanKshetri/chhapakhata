@@ -25,6 +25,8 @@ from apps.production.models import ACTIVE_STAGES, Job, Stage
 
 from . import selectors
 from .exporters import report_to_pdf, report_to_xlsx
+from .insights import dues_follow_up, insights
+from .serializers import InsightsSerializer
 from .tables import report_to_json
 
 REPORTS = {
@@ -248,6 +250,9 @@ class DashboardView(APIView):
                 .order_by("-created_at")[:6]
             ]
 
+        if Perm.LEDGER_VIEW in held:
+            data["dues_follow_up"] = dues_follow_up()
+
         if Perm.REPORTS_OWN_PRODUCTION in held and Perm.REPORTS_ALL not in held:
             month_start, _ = bs_month_range(today)
             mine = selectors.operator_log(month_start, today, operator=user)
@@ -257,3 +262,23 @@ class DashboardView(APIView):
                 "period_start": month_start.isoformat(),
             }
         return Response(data)
+
+
+class InsightsView(APIView):
+    """Owner insights for a period: sales, collections, customers, dues, production."""
+
+    required_perms = Perm.REPORTS_ALL
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "from", str, description="Start date (AD). Default: start of this BS month"
+            ),
+            OpenApiParameter("to", str, description="End date (AD). Default: today"),
+        ],
+        responses=InsightsSerializer,
+    )
+    def get(self, request):
+        today = local_today()
+        date_from, date_to = parse_range(request.query_params, bs_month_range(today)[0], today)
+        return Response(InsightsSerializer(insights(date_from, date_to)).data)

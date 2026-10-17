@@ -279,6 +279,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/insights/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Owner insights for a period: sales, collections, customers, dues, production. */
+        get: operations["insights_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/invoices/": {
         parameters: {
             query?: never;
@@ -1917,6 +1934,11 @@ export interface components {
             /** Format: decimal */
             amount: string;
         };
+        AgingTotal: {
+            label: string;
+            /** Format: decimal */
+            amount: string;
+        };
         AuthChangePasswordCreateCurrentPasswordErrorComponent: {
             /**
              * @description * `current_password` - current_password (enum property replaced by openapi-typescript)
@@ -2947,11 +2969,55 @@ export interface components {
             /** @default  */
             reason?: string;
         };
+        /**
+         * @description * `day` - day
+         *     * `month` - month
+         * @enum {string}
+         */
+        GranularityEnum: "day" | "month";
         Health: {
             status: string;
             database: string;
         };
         HealthRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        InsightSummary: {
+            /**
+             * Format: decimal
+             * @description Confirmed and delivered orders
+             */
+            work_done: string;
+            orders: number;
+            /** Format: decimal */
+            average_order: string;
+            /** Format: decimal */
+            invoiced: string;
+            /** Format: decimal */
+            collected: string;
+            /** Format: decimal */
+            discounts: string;
+            new_customers: number;
+            quotations_open: number;
+        };
+        Insights: {
+            /** Format: date */
+            date_from: string;
+            readonly date_from_bs: string;
+            /** Format: date */
+            date_to: string;
+            readonly date_to_bs: string;
+            granularity: components["schemas"]["GranularityEnum"];
+            summary: components["schemas"]["InsightSummary"];
+            trend: components["schemas"]["TrendPoint"][];
+            top_items: components["schemas"]["TopItem"][];
+            top_customers: components["schemas"]["TopCustomer"][];
+            payment_modes: components["schemas"]["PaymentModeTotal"][];
+            aging: components["schemas"]["AgingTotal"][];
+            top_dues: components["schemas"]["TopDue"][];
+            /** Format: decimal */
+            dues_total: string;
+            production: components["schemas"]["ProductionInsight"];
+        };
+        InsightsRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         InvoiceCreateRequest: {
             order: number;
             /** @default  */
@@ -6779,6 +6845,12 @@ export interface components {
             cheque_date?: string | null;
             notes?: string;
         };
+        PaymentModeTotal: {
+            mode: string;
+            /** Format: decimal */
+            amount: string;
+            count: number;
+        };
         /**
          * @description * `valid` - Valid
          *     * `void` - Void
@@ -7173,6 +7245,22 @@ export interface components {
          * @enum {integer}
          */
         PriorityEnum: 0 | 1;
+        ProductionInsight: {
+            jobs_finished: number;
+            /** Format: double */
+            on_time_percent: number | null;
+            /** Format: double */
+            average_turnaround_hours: number | null;
+            /** Format: decimal */
+            material_used: string;
+            /** Format: decimal */
+            material_wasted: string;
+            /** Format: double */
+            wastage_percent: number | null;
+            open_jobs: number;
+            /** Format: decimal */
+            average_job_value: string;
+        };
         Purchase: {
             readonly id: number;
             purchase_no: string;
@@ -9494,6 +9582,31 @@ export interface components {
         SystemWorkLogExportRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemWorkLogImportCreateErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemWorkLogTemplateRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        TopCustomer: {
+            customer_id: number;
+            name: string;
+            /** Format: decimal */
+            amount: string;
+            orders: number;
+        };
+        TopDue: {
+            customer_id: number;
+            name: string;
+            /** Format: decimal */
+            balance: string;
+            /** Format: date */
+            oldest_due_date: string | null;
+            oldest_due_date_bs: string | null;
+        };
+        TopItem: {
+            name: string;
+            /** Format: decimal */
+            amount: string;
+            pieces: number;
+            /** Format: decimal */
+            sqft: string;
+            orders: number;
+        };
         Totals: {
             /** Format: decimal */
             subtotal: string;
@@ -9509,6 +9622,17 @@ export interface components {
             round_off: string;
             /** Format: decimal */
             total: string;
+        };
+        TrendPoint: {
+            label: string;
+            /** Format: date */
+            date_from: string;
+            /** Format: date */
+            date_to: string;
+            /** Format: double */
+            work_done: number;
+            /** Format: double */
+            collected: number;
         };
         /**
          * @description * `scheduled` - Scheduled
@@ -12252,6 +12376,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthRetrieveErrorResponse400"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    insights_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Start date (AD). Default: start of this BS month */
+                from?: string;
+                /** @description End date (AD). Default: today */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Insights"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InsightsRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
                 };
             };
             404: {

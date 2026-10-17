@@ -1,6 +1,6 @@
 import { ActionIcon, Group, Select, Text, Tooltip } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
-import { IconUserPlus } from '@tabler/icons-react';
+import { IconPlus, IconUserPlus } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,8 @@ interface CustomerSelectProps {
   disabled?: boolean;
   label?: string;
 }
+
+const NEW = '__new__';
 
 /** Search customers by name, phone or PAN; add a new one without leaving the form. */
 export function CustomerSelect({ value, onChange, error, disabled, label }: CustomerSelectProps) {
@@ -44,6 +46,17 @@ export function CustomerSelect({ value, onChange, error, disabled, label }: Cust
 
   const label_ = (c: Customer) => (c.phone ? `${c.name} · ${c.phone}` : c.name);
 
+  // Offer to add the typed name whenever it doesn't exactly match an existing customer.
+  const typed = search.trim();
+  const showAdd =
+    !disabled &&
+    typed.length >= 2 &&
+    !isFetching &&
+    debounced === search &&
+    !options.some((c) => c.name.toLowerCase() === typed.toLowerCase() || label_(c) === typed);
+  const addNew = (name: string) =>
+    openCustomerModal({ initialName: name, onSaved: (c) => onChange(c) });
+
   return (
     <Group gap="xs" align="flex-start" wrap="nowrap">
       <Select
@@ -57,13 +70,30 @@ export function CustomerSelect({ value, onChange, error, disabled, label }: Cust
         value={value ? String(value.id) : null}
         searchValue={search}
         onSearchChange={setSearch}
-        data={options.map((c) => ({ value: String(c.id), label: label_(c) }))}
+        data={[
+          ...options.map((c) => ({ value: String(c.id), label: label_(c) })),
+          ...(showAdd ? [{ value: NEW, label: typed }] : []),
+        ]}
         filter={({ options: opts }) => opts}
-        nothingFoundMessage={
-          isFetching ? t('Searching…') : t('No match. Use the + button to add a new customer.')
-        }
-        onChange={(id) => onChange(options.find((c) => String(c.id) === id) ?? null)}
+        nothingFoundMessage={isFetching ? t('Searching…') : t('Type a name, phone or PAN')}
+        onChange={(id) => {
+          if (id === NEW) {
+            addNew(typed);
+            return;
+          }
+          onChange(options.find((c) => String(c.id) === id) ?? null);
+        }}
         renderOption={({ option }) => {
+          if (option.value === NEW) {
+            return (
+              <Group gap="xs" wrap="nowrap" c="slate.8">
+                <IconPlus size={16} />
+                <Text size="sm" fw={500}>
+                  {t('Add “{{name}}” as a new customer', { name: typed })}
+                </Text>
+              </Group>
+            );
+          }
           const c = options.find((x) => String(x.id) === option.value);
           if (!c) return option.label;
           const balance = toNumber(c.balance);
@@ -93,7 +123,7 @@ export function CustomerSelect({ value, onChange, error, disabled, label }: Cust
             size={36}
             mt={label === '' ? 0 : 25}
             aria-label={t('New customer')}
-            onClick={() => openCustomerModal({ initialName: search, onSaved: (c) => onChange(c) })}
+            onClick={() => addNew(search)}
           >
             <IconUserPlus size={18} />
           </ActionIcon>

@@ -2,6 +2,7 @@ import {
   IconBook2,
   IconBuildingWarehouse,
   IconChartBar,
+  IconChartDots3,
   IconClipboardList,
   IconFileInvoice,
   IconLayoutDashboard,
@@ -75,6 +76,7 @@ export const NAV: NavSection[] = [
   {
     label: 'Insight',
     items: [
+      { label: 'Insights', to: '/insights', icon: IconChartDots3, perms: [Perm.REPORTS_ALL] },
       {
         label: 'Reports',
         to: '/reports',

@@ -156,3 +156,40 @@ class HealthView(APIView):
             {"status": "ok" if db_status == "ok" else "degraded", "database": db_status},
             status=status_code,
         )
+
+
+def _api_error(request, status_code: int, code: str, detail: str, fallback):
+    """JSON errors for /api/ in the standard shape; normal Django pages elsewhere."""
+    from django.http import JsonResponse
+
+    if request.path.startswith("/api/"):
+        error_type = "client_error" if status_code < 500 else "server_error"
+        return JsonResponse(
+            {"type": error_type, "errors": [{"code": code, "detail": detail, "attr": None}]},
+            status=status_code,
+        )
+    return fallback()
+
+
+def not_found(request, exception=None):
+    from django.views.defaults import page_not_found
+
+    return _api_error(
+        request,
+        404,
+        "not_found",
+        "This address does not exist.",
+        lambda: page_not_found(request, exception),
+    )
+
+
+def server_error(request):
+    from django.views.defaults import server_error as default_server_error
+
+    return _api_error(
+        request,
+        500,
+        "error",
+        "The server had a problem. Try again; if it repeats, tell the owner.",
+        lambda: default_server_error(request),
+    )

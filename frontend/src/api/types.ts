@@ -51,6 +51,7 @@ export type Purchase = S['Purchase'];
 export type StockMovement = S['StockMovement'];
 
 export type BackupRun = S['BackupRun'];
+export type Insights = S['Insights'];
 export type WorkLogImportResult = S['WorkLogImportResult'];
 
 export interface Paginated<T> {
@@ -140,4 +141,12 @@ export interface Dashboard {
     payment_date: string;
   }[];
   my_production?: { jobs: number; sqft: string; period_start: string };
+  dues_follow_up?: {
+    customer_id: number;
+    name: string;
+    phone: string;
+    balance: string;
+    oldest_due_date: string;
+    oldest_due_date_bs: string;
+  }[];
 }

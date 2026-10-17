@@ -3172,6 +3172,144 @@ paths:
               schema:
                 $ref: '#/components/schemas/Health'
           description: ''
+  /api/v1/insights/:
+    get:
+      operationId: insights_retrieve
+      description: 'Owner insights for a period: sales, collections, customers, dues,
+        production.'
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: 'Start date (AD). Default: start of this BS month'
+      - in: query
+        name: to
+        schema:
+          type: string
+        description: 'End date (AD). Default: today'
+      tags:
+      - insights
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightsRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Insights'
+          description: ''
   /api/v1/invoices/:
     get:
       operationId: invoices_list
@@ -15960,6 +16098,18 @@ components:
       required:
       - amount
       - label
+    AgingTotal:
+      type: object
+      properties:
+        label:
+          type: string
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - label
     AuthChangePasswordCreateCurrentPasswordErrorComponent:
       type: object
       properties:
@@ -18055,6 +18205,14 @@ components:
           type: string
           default: ''
           maxLength: 255
+    GranularityEnum:
+      enum:
+      - day
+      - month
+      type: string
+      description: |-
+        * `day` - day
+        * `month` - month
     Health:
       type: object
       properties:
@@ -18066,6 +18224,116 @@ components:
       - database
       - status
     HealthRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    InsightSummary:
+      type: object
+      properties:
+        work_done:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+          description: Confirmed and delivered orders
+        orders:
+          type: integer
+        average_order:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        invoiced:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        collected:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        discounts:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        new_customers:
+          type: integer
+        quotations_open:
+          type: integer
+      required:
+      - average_order
+      - collected
+      - discounts
+      - invoiced
+      - new_customers
+      - orders
+      - quotations_open
+      - work_done
+    Insights:
+      type: object
+      properties:
+        date_from:
+          type: string
+          format: date
+        date_from_bs:
+          type: string
+          readOnly: true
+        date_to:
+          type: string
+          format: date
+        date_to_bs:
+          type: string
+          readOnly: true
+        granularity:
+          $ref: '#/components/schemas/GranularityEnum'
+        summary:
+          $ref: '#/components/schemas/InsightSummary'
+        trend:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrendPoint'
+        top_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopItem'
+        top_customers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopCustomer'
+        payment_modes:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentModeTotal'
+        aging:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgingTotal'
+        top_dues:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopDue'
+        dues_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        production:
+          $ref: '#/components/schemas/ProductionInsight'
+      required:
+      - aging
+      - date_from
+      - date_from_bs
+      - date_to
+      - date_to_bs
+      - dues_total
+      - granularity
+      - payment_modes
+      - production
+      - summary
+      - top_customers
+      - top_dues
+      - top_items
+      - trend
+    InsightsRetrieveErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/ParseErrorResponse'
       discriminator:
@@ -25741,6 +26009,21 @@ components:
       required:
       - amount
       - mode
+    PaymentModeTotal:
+      type: object
+      properties:
+        mode:
+          type: string
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        count:
+          type: integer
+      required:
+      - amount
+      - count
+      - mode
     PaymentStatusEnum:
       enum:
       - valid
@@ -26464,6 +26747,46 @@ components:
       description: |-
         * `0` - Normal
         * `1` - Urgent
+    ProductionInsight:
+      type: object
+      properties:
+        jobs_finished:
+          type: integer
+        on_time_percent:
+          type: number
+          format: double
+          nullable: true
+        average_turnaround_hours:
+          type: number
+          format: double
+          nullable: true
+        material_used:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        material_wasted:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        wastage_percent:
+          type: number
+          format: double
+          nullable: true
+        open_jobs:
+          type: integer
+        average_job_value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - average_job_value
+      - average_turnaround_hours
+      - jobs_finished
+      - material_used
+      - material_wasted
+      - on_time_percent
+      - open_jobs
+      - wastage_percent
     Purchase:
       type: object
       properties:
@@ -31039,6 +31362,71 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    TopCustomer:
+      type: object
+      properties:
+        customer_id:
+          type: integer
+        name:
+          type: string
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        orders:
+          type: integer
+      required:
+      - amount
+      - customer_id
+      - name
+      - orders
+    TopDue:
+      type: object
+      properties:
+        customer_id:
+          type: integer
+        name:
+          type: string
+        balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        oldest_due_date:
+          type: string
+          format: date
+          nullable: true
+        oldest_due_date_bs:
+          type: string
+          nullable: true
+      required:
+      - balance
+      - customer_id
+      - name
+      - oldest_due_date
+      - oldest_due_date_bs
+    TopItem:
+      type: object
+      properties:
+        name:
+          type: string
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        pieces:
+          type: integer
+        sqft:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        orders:
+          type: integer
+      required:
+      - amount
+      - name
+      - orders
+      - pieces
+      - sqft
     Totals:
       type: object
       properties:
@@ -31078,6 +31466,29 @@ components:
       - total
       - vat_amount
       - vat_rate
+    TrendPoint:
+      type: object
+      properties:
+        label:
+          type: string
+        date_from:
+          type: string
+          format: date
+        date_to:
+          type: string
+          format: date
+        work_done:
+          type: number
+          format: double
+        collected:
+          type: number
+          format: double
+      required:
+      - collected
+      - date_from
+      - date_to
+      - label
+      - work_done
     TriggerEnum:
       enum:
       - scheduled

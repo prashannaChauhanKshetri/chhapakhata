@@ -2,7 +2,7 @@
  * PDF and Excel downloads. PDFs open in a new tab, ready for the print
  * dialog; spreadsheets are saved with the server's filename.
  */
-import { ensureCsrfCookie } from './client';
+import { ensureCsrfCookie, fetchWithTimeout, reportIfUnauthenticated } from './client';
 import { ApiError } from './errors';
 
 interface FileOptions {
@@ -17,6 +17,8 @@ function filenameFrom(response: Response, fallback: string): string {
   return match?.[1] ?? fallback;
 }
 
+export const FILE_TIMEOUT_MS = 120_000;
+
 export async function openFile(url: string, options: FileOptions = {}): Promise<void> {
   const method = options.method ?? 'GET';
   // Open the tab synchronously (before awaiting) so pop-up blockers allow it.
@@ -25,8 +27,17 @@ export async function openFile(url: string, options: FileOptions = {}): Promise<
   try {
     const headers: Record<string, string> = {};
     if (method !== 'GET') headers['X-CSRFToken'] = await ensureCsrfCookie();
-    const response = await fetch(url, { method, headers, credentials: 'same-origin' });
-    if (!response.ok) throw await ApiError.fromResponse(response);
+    // Big reports and exports take longer than ordinary requests.
+    const response = await fetchWithTimeout(
+      url,
+      { method, headers, credentials: 'same-origin' },
+      FILE_TIMEOUT_MS,
+    );
+    if (!response.ok) {
+      const error = await ApiError.fromResponse(response);
+      reportIfUnauthenticated(error, url);
+      throw error;
+    }
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
     const isPdf = blob.type === 'application/pdf';

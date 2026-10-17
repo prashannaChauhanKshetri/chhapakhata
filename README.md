@@ -34,16 +34,21 @@ make frontend     # app on http://127.0.0.1:5173  (separate terminal)
 
 Open http://127.0.0.1:5173 and sign in. API reference (development only): http://127.0.0.1:8000/api/docs/.
 
-### On a phone (same Wi-Fi)
-
-Run these instead of `make backend` and `make frontend`:
+### On a phone (same Wi-Fi), installable and offline
 
 ```bash
-make lan-backend    # separate terminal
-make lan-frontend   # prints the address to open, e.g. http://192.168.1.176:5173
+make lan-backend    # terminal 1: the API, accepting the computer's Wi-Fi address
+make lan-app        # terminal 2: the installable app over HTTPS, prints https://<ip>:4173
+make lan-ca         # once per phone: lets the phone download and trust the certificate
 ```
 
-The phone must be on the same Wi-Fi as the computer. The address follows the computer's current IP, so check the printed line if the router hands out a new one. This is the development server, for trying the app out; the shop computer runs the production stack in `deploy/` (see [docs/deployment.md](docs/deployment.md)).
+1. **Once per phone**, run `make lan-ca`, open the printed `http://<ip>:8099/...` address on the phone and install the certificate (the command prints the steps for Android and iPhone).
+2. Open the printed `https://<ip>:4173` address and sign in.
+3. **Install:** Android/Chrome: account menu → **Install app on this device**. iPhone: Safari → Share → **Add to Home Screen**.
+
+The app then opens from the home screen, full screen. If the Wi-Fi drops or the computer is off, it still opens and shows the data last loaded (saved on the phone for 24 hours, removed on sign-out), with a banner; saving waits until the connection is back. `make lan-frontend` is the same over HTTPS with live reload for development. HTTPS keys are made by `make lan-cert` into `.certs/` (git-ignored); the address is re-detected each time.
+
+This is for development and demos; the shop computer runs the production stack in `deploy/` (see [docs/deployment.md](docs/deployment.md)).
 
 ## Checks
 

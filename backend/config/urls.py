@@ -36,3 +36,7 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# API clients always get JSON errors, even for addresses no view handles.
+handler404 = "apps.core.views.not_found"
+handler500 = "apps.core.views.server_error"

@@ -102,14 +102,14 @@ Backend image (WeasyPrint libraries, PostgreSQL 17 client, rclone, non-root user
 | 3.8 Initial data entry | `import_rate_card`, `import_customers`, `import_opening_stock` | — | `system/tests/test_imports.py` |
 | 3.8 Printer setup, training, user guide | [deployment.md](deployment.md), [user-guide](user-guide/) | — | at the shop |
 
-## 5. Quality status (16 October 2026)
+## 5. Quality status (17 October 2026)
 
 | Check | Result |
 |---|---|
-| Backend tests (pytest) | 172 passed |
+| Backend tests (pytest) | 179 passed |
 | Backend coverage | 88 % overall; services 80–100 % |
-| Frontend unit tests (Vitest) | 18 passed |
-| End-to-end (Playwright) | Counter → production with material → delivery, invoice and payment; drag-and-drop on the board (allowed and refused moves): passing |
+| Frontend unit tests (Vitest) | 19 passed |
+| End-to-end (Playwright, production build) | 8 passing: counter → production → delivery; drag-and-drop; sign out; Excel import; add customer from search; offline app; unsaved-order guard and shortcuts; Undo on the board |
 | Lint / format / types | ruff, ESLint, Prettier, `tsc --strict`: clean |
 | OpenAPI schema | Generated and validated; TypeScript types generated from it |
 | Backup and restore | Real `pg_dump`, checksum verified, restore drill row counts identical |
@@ -125,6 +125,19 @@ Backend image (WeasyPrint libraries, PostgreSQL 17 client, rclone, non-root user
 | Draggable production board | Drag-and-drop with @dnd-kit (mouse, touch, keyboard). Drops follow the same role rules as the buttons; the material dialog opens when needed; the card moves at once and is confirmed by the server. | `production/BoardPage.tsx`, `useJobMover.ts` |
 | Better ledger: opening, closing and more | Statement with BS period presets, opening/closing rows, Dr/Cr balances, type totals, aging, linked references. New Ledger page with customer balances (opening, billed, received, closing, last payment) and a day book. PDF and Excel. | `billing/selectors.py`, `LedgerPage.tsx` |
 
+## 5b. Phone app, offline, errors, insights (17 October 2026)
+
+| Request | What was built | Where |
+|---|---|---|
+| Add to Home Screen (web first, native later) | Installable web app: manifest, icons, service worker that stores the app on the device, install button (Android/desktop) and iPhone instructions, "New version ready" prompt | `vite.config.ts`, `app/pwa.tsx`, `public/icons/` |
+| HTTPS | Production: Caddy `tls internal` (no change). Development on Wi-Fi: `make lan-cert` makes a private certificate authority and a certificate for the current IP; `make lan-ca` lets each phone install it; `make lan-app` serves the installable build over HTTPS | `scripts/dev-cert.sh`, `Makefile` |
+| Offline and online | "Online" means the shop computer answers (checked every 15 s), not only that Wi-Fi is up. Offline: the app opens, shows the last data (saved for 24 h, cleared at sign-out) and a banner; writes are refused up front. | `app/offline.ts` |
+| Proper error handling | Request time limits (30 s; 120 s for files), session expiry detected on every request type, warning when a background refresh fails, catch-all for unexpected errors, "updated, reload" screen after deployments, JSON 404/500 for the API, toasts that fit phone screens | `api/client.ts`, `app/queryClient.ts`, `app/globalErrors.ts`, `core/views.py` |
+| Add a customer from the search box | When a typed name matches nobody: "Add “name” as a new customer" in the order form and on the Customers page; only the name is required (PAN optional) | `CustomerSelect.tsx`, `CustomersPage.tsx` |
+| Test the import | Browser test: upload → preview → import → ledger balance → re-upload adds nothing; plus backend tests | `e2e/import.spec.ts` |
+| Eight golden rules | Review and fixes: unsaved-order guard, Undo on the board, keyboard shortcuts, dues follow-up | [ux-golden-rules.md](ux-golden-rules.md) |
+| More dashboards | Insights page (owner): work done vs collected by day or BS month, best-selling items, top customers, dues by age, money in by mode, production (finished, on time, turnaround, wastage). Front-desk home: dues to follow up | `reports/insights.py`, `features/insights/` |
+
 ## 6. Risks and open items
 
 | Risk / item | Impact | Action |
@@ -137,6 +150,8 @@ Backend image (WeasyPrint libraries, PostgreSQL 17 client, rclone, non-root user
 | Thermal printer model | 80 mm receipts print through the browser | Test with the actual printer driver during installation |
 | Nepali user guide | Drafted, needs native review | Team review before training |
 | Work-log column meanings | The sheet's "Payment S" column was read as the amount paid and "Payment M" as the payment mode | Confirm with the shop before importing the full sheet; the preview lists how every column was read |
+| Phones and the certificate | Each phone must trust the shop's certificate once for install/offline to work | Part of the install checklist (deployment §4) |
+| Offline saving | Offline is read-only by design (numbers and stock are allocated on the server) | If offline order entry is needed later, it needs a queue-and-sync design with provisional numbers |
 | Imported history and invoices | Imported work has no invoices, so VAT and invoiced-sales reports exclude it | Expected; confirm the client agrees |
 
 ## 7. Next steps to handover

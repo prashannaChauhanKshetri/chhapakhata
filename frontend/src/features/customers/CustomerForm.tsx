@@ -88,7 +88,14 @@ export function CustomerForm({ customer, initialName, onSaved, onCancel }: Custo
           ]}
           {...form.getInputProps('customer_type')}
         />
-        <TextInput label={t('Name')} required data-autofocus {...form.getInputProps('name')} />
+        <TextInput
+          label={t('Name')}
+          description={t('Only the name is required; everything else can be added later.')}
+          inputWrapperOrder={['label', 'input', 'description', 'error']}
+          required
+          data-autofocus
+          {...form.getInputProps('name')}
+        />
         <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
           <TextInput label={t('Phone')} inputMode="tel" {...form.getInputProps('phone')} />
           <TextInput
@@ -100,7 +107,7 @@ export function CustomerForm({ customer, initialName, onSaved, onCancel }: Custo
         <TextInput label={t('Address')} {...form.getInputProps('address')} />
         <TextInput
           label={t('PAN / VAT number')}
-          description={t("Printed on invoices as the buyer's PAN")}
+          description={t("Optional. Printed on invoices as the buyer's PAN")}
           inputMode="numeric"
           maxLength={9}
           {...form.getInputProps('pan_no')}

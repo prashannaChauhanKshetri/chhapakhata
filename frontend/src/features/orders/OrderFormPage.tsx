@@ -17,7 +17,7 @@ import { useForm } from '@mantine/form';
 import { useDebouncedValue, useHotkeys } from '@mantine/hooks';
 import { IconAlertCircle, IconCheck, IconDeviceFloppy, IconPlus } from '@tabler/icons-react';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
@@ -31,6 +31,7 @@ import { PageLoader } from '@/components/PageLoader';
 import { QueryError } from '@/components/QueryError';
 import { handleFormError, notifySuccess } from '@/lib/forms';
 import { formatAmount, formatNPR, formatQty, toNumber } from '@/lib/format';
+import { useUnsavedChanges } from '@/lib/useUnsavedChanges';
 
 import { CustomerSelect } from '../customers/CustomerSelect';
 import { ItemRow } from './ItemRow';
@@ -141,6 +142,15 @@ function OrderFormInner({
     form.insertListItem('items', emptyItem(last?.unit ?? 'ft', null));
   };
 
+  // Prevent errors: a half-entered order is not lost to a stray click or the back button.
+  const isSaved = useRef(false);
+  useUnsavedChanges(
+    () => !isSaved.current && (form.isDirty() || (!isEdit && customer?.id !== presetCustomer?.id)),
+    isEdit
+      ? t('Your changes to this order have not been saved.')
+      : t('This order has not been saved yet. Leaving now discards it.'),
+  );
+
   const save = async (mode: 'quotation' | 'confirm') => {
     const validation = form.validate();
     if (!customer) {
@@ -166,6 +176,7 @@ function OrderFormInner({
             ? t('Order {{no}} confirmed', { no: saved.order_no })
             : t('Quotation {{no}} saved', { no: saved.order_no }),
       );
+      isSaved.current = true;
       navigate(`/orders/${saved.id}`, { replace: true });
     } catch (error) {
       handleFormError(error, form, t('Order not saved'));

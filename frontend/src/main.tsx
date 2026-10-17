@@ -13,6 +13,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { App } from './app/App';
+import { installGlobalErrorHandlers } from './app/globalErrors';
+import { startConnectionWatch } from './app/offline';
+
+installGlobalErrorHandlers();
+startConnectionWatch();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

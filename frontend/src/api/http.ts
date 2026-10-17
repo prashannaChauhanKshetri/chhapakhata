@@ -2,6 +2,7 @@
  * Small GET helper for reads with dynamic filters (lists, reports). Writes go
  * through the typed `api` client in ./client so request bodies are checked.
  */
+import { fetchWithTimeout, reportIfUnauthenticated } from './client';
 import { ApiError } from './errors';
 
 export type Query = Record<string, string | number | boolean | null | undefined>;
@@ -19,15 +20,20 @@ export function withQuery(path: string, query?: Query): string {
 export async function apiGet<T>(path: string, query?: Query, signal?: AbortSignal): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(withQuery(path, query), {
+    response = await fetchWithTimeout(withQuery(path, query), {
       credentials: 'same-origin',
       headers: { Accept: 'application/json' },
       signal,
     });
   } catch (error) {
-    if ((error as Error).name === 'AbortError') throw error;
+    if (error instanceof ApiError) throw error; // timed out
+    if ((error as Error).name === 'AbortError') throw error; // cancelled by the page
     throw new ApiError(0, []);
   }
-  if (!response.ok) throw await ApiError.fromResponse(response);
+  if (!response.ok) {
+    const error = await ApiError.fromResponse(response);
+    reportIfUnauthenticated(error, path);
+    throw error;
+  }
   return (await response.json()) as T;
 }
