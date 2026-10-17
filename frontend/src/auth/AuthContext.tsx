@@ -35,7 +35,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(
     () =>
       onUnauthenticated(() => {
+        // Session expired: same clean-up as signing out, so the next person to
+        // sign in never sees the previous user's data.
         client.setQueryData(ME_KEY, null);
+        client.removeQueries({ predicate: (query) => query.queryKey[0] !== ME_KEY[0] });
       }),
     [client],
   );
@@ -45,10 +48,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await unwrap(api.POST('/api/v1/auth/logout/'));
-    } finally {
-      client.clear();
-      client.setQueryData(ME_KEY, null);
+    } catch {
+      // Offline or the session already expired: sign out on this device anyway.
     }
+    // Show the login screen first, so open pages unmount instead of refetching
+    // the last user's data, then drop everything that user loaded. (Clearing the
+    // whole cache would also detach the signed-in query from this provider and
+    // leave the old screens up.)
+    await client.cancelQueries();
+    client.setQueryData(ME_KEY, null);
+    client.removeQueries({ predicate: (query) => query.queryKey[0] !== ME_KEY[0] });
   }, [client]);
 
   const value = useMemo<AuthState>(() => {

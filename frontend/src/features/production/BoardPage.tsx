@@ -216,9 +216,11 @@ export default function BoardPage() {
     <>
       <PageHeader
         title={t('Production board')}
-        description={t(
-          'Drag a card to another stage, or use its buttons. Updates every 30 seconds.',
-        )}
+        description={
+          isPhone
+            ? t('Pick a stage, then move jobs with the buttons on each card.')
+            : t('Drag a card to another stage, or use its buttons. Updates every 30 seconds.')
+        }
         badge={
           data ? (
             <Group gap={6}>

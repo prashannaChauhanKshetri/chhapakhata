@@ -34,6 +34,17 @@ make frontend     # app on http://127.0.0.1:5173  (separate terminal)
 
 Open http://127.0.0.1:5173 and sign in. API reference (development only): http://127.0.0.1:8000/api/docs/.
 
+### On a phone (same Wi-Fi)
+
+Run these instead of `make backend` and `make frontend`:
+
+```bash
+make lan-backend    # separate terminal
+make lan-frontend   # prints the address to open, e.g. http://192.168.1.176:5173
+```
+
+The phone must be on the same Wi-Fi as the computer. The address follows the computer's current IP, so check the printed line if the router hands out a new one. This is the development server, for trying the app out; the shop computer runs the production stack in `deploy/` (see [docs/deployment.md](docs/deployment.md)).
+
 ## Checks
 
 ```bash

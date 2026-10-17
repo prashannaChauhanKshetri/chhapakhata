@@ -1,5 +1,5 @@
 # Common development tasks. Run `make help` for the list.
-.PHONY: help setup db seed backend frontend test test-backend test-frontend e2e lint schema build
+.PHONY: help setup db seed backend frontend lan-backend lan-frontend test test-backend test-frontend e2e lint schema build
 
 help:
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
@@ -21,6 +21,23 @@ backend: ## Run the Django API on :8000
 
 frontend: ## Run the web app on :5173 (proxies /api to :8000)
 	cd frontend && npm run dev
+
+# This computer's address on the Wi-Fi (macOS, then Linux), for testing on phones.
+LAN_IP := $(shell ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || hostname -I 2>/dev/null | awk '{print $$1}')
+
+lan-backend: ## Like `backend`, but accepts requests from phones on the same Wi-Fi
+	@test -n "$(LAN_IP)" || (echo "Not connected to a network" && exit 1)
+	cd backend && \
+	  ALLOWED_HOSTS=localhost,127.0.0.1,$(LAN_IP) \
+	  CSRF_TRUSTED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://$(LAN_IP):5173 \
+	  uv run python manage.py runserver 127.0.0.1:8000
+
+lan-frontend: ## Like `frontend`, but open to phones on the same Wi-Fi (prints the address)
+	@test -n "$(LAN_IP)" || (echo "Not connected to a network" && exit 1)
+	@echo ""
+	@echo "  On a phone or another computer on the same Wi-Fi, open:  http://$(LAN_IP):5173"
+	@echo ""
+	cd frontend && npm run dev -- --host 0.0.0.0
 
 test: test-backend test-frontend ## Run all unit and API tests
 
