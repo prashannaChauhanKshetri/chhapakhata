@@ -1,5 +1,5 @@
 # Common development tasks. Run `make help` for the list.
-.PHONY: help setup db seed backend frontend lan-backend lan-frontend lan-app lan-cert lan-cert-check lan-ca test test-backend test-frontend e2e lint schema build
+.PHONY: help setup db seed history backend-history backend frontend lan-backend lan-frontend lan-app lan-cert lan-cert-check lan-ca test test-backend test-frontend e2e lint schema build
 
 help:
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
@@ -15,6 +15,18 @@ db: ## Create the local database and apply migrations
 
 seed: ## Fill an empty database with demo data (owner / frontdesk / operator, password Demo@2083)
 	cd backend && uv run python manage.py seed_demo
+
+# A second, separate database holding six years of simulated shop history.
+HISTORY_DB ?= chhapakhata_history
+HISTORY_URL := postgres://localhost:5432/$(HISTORY_DB)
+
+history: ## Build the separate history database: the shop from 1 Shrawan 2077 to today (takes a while)
+	dropdb --if-exists $(HISTORY_DB) && createdb $(HISTORY_DB)
+	cd backend && DATABASE_URL=$(HISTORY_URL) uv run python manage.py migrate -v0
+	cd backend && DATABASE_URL=$(HISTORY_URL) uv run python manage.py seed_history
+
+backend-history: ## Like `backend`, but on the history database (sign in as newowner)
+	cd backend && DATABASE_URL=$(HISTORY_URL) uv run python manage.py runserver 127.0.0.1:8000
 
 backend: ## Run the Django API on :8000
 	cd backend && uv run python manage.py runserver 127.0.0.1:8000

@@ -242,7 +242,8 @@ def dues_follow_up(limit: int = 6) -> list[dict[str, Any]]:
     """Customers whose dues are oldest, for the front desk to call."""
     outstanding = outstanding_by_customer()
     rows = sorted(
-        (o for o in outstanding.values() if o.oldest_due_date),
+        # Paise left over from rounding are not worth a phone call.
+        (o for o in outstanding.values() if o.oldest_due_date and o.balance >= 1),
         key=lambda o: o.oldest_due_date,
     )[:limit]
     customers = {c.pk: c for c in Customer.objects.filter(pk__in=[o.customer_id for o in rows])}

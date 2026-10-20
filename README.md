@@ -34,6 +34,17 @@ make frontend     # app on http://127.0.0.1:5173  (separate terminal)
 
 Open http://127.0.0.1:5173 and sign in. API reference (development only): http://127.0.0.1:8000/api/docs/.
 
+### Six years of shop history (separate database)
+
+```bash
+make history          # builds `chhapakhata_history`: the shop from 1 Shrawan 2077 BS to today (about 30–40 min)
+make backend-history  # run the API on that database instead of the demo one (frontend unchanged)
+```
+
+Sign in as **newowner** (owner), **sunita** / **anjali** (front desk) or **kamal** / **suresh** (operators); password **Shop@2077**. Hari, the first operator (2077–2080), has left, so his account is inactive.
+
+The shop opens with only the owner and a small rate card, then grows. Staff join and leave; rates rise every fiscal year; new items arrive (Backlit 2078, 3D letters 2080, acrylic plates 2081); VAT registration starts in FY 2079/80. Seasons follow Dashain–Tihar and Baisakh admissions, with the 2077–78 Covid lockdowns and the Mangsir 2079 election rush; Saturdays are closed. Regular businesses buy on credit at negotiated rates, walk-ins pay at the counter, and payments move from cash to Fonepay/eSewa/Khalti over the years. Rolls are bought when low and every print records material and wastage. Every event goes through the normal business rules in date order, so invoice and receipt numbers, the ledger and stock reconcile exactly. Names, phones and PAN numbers are invented. `make backend` switches back to the demo data.
+
 ### On a phone (same Wi-Fi), installable and offline
 
 ```bash
