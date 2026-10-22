@@ -9,6 +9,11 @@ router.register("activity", views.ActivityLogViewSet, basename="activity")
 
 urlpatterns = [
     path("settings/shop/", views.ShopSettingsView.as_view(), name="shop-settings"),
+    path(
+        "settings/shop/images/<str:field>/",
+        views.ShopImageView.as_view(),
+        name="shop-image",
+    ),
     path("utils/date/", views.DateConversionView.as_view(), name="date-conversion"),
     path("utils/periods/", views.PeriodsView.as_view(), name="periods"),
     path("health/", views.HealthView.as_view(), name="health"),

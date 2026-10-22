@@ -25,6 +25,11 @@
 		root * /data/static
 		file_server
 	}
+	# Private uploads (the shop's stamp and signature) are never served as
+	# files; the app hands them out to signed-in users only.
+	handle /media/private/* {
+		respond 404
+	}
 	handle_path /media/* {
 		root * /data/media
 		file_server

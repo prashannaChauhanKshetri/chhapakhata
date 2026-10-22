@@ -137,9 +137,9 @@ USE_TZ = True
 
 # --- Static & media ---
 STATIC_URL = "/static/"
-STATIC_ROOT = env.path("STATIC_ROOT", default=BASE_DIR / "staticfiles")
+STATIC_ROOT = Path(env.str("STATIC_ROOT", default=str(BASE_DIR / "staticfiles")))
 MEDIA_URL = "/media/"
-MEDIA_ROOT = env.path("MEDIA_ROOT", default=BASE_DIR / "media")
+MEDIA_ROOT = Path(env.str("MEDIA_ROOT", default=str(BASE_DIR / "media")))
 FONTS_DIR = BASE_DIR / "fonts"
 
 # --- Django REST Framework ---
@@ -213,12 +213,12 @@ Q_CLUSTER = {
 
 # --- Business configuration ---
 MAX_ACTIVE_USERS = env.int("MAX_ACTIVE_USERS", default=5)
-BACKUP_DIR = env.path("BACKUP_DIR", default=BASE_DIR / "backups")
+BACKUP_DIR = Path(env.str("BACKUP_DIR", default=str(BASE_DIR / "backups")))
 BACKUP_HOUR = env.int("BACKUP_HOUR", default=21)
 RCLONE_REMOTE = env("RCLONE_REMOTE", default="")
 RCLONE_CONFIG = env("RCLONE_CONFIG", default="")
 
-LOG_DIR = env.path("LOG_DIR", default=BASE_DIR / "logs")
+LOG_DIR = Path(env.str("LOG_DIR", default=str(BASE_DIR / "logs")))
 
 LOGGING = {
     "version": 1,

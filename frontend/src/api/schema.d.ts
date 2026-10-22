@@ -934,6 +934,28 @@ export interface paths {
         patch: operations["settings_shop_partial_update"];
         trace?: never;
     };
+    "/api/v1/settings/shop/images/{field}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description The shop's logo, stamp and signature, for signed-in users only.
+         *
+         *     Any signed-in user may see the logo; the stamp and signature (which make a
+         *     bill look genuine) are for the owner, who manages them in Settings.
+         */
+        get: operations["settings_shop_images_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/stock-items/": {
         parameters: {
             query?: never;
@@ -7739,6 +7761,7 @@ export interface components {
          * @enum {string}
          */
         ServerErrorEnum: "server_error";
+        SettingsShopImagesRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SettingsShopPartialUpdateAddressErrorComponent: {
             /**
              * @description * `address` - address (enum property replaced by openapi-typescript)
@@ -16829,6 +16852,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettingsShopPartialUpdateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    settings_shop_images_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                field: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": string;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsShopImagesRetrieveErrorResponse400"];
                 };
             };
             401: {

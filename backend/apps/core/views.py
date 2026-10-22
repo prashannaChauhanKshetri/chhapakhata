@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import datetime as dt
+import mimetypes
 
 import django_filters
 from django.db import connection
+from django.http import FileResponse
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import mixins, serializers, viewsets
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -24,7 +26,12 @@ from .dates import (
 )
 from .models import ActivityLog, ShopSettings
 from .permissions import AUTHENTICATED, Perm
-from .serializers import ActivityLogSerializer, DateConversionSerializer, ShopSettingsSerializer
+from .serializers import (
+    IMAGE_FIELDS,
+    ActivityLogSerializer,
+    DateConversionSerializer,
+    ShopSettingsSerializer,
+)
 
 
 class ShopSettingsView(APIView):
@@ -56,6 +63,34 @@ class ShopSettingsView(APIView):
             request=request,
         )
         return Response(serializer.data)
+
+
+class ShopImageView(APIView):
+    """The shop's logo, stamp and signature, for signed-in users only.
+
+    Any signed-in user may see the logo; the stamp and signature (which make a
+    bill look genuine) are for the owner, who manages them in Settings.
+    """
+
+    required_perms = AUTHENTICATED
+
+    @extend_schema(responses={(200, "image/*"): bytes})
+    def get(self, request, field: str):
+        if field not in IMAGE_FIELDS:
+            raise NotFound()
+        if field != "logo" and not request.user.can(Perm.SETTINGS_MANAGE):
+            raise PermissionDenied()
+        image = getattr(ShopSettings.load(), field)
+        if not image:
+            raise NotFound()
+        try:
+            handle = image.open("rb")
+        except FileNotFoundError as exc:
+            raise NotFound() from exc
+        response = FileResponse(handle, content_type=mimetypes.guess_type(image.name)[0])
+        response["Cache-Control"] = "private, max-age=86400"
+        response["X-Content-Type-Options"] = "nosniff"
+        return response
 
 
 class ActivityLogFilter(django_filters.FilterSet):

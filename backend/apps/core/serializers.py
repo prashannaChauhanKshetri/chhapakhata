@@ -28,6 +28,9 @@ class UserRefSerializer(serializers.Serializer):
     full_name = serializers.CharField(source="get_full_name", read_only=True)
 
 
+IMAGE_FIELDS = ("logo", "stamp_image", "signature_image")
+
+
 class ShopSettingsSerializer(serializers.ModelSerializer):
     remove_logo = serializers.BooleanField(write_only=True, required=False)
     remove_stamp_image = serializers.BooleanField(write_only=True, required=False)
@@ -65,8 +68,21 @@ class ShopSettingsSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["updated_at"]
 
+    def to_representation(self, instance):
+        # Images are private files: point at the signed-in-only endpoint, with a
+        # version so a replaced image is not shown from the browser cache.
+        data = super().to_representation(instance)
+        version = int(instance.updated_at.timestamp()) if instance.updated_at else 0
+        for field in IMAGE_FIELDS:
+            data[field] = (
+                f"/api/v1/settings/shop/images/{field}/?v={version}"
+                if getattr(instance, field)
+                else None
+            )
+        return data
+
     def update(self, instance, validated_data):
-        for field in ("logo", "stamp_image", "signature_image"):
+        for field in IMAGE_FIELDS:
             if validated_data.pop(f"remove_{field}", False):
                 getattr(instance, field).delete(save=False)
                 setattr(instance, field, "")

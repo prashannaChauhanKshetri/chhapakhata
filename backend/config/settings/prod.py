@@ -14,6 +14,11 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 
+# Caddy redirects HTTP to HTTPS itself (W008). HSTS stays off on purpose (W004):
+# the shop runs on a private certificate, and the documented plain-HTTP fallback
+# must keep working if a device cannot trust it; HSTS would lock those devices out.
+SILENCED_SYSTEM_CHECKS = ["security.W004", "security.W008"]
+
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 LOGGING = {
     "version": 1,

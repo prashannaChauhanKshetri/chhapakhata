@@ -9,6 +9,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from simple_history.models import HistoricalRecords
 
+from .storage import private_storage
+
 
 class TimeStampedModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -78,9 +80,10 @@ class ShopSettings(models.Model):
     )
 
     # Documents
-    logo = models.ImageField(upload_to="branding/", blank=True)
-    stamp_image = models.ImageField(upload_to="branding/", blank=True)
-    signature_image = models.ImageField(upload_to="branding/", blank=True)
+    # Private: served only to signed-in users (see apps/core/storage.py).
+    logo = models.ImageField(upload_to="branding/", storage=private_storage, blank=True)
+    stamp_image = models.ImageField(upload_to="branding/", storage=private_storage, blank=True)
+    signature_image = models.ImageField(upload_to="branding/", storage=private_storage, blank=True)
     invoice_footer_note = models.CharField(
         max_length=255, blank=True, default="Thank you for your business."
     )
