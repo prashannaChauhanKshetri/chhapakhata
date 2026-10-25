@@ -31,6 +31,7 @@ import { apiGet } from '@/api/http';
 import type { DateConversion, ShopSettings } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { ChangePasswordForm } from '@/auth/ChangePasswordForm';
+import { Logo } from '@/components/Logo';
 import { PageLoader } from '@/components/PageLoader';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
@@ -164,7 +165,9 @@ export function AppLayout() {
 
         <AppShell.Navbar className={classes.navbar}>
           <AppShell.Section px="md" pt="md" pb="sm">
-            <Text className={classes.brand}>ChhapaKhata</Text>
+            <Link to="/" className={classes.brand} aria-label={t('ChhapaKhata home')}>
+              <Logo size={30} onDark />
+            </Link>
           </AppShell.Section>
           <AppShell.Section grow component={ScrollArea} px="sm">
             <Stack gap="md" pb="md">

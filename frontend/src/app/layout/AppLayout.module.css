@@ -10,11 +10,14 @@
 }
 
 .brand {
-  color: #f8fafc;
-  font-size: var(--mantine-font-size-sm);
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+  display: inline-flex;
+  border-radius: var(--mantine-radius-sm);
+  text-decoration: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--mantine-color-slate-4);
+    outline-offset: 4px;
+  }
 }
 
 .sectionLabel {

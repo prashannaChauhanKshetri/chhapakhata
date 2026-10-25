@@ -64,3 +64,15 @@ One chart: daily sales for 30 days, a single slate series (no legend box), bars 
 ## Accessibility
 
 Visible focus rings, labelled inputs and icon buttons, AA contrast for all text, status never shown by colour alone, keyboard shortcuts on the order form (Ctrl+S saves; Enter on the last item adds another).
+
+## Brand
+
+The ChhapaKhata mark is a print stamp (*chhapa*) over two ledger lines (*khata*), on a `#0F172A` tile with rounded corners (radius ≈ 21 % of the side). It uses only the palette: handle `#E2E8F0`, neck and ledger lines `#94A3B8`, stamp base `#F8FAFC`.
+
+| Asset | Where |
+|---|---|
+| Mark (SVG, master) | `frontend/public/brand/logo-mark.svg` (also `favicon.svg`) |
+| React component | `frontend/src/components/Logo.tsx`: `<Logo size onDark />` (mark + wordmark) and `<LogoMark />` |
+| App icons | `frontend/public/icons/`: 192 and 512 px rounded tiles; 512 px maskable (full bleed, glyph at 78 % inside the safe zone); 180 px Apple touch icon |
+
+Wordmark: "Chhapa" bold, "Khata" medium, Inter, letter-spacing −0.02 em. On light backgrounds `#0F172A` + `#64748B`; on dark (sidebar, login panel) `#F8FAFC` + `#94A3B8`, and the tile gets a faint `#334155` edge so it does not melt into the background. The shop's own logo (Settings → Shop) stays on invoices and receipts; the ChhapaKhata mark is for the app only.

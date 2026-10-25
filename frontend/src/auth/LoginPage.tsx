@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 
 import { api, ensureCsrfCookie, unwrap } from '@/api/client';
 import { errorMessage } from '@/api/errors';
+import { Logo } from '@/components/Logo';
 
 import { useAuth } from './AuthContext';
 import classes from './LoginPage.module.css';
@@ -56,7 +57,9 @@ export function LoginPage() {
     <Box className={classes.page}>
       <Box className={classes.brandPanel} visibleFrom="md">
         <Stack gap="xs">
-          <Text className={classes.eyebrow}>ChhapaKhata</Text>
+          <Box mb="lg">
+            <Logo size={44} onDark />
+          </Box>
           <Title order={1} c="white" fz={30}>
             {t('Print shop management')}
           </Title>
@@ -66,6 +69,9 @@ export function LoginPage() {
         </Stack>
       </Box>
       <Box className={classes.formPanel}>
+        <Box hiddenFrom="md" mb="lg">
+          <Logo size={40} />
+        </Box>
         <Paper className={classes.card} withBorder p="xl">
           <form onSubmit={submit} noValidate>
             <Stack gap="md">
