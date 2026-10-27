@@ -1,4 +1,5 @@
 import {
+  ActionIcon,
   AppShell,
   Avatar,
   Box,
@@ -32,6 +33,7 @@ import type { DateConversion, ShopSettings } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { ChangePasswordForm } from '@/auth/ChangePasswordForm';
 import { Logo } from '@/components/Logo';
+import { TextSizeControl } from '@/components/TextSizeControl';
 import { PageLoader } from '@/components/PageLoader';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
@@ -106,16 +108,31 @@ export function AppLayout() {
             </Group>
             <Group gap="xs" wrap="nowrap">
               {can(Perm.ORDERS_MANAGE) && (
-                <Button
-                  component={Link}
-                  to="/orders/new"
-                  leftSection={<IconPlus size={16} />}
-                  visibleFrom="xs"
-                >
-                  {t('New order')}
-                </Button>
+                <>
+                  <Button
+                    component={Link}
+                    to="/orders/new"
+                    leftSection={<IconPlus size={16} stroke={2.25} />}
+                    visibleFrom="xs"
+                    fw={600}
+                  >
+                    {t('New order')}
+                  </Button>
+                  <ActionIcon
+                    component={Link}
+                    to="/orders/new"
+                    variant="filled"
+                    color="orange"
+                    size={36}
+                    radius="md"
+                    hiddenFrom="xs"
+                    aria-label={t('New order')}
+                  >
+                    <IconPlus size={20} stroke={2.25} />
+                  </ActionIcon>
+                </>
               )}
-              <Menu position="bottom-end" width={220} shadow="md">
+              <Menu position="bottom-end" width={240} shadow="md" closeOnItemClick>
                 <Menu.Target>
                   <UnstyledButton className={classes.userButton} aria-label={t('Account menu')}>
                     <Group gap={8} wrap="nowrap">
@@ -135,6 +152,10 @@ export function AppLayout() {
                   </UnstyledButton>
                 </Menu.Target>
                 <Menu.Dropdown>
+                  <Box px="sm" py={6}>
+                    <TextSizeControl />
+                  </Box>
+                  <Menu.Divider />
                   <Menu.Item leftSection={<IconKey size={16} />} onClick={openChangePassword}>
                     {t('Change password')}
                   </Menu.Item>

@@ -455,6 +455,7 @@ export default function CustomerDetailPage() {
             )}
             {can(Perm.ORDERS_MANAGE) && customer.is_active && (
               <Button
+                variant="light"
                 leftSection={<IconPlus size={16} />}
                 onClick={() => navigate(`/orders/new?customer=${customer.id}`)}
               >

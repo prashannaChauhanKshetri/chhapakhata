@@ -17,7 +17,6 @@ import {
   IconDatabaseExclamation,
   IconFileInvoice,
   IconPackage,
-  IconPlus,
   IconReceipt2,
   IconUsers,
 } from '@tabler/icons-react';
@@ -79,11 +78,6 @@ export default function DashboardPage() {
                 {t('Receive payment')}
               </Button>
             )}
-            {can(Perm.ORDERS_MANAGE) && (
-              <Button component={Link} to="/orders/new" leftSection={<IconPlus size={16} />}>
-                {t('New order')}
-              </Button>
-            )}
           </>
         }
       />
@@ -120,6 +114,7 @@ export default function DashboardPage() {
                   data?.today ? t('{{count}} invoices', { count: data.today.invoices }) : undefined
                 }
                 icon={<IconFileInvoice size={18} />}
+                accent="blue"
                 to={can(Perm.INVOICES_VIEW) ? '/invoices' : undefined}
                 loading={isPending}
               />
@@ -130,6 +125,7 @@ export default function DashboardPage() {
                   data?.today ? t('{{count}} payments', { count: data.today.payments }) : undefined
                 }
                 icon={<IconCash size={18} />}
+                accent="green"
                 to={can(Perm.PAYMENTS_VIEW) ? '/payments' : undefined}
                 loading={isPending}
               />
@@ -144,6 +140,7 @@ export default function DashboardPage() {
                 amount: formatNPRCompact(data.dues.over_90_days),
               })}
               icon={<IconUsers size={18} />}
+              accent="amber"
               to="/reports/pending-dues"
               tone={Number(data.dues.over_90_days) > 0 ? 'warning' : 'default'}
             />
@@ -166,6 +163,7 @@ export default function DashboardPage() {
                 )
               }
               icon={<IconClockExclamation size={18} />}
+              accent="violet"
               to="/production"
             />
           )}
@@ -183,6 +181,7 @@ export default function DashboardPage() {
               value={data.low_stock.length}
               hint={t('items below their set level')}
               icon={<IconPackage size={18} />}
+              accent="orange"
               to="/inventory?low=true"
               tone={data.low_stock.length > 0 ? 'warning' : 'default'}
             />

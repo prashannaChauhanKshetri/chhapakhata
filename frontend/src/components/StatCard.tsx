@@ -1,4 +1,4 @@
-import { Card, Group, Skeleton, Stack, Text, ThemeIcon } from '@mantine/core';
+import { Card, Group, type MantineColor, Skeleton, Stack, Text, ThemeIcon } from '@mantine/core';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
@@ -11,6 +11,8 @@ interface StatCardProps {
   loading?: boolean;
   /** Draws attention (e.g. overdue jobs) with a coloured value. */
   tone?: 'default' | 'warning' | 'danger';
+  /** Icon tint, so each kind of figure is recognisable at a glance. */
+  accent?: MantineColor;
 }
 
 export function StatCard({
@@ -21,6 +23,7 @@ export function StatCard({
   to,
   loading,
   tone = 'default',
+  accent = 'slate',
 }: StatCardProps) {
   const color = tone === 'danger' ? 'red.7' : tone === 'warning' ? 'amber.8' : 'slate.9';
   const card = (
@@ -44,7 +47,7 @@ export function StatCard({
           )}
         </Stack>
         {icon && (
-          <ThemeIcon variant="light" color="slate" size={36} radius="md">
+          <ThemeIcon variant="light" color={accent} size={36} radius="md">
             {icon}
           </ThemeIcon>
         )}

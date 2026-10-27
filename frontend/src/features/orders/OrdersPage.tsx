@@ -10,7 +10,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { IconFileSpreadsheet, IconPlus, IconSearch } from '@tabler/icons-react';
+import { IconFileSpreadsheet, IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from 'mantine-datatable';
 import { useTranslation } from 'react-i18next';
@@ -24,6 +24,7 @@ import { Money } from '@/components/Money';
 import { PageHeader } from '@/components/PageHeader';
 import { QueryError } from '@/components/QueryError';
 import { StatusBadge } from '@/components/StatusBadge';
+import { WorkProgress } from '@/components/WorkProgress';
 import { deadlineLabel } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
 import { ORDER_STATUS } from '@/lib/status';
@@ -97,11 +98,6 @@ export default function OrdersPage() {
                 {t('Excel import / export')}
               </Button>
             </Can>
-            <Can perm={Perm.ORDERS_MANAGE}>
-              <Button component={Link} to="/orders/new" leftSection={<IconPlus size={16} />}>
-                {t('New order')}
-              </Button>
-            </Can>
           </>
         }
       />
@@ -144,6 +140,7 @@ export default function OrdersPage() {
               {
                 accessor: 'order_no',
                 title: t('Order'),
+                noWrap: true,
                 render: (o) => (
                   <div>
                     <Group gap={6} wrap="nowrap">
@@ -177,6 +174,7 @@ export default function OrdersPage() {
               {
                 accessor: 'created_at',
                 title: t('Date'),
+                noWrap: true,
                 sortable: true,
                 visibleMediaQuery: '(min-width: 48em)',
                 render: (o) => <DualDate ad={o.order_date} bs={o.order_date_bs} />,
@@ -198,7 +196,14 @@ export default function OrdersPage() {
               {
                 accessor: 'status',
                 title: t('Status'),
+                noWrap: true,
                 render: (o) => <StatusBadge value={o.status} map={ORDER_STATUS} />,
+              },
+              {
+                accessor: 'progress',
+                title: t('Progress'),
+                visibleMediaQuery: '(min-width: 48em)',
+                render: (o) => <WorkProgress progress={o.progress} />,
               },
               {
                 accessor: 'deadline',

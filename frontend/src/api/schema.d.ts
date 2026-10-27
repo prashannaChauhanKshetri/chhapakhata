@@ -4737,6 +4737,7 @@ export interface components {
             readonly created_by: components["schemas"]["UserRef"];
             /** Format: date-time */
             readonly created_at: string;
+            readonly progress: components["schemas"]["OrderProgress"] | null;
             notes: string;
             discount_type: components["schemas"]["DiscountTypeEnum"];
             readonly discount_type_label: string;
@@ -4909,6 +4910,7 @@ export interface components {
             readonly created_by: components["schemas"]["UserRef"];
             /** Format: date-time */
             readonly created_at: string;
+            readonly progress: components["schemas"]["OrderProgress"] | null;
         };
         OrderPayment: {
             id: number;
@@ -4921,6 +4923,16 @@ export interface components {
             payment_date: string;
             is_advance: boolean;
             status: string;
+        };
+        OrderProgress: {
+            /** @description 0–100, across all items */
+            percent: number;
+            /** @description Stage of the furthest-behind item */
+            stage: number;
+            stage_label: string;
+            jobs: number;
+            /** @description Items ready for collection or delivered */
+            jobs_ready: number;
         };
         OrderRef: {
             id: number;

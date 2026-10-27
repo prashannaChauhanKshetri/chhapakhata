@@ -22060,6 +22060,11 @@ components:
           type: string
           format: date-time
           readOnly: true
+        progress:
+          allOf:
+          - $ref: '#/components/schemas/OrderProgress'
+          nullable: true
+          readOnly: true
         notes:
           type: string
         discount_type:
@@ -22156,6 +22161,7 @@ components:
       - order_no
       - paid_amount
       - payments
+      - progress
       - round_off
       - source
       - source_label
@@ -22507,6 +22513,11 @@ components:
           type: string
           format: date-time
           readOnly: true
+        progress:
+          allOf:
+          - $ref: '#/components/schemas/OrderProgress'
+          nullable: true
+          readOnly: true
       required:
       - balance_due
       - created_at
@@ -22521,6 +22532,7 @@ components:
       - order_date_bs
       - order_no
       - paid_amount
+      - progress
       - source
       - source_label
       - status
@@ -22557,6 +22569,28 @@ components:
       - payment_date
       - receipt_no
       - status
+    OrderProgress:
+      type: object
+      properties:
+        percent:
+          type: integer
+          description: 0–100, across all items
+        stage:
+          type: integer
+          description: Stage of the furthest-behind item
+        stage_label:
+          type: string
+        jobs:
+          type: integer
+        jobs_ready:
+          type: integer
+          description: Items ready for collection or delivered
+      required:
+      - jobs
+      - jobs_ready
+      - percent
+      - stage
+      - stage_label
     OrderRef:
       type: object
       properties:

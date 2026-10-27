@@ -24,6 +24,7 @@ export type AddOn = S['AddOn'];
 export type RateHistory = S['RateHistory'];
 
 export type OrderList = S['OrderList'];
+export type OrderProgress = S['OrderProgress'];
 export type OrderDetail = S['OrderDetail'];
 export type OrderItem = S['OrderItem'];
 export type OrderWrite = S['OrderWriteRequest'];

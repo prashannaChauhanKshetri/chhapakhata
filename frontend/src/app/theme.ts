@@ -1,8 +1,12 @@
 /**
  * Design system: the neutral slate palette from the client's reference
  * (#F8FAFC · #E2E8F0 · #94A3B8 · #334155 · #0F172A) with in-between shades from
- * the same slate family. Primary actions use #334155. Colour beyond slate is
- * reserved for meaning: status badges, alerts, overdue and low-stock signals.
+ * the same slate family, plus one accent: orange, for the main action on each
+ * screen (New order, Save, Confirm, Sign in), checkboxes and switches, and the
+ * keyboard focus ring. Filled buttons use orange 700 (#C2410C, 5.2:1 with white
+ * text, passes WCAG AA; the brighter #EA580C would not). Links stay slate.
+ * Other colours are reserved for meaning: status badges, alerts, overdue and
+ * low-stock signals, chart series.
  *
  * Contrast notes (on white): #0F172A 17.9:1, #334155 10.4:1, #475569 7.6:1,
  * #64748B 4.8:1 (smallest allowed for text). #94A3B8 is 2.6:1, so it is used
@@ -10,10 +14,12 @@
  */
 import {
   ActionIcon,
+  Anchor,
   Badge,
   Button,
   Card,
   createTheme,
+  Loader,
   type MantineColorsTuple,
   Modal,
   NumberInput,
@@ -48,6 +54,20 @@ const slate: MantineColorsTuple = [
   '#334155',
   '#1E293B',
   '#0F172A',
+];
+
+// The accent (Tailwind orange). Shade 7 is the filled-button colour.
+const orange: MantineColorsTuple = [
+  '#FFF7ED',
+  '#FFEDD5',
+  '#FED7AA',
+  '#FDBA74',
+  '#FB923C',
+  '#F97316',
+  '#EA580C',
+  '#C2410C',
+  '#9A3412',
+  '#7C2D12',
 ];
 
 // Semantic palettes (Tailwind scales, the same family as slate) for status only.
@@ -116,9 +136,9 @@ const fontFamily =
   "'Inter Variable', Inter, 'Noto Sans Devanagari', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
 
 export const theme = createTheme({
-  primaryColor: 'slate',
+  primaryColor: 'orange',
   primaryShade: 7,
-  colors: { slate, gray: slate, green, amber, yellow: amber, red, blue, violet },
+  colors: { slate, gray: slate, orange, green, amber, yellow: amber, red, blue, violet },
   white: '#FFFFFF',
   black: palette.text,
   fontFamily,
@@ -159,6 +179,9 @@ export const theme = createTheme({
   components: {
     Button: Button.extend({ defaultProps: { size: 'sm', fw: 500 } }),
     ActionIcon: ActionIcon.extend({ defaultProps: { variant: 'subtle', color: 'slate' } }),
+    // Links stay neutral: orange is for actions, not for every piece of text.
+    Anchor: Anchor.extend({ defaultProps: { c: 'slate.8', underline: 'hover', fw: 500 } }),
+    Loader: Loader.extend({ defaultProps: { color: 'slate.5' } }),
     TextInput: TextInput.extend({ defaultProps: { size: 'sm' } }),
     NumberInput: NumberInput.extend({ defaultProps: { size: 'sm', hideControls: true } }),
     Select: Select.extend({

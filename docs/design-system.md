@@ -4,7 +4,7 @@ Defined in `frontend/src/app/theme.ts` (Mantine theme) and `frontend/src/styles/
 
 ## Colour
 
-The client's reference palette, used exactly. In-between shades come from the same slate family (Tailwind slate), which Mantine needs for hover and border states.
+The client's reference slate palette for everything neutral, plus **one accent, orange**, chosen on 27 Oct 2026 because an all-slate interface read as flat and the main actions did not stand out. In-between shades come from the same families (Tailwind slate and orange), which Mantine needs for hover and border states.
 
 | Token | Hex | Use |
 |---|---|---|
@@ -13,10 +13,13 @@ The client's reference palette, used exactly. In-between shades come from the sa
 | Border | `#E2E8F0` | Dividers, input borders, subtle fills |
 | Decor | `#94A3B8` | Icons, placeholders, disabled, progress tracks. **Never body text** (2.6:1 contrast) |
 | Muted text | `#64748B` / dimmed `#475569` | Secondary text (≥ 4.8:1, passes WCAG AA) |
-| Strong text / primary | `#334155` | Primary buttons, active controls, headings in tables |
+| Strong text | `#334155` | Headings in tables, strong labels, links |
+| **Accent** | orange `#C2410C` (hover `#9A3412`, tint `#FFF7ED`) | The main action on each screen (New order, Save, Confirm, Deliver, Sign in), checkboxes and switches, the active sidebar marker, the focus ring. `#C2410C` with white text is 5.2:1 (passes AA); the brighter `#EA580C` is not used for text-on-fill |
 | Text / sidebar | `#0F172A` | Body text; sidebar background |
 
-**Colour beyond slate is reserved for meaning**, as soft badges or small marks, always with a text label:
+One orange filled button per screen at most: the top-bar **New order** is the main action everywhere, so pages do not repeat it (a customer's page offers a light-orange "New order" for that customer). Links stay slate, so orange always means "act here".
+
+**Other colour is reserved for meaning**, as soft badges or small marks, always with a text label. Dashboard and Insights cards tint their icons (sales blue, money green, dues amber, jobs violet, stock orange) so each kind of figure is recognisable at a glance:
 
 | Meaning | Colour |
 |---|---|
@@ -63,7 +66,9 @@ One chart: daily sales for 30 days, a single slate series (no legend box), bars 
 
 ## Accessibility
 
-Visible focus rings, labelled inputs and icon buttons, AA contrast for all text, status never shown by colour alone, keyboard shortcuts on the order form (Ctrl+S saves; Enter on the last item adds another).
+Visible focus rings, labelled inputs and icon buttons, AA contrast for all text, status never shown by colour alone, keyboard shortcuts (`/` search, `N` new order, `?` list; Ctrl+S saves an order; Enter on the last item adds another).
+
+**Text size:** Normal / Large / Extra large (100 / 112.5 / 125 %) from the account menu and on the sign-in screen, remembered per device (`src/app/textSize.ts`). Everything is sized in rem, so text, buttons and spacing grow together; tables scroll sideways instead of squeezing, and key columns do not wrap. The browser's own font-size setting still applies on top.
 
 ## Brand
 

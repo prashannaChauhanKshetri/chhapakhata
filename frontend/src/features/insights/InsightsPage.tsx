@@ -187,12 +187,14 @@ export default function InsightsPage() {
               value={formatNPRCompact(s?.work_done)}
               hint={plural(s?.orders ?? 0, t('order'))}
               icon={<IconClipboardList size={18} />}
+              accent="blue"
             />
             <StatCard
               label={t('Collected')}
               loading={loading}
               value={formatNPRCompact(s?.collected)}
               icon={<IconCash size={18} />}
+              accent="green"
             />
             <StatCard
               label={t('Invoiced')}
@@ -200,12 +202,14 @@ export default function InsightsPage() {
               value={formatNPRCompact(s?.invoiced)}
               hint={t('Tax invoices only')}
               icon={<IconFileInvoice size={18} />}
+              accent="slate"
             />
             <StatCard
               label={t('Average order')}
               loading={loading}
               value={formatNPRCompact(s?.average_order)}
               icon={<IconReceipt size={18} />}
+              accent="violet"
             />
             <StatCard
               label={t('Discounts given')}
@@ -219,6 +223,7 @@ export default function InsightsPage() {
                   : undefined
               }
               icon={<IconDiscount size={18} />}
+              accent="amber"
             />
             <StatCard
               label={t('New customers')}
@@ -226,6 +231,7 @@ export default function InsightsPage() {
               value={s?.new_customers ?? 0}
               hint={t('{{q}} open', { q: plural(s?.quotations_open ?? 0, t('quotation')) })}
               icon={<IconUserPlus size={18} />}
+              accent="orange"
             />
           </SimpleGrid>
 

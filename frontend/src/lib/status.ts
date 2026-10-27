@@ -22,7 +22,7 @@ export const ORDER_STATUS: Record<string, StatusStyle> = {
   quotation: { label: 'Quotation', color: 'slate' },
   confirmed: { label: 'Confirmed', color: 'blue' },
   in_production: { label: 'In production', color: 'amber' },
-  ready: { label: 'Ready for collection', color: 'green' },
+  ready: { label: 'Ready', color: 'green' },
   delivered: { label: 'Delivered', color: 'slate' },
   cancelled: { label: 'Cancelled', color: 'red' },
 };

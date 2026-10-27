@@ -40,6 +40,7 @@ import { PageLoader } from '@/components/PageLoader';
 import { QueryError } from '@/components/QueryError';
 import { openReasonModal } from '@/components/ReasonModal';
 import { SectionCard } from '@/components/SectionCard';
+import { WorkSteps } from '@/components/WorkProgress';
 import { StageBadge, StatusBadge } from '@/components/StatusBadge';
 import { notifyError, notifySuccess } from '@/lib/forms';
 import { deadlineLabel, formatAmount, formatDateTime, formatQty, toNumber } from '@/lib/format';
@@ -280,6 +281,11 @@ export default function OrderDetailPage() {
       <Grid gap="lg">
         <Grid.Col span={{ base: 12, lg: 8 }}>
           <Stack gap="lg">
+            {order.progress && order.source !== 'import' && (
+              <Card padding="md">
+                <WorkSteps progress={order.progress} />
+              </Card>
+            )}
             <SectionCard title={t('Items')} flush>
               <Table.ScrollContainer minWidth={640}>
                 <Table verticalSpacing="sm" highlightOnHover={false}>

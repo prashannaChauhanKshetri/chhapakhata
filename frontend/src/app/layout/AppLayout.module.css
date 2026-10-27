@@ -59,7 +59,7 @@
 .linkActive {
   background: #1e293b;
   color: #f8fafc;
-  box-shadow: inset 3px 0 0 #e2e8f0;
+  box-shadow: inset 3px 0 0 var(--mantine-color-orange-5);
 }
 
 .navFooter {

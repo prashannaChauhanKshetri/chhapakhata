@@ -19,6 +19,7 @@ from apps.core.exceptions import BusinessError
 from apps.core.permissions import Perm
 from apps.core.serializers import ReasonSerializer
 from apps.production.models import Job
+from apps.production.selectors import job_progress_annotations
 
 from . import services
 from .models import Order, OrderItem, OrderStatus
@@ -105,6 +106,7 @@ class OrderViewSet(
                 paid_amount=paid_subquery(),
                 items_count=Count("items", distinct=True),
                 invoice_no=Subquery(active_invoice),
+                **job_progress_annotations(),
             )
             .distinct()
         )

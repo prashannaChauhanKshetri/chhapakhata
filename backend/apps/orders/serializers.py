@@ -11,6 +11,7 @@ from apps.core.permissions import Perm
 from apps.core.serializers import BSDateField, UserRefSerializer
 from apps.customers.models import Customer
 from apps.customers.serializers import CustomerRefSerializer
+from apps.production.selectors import order_progress
 
 from .models import DiscountType, Order, OrderItem, OrderItemAddOn, OrderStatus
 from .services import EDITABLE_STATUSES
@@ -89,6 +90,14 @@ class OrderItemSerializer(serializers.ModelSerializer):
         return JobRefSerializer(job).data if job is not None else None
 
 
+class OrderProgressSerializer(serializers.Serializer):
+    percent = serializers.IntegerField(help_text="0–100, across all items")
+    stage = serializers.IntegerField(help_text="Stage of the furthest-behind item")
+    stage_label = serializers.CharField()
+    jobs = serializers.IntegerField()
+    jobs_ready = serializers.IntegerField(help_text="Items ready for collection or delivered")
+
+
 class OrderListSerializer(serializers.ModelSerializer):
     customer = CustomerRefSerializer(read_only=True)
     status_label = serializers.CharField(source="get_status_display", read_only=True)
@@ -99,6 +108,7 @@ class OrderListSerializer(serializers.ModelSerializer):
     items_count = serializers.IntegerField(read_only=True)
     invoice_no = serializers.CharField(read_only=True, allow_null=True)
     created_by = UserRefSerializer(read_only=True)
+    progress = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
@@ -121,7 +131,12 @@ class OrderListSerializer(serializers.ModelSerializer):
             "invoice_no",
             "created_by",
             "created_at",
+            "progress",
         ]
+
+    @extend_schema_field(OrderProgressSerializer(allow_null=True))
+    def get_progress(self, obj: Order) -> dict | None:
+        return order_progress(obj)
 
     def get_balance_due(self, obj: Order) -> str:
         if obj.status in (OrderStatus.CANCELLED,):
