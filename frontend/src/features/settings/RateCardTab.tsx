@@ -5,7 +5,6 @@ import {
   Group,
   Menu,
   NumberInput,
-  SegmentedControl,
   Select,
   Stack,
   Switch,
@@ -16,19 +15,20 @@ import {
 import { useForm } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { IconDotsVertical, IconHistory, IconPencil, IconPlus } from '@tabler/icons-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { DataTable } from 'mantine-datatable';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { api, unwrap } from '@/api/client';
 import { apiGet } from '@/api/http';
-import type { AddOn, MediaType, RateHistory, StockItem } from '@/api/types';
+import type { AddOn, MediaType, RateHistory } from '@/api/types';
 import { SectionCard } from '@/components/SectionCard';
 import { handleFormError, notifySuccess } from '@/lib/forms';
 import { formatAmount, formatDateTime, formatQty, toNumber } from '@/lib/format';
 
 import { useAddOns, useMediaTypes } from '../orders/useCatalog';
+import { MediaTypeForm, useInvalidateCatalog } from './MediaTypeForm';
 
 const BASES = [
   { value: 'fixed', label: 'Fixed amount per item line (e.g. design)' },
@@ -37,134 +37,6 @@ const BASES = [
   { value: 'per_running_ft', label: 'Per running ft of perimeter (e.g. framing)' },
   { value: 'percent', label: 'Percent of print amount (e.g. urgent)' },
 ];
-
-function useInvalidateCatalog() {
-  const client = useQueryClient();
-  return () => client.invalidateQueries({ queryKey: ['catalog'] });
-}
-
-function MediaTypeForm({ media, onDone }: { media?: MediaType; onDone: () => void }) {
-  const invalidate = useInvalidateCatalog();
-  const [busy, setBusy] = useState(false);
-  const { data: materials = [] } = useQuery({
-    queryKey: ['stock-items', { kind: 'roll_media' }],
-    queryFn: () => apiGet<StockItem[]>('/api/v1/stock-items/', { kind: 'roll_media' }),
-  });
-  const form = useForm({
-    initialValues: {
-      name: media?.name ?? '',
-      pricing_unit: (media?.pricing_unit ?? 'sqft') as 'sqft' | 'piece',
-      rate: toNumber(media?.rate) || ('' as number | string),
-      min_sqft:
-        media?.min_sqft === null || media?.min_sqft === undefined
-          ? ('' as number | string)
-          : toNumber(media.min_sqft),
-      material: media?.material ? String(media.material) : null,
-      description: media?.description ?? '',
-      sort_order: media?.sort_order ?? 0,
-      is_active: media?.is_active ?? true,
-    },
-    validate: {
-      name: (v) => (v.trim() ? null : 'Enter a name'),
-      rate: (v) => (v === '' ? 'Enter the rate' : null),
-    },
-  });
-  const submit = form.onSubmit(async (values) => {
-    setBusy(true);
-    const body = {
-      ...values,
-      rate: String(values.rate),
-      min_sqft:
-        values.min_sqft === '' || values.pricing_unit === 'piece' ? null : String(values.min_sqft),
-      material: values.material ? Number(values.material) : null,
-    };
-    try {
-      if (media)
-        await unwrap(
-          api.PATCH('/api/v1/media-types/{id}/', { params: { path: { id: media.id } }, body }),
-        );
-      else await unwrap(api.POST('/api/v1/media-types/', { body }));
-      await invalidate();
-      notifySuccess(media ? 'Media updated' : 'Media added');
-      onDone();
-    } catch (error) {
-      handleFormError(error, form);
-    } finally {
-      setBusy(false);
-    }
-  });
-  return (
-    <form onSubmit={submit}>
-      <Stack gap="sm">
-        <TextInput
-          label="Name"
-          placeholder="e.g. Star Flex"
-          data-autofocus
-          {...form.getInputProps('name')}
-        />
-        <SegmentedControl
-          fullWidth
-          data={[
-            { value: 'sqft', label: 'Priced per sq ft' },
-            { value: 'piece', label: 'Priced per piece' },
-          ]}
-          {...form.getInputProps('pricing_unit')}
-        />
-        <Group grow>
-          <NumberInput
-            label={form.values.pricing_unit === 'piece' ? 'Rate per piece' : 'Rate per sq ft'}
-            prefix="Rs. "
-            min={0}
-            decimalScale={2}
-            {...form.getInputProps('rate')}
-          />
-          {form.values.pricing_unit === 'sqft' ? (
-            <NumberInput
-              label="Minimum sq ft"
-              placeholder="Shop default"
-              min={0}
-              decimalScale={2}
-              {...form.getInputProps('min_sqft')}
-            />
-          ) : (
-            <Text size="xs" c="dimmed" mt={24}>
-              Size is optional and no minimum applies (e.g. photos, 3D letters, name plates).
-            </Text>
-          )}
-        </Group>
-        <Select
-          label="Stock item used"
-          description="Printing this media deducts from rolls of this item."
-          clearable
-          data={materials.map((m) => ({ value: String(m.id), label: m.name }))}
-          {...form.getInputProps('material')}
-        />
-        <TextInput label="Description" {...form.getInputProps('description')} />
-        <Group grow>
-          <NumberInput
-            label="Sort order"
-            min={0}
-            allowDecimal={false}
-            {...form.getInputProps('sort_order')}
-          />
-          <Switch
-            mt={26}
-            label="Offered"
-            {...form.getInputProps('is_active', { type: 'checkbox' })}
-          />
-        </Group>
-        <Group justify="flex-end">
-          <Button variant="default" onClick={onDone}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={busy}>
-            Save
-          </Button>
-        </Group>
-      </Stack>
-    </form>
-  );
-}
 
 function AddOnForm({ addon, onDone }: { addon?: AddOn; onDone: () => void }) {
   const invalidate = useInvalidateCatalog();

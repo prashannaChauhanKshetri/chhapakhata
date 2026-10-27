@@ -16,16 +16,30 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
-import { IconChevronDown, IconChevronRight, IconCopy, IconTrash } from '@tabler/icons-react';
+import {
+  IconChevronDown,
+  IconChevronRight,
+  IconCopy,
+  IconPlus,
+  IconSettings,
+  IconTrash,
+} from '@tabler/icons-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 import type { AddOn, CustomerRate, ItemResult, MediaType } from '@/api/types';
+import { useAuth } from '@/auth/AuthContext';
 import { formatAmount, formatQty, toNumber } from '@/lib/format';
+import { Perm } from '@/lib/permissions';
 import { UNITS } from '@/lib/status';
 
+import { openMediaTypeModal } from '../settings/MediaTypeForm';
 import classes from './OrderForm.module.css';
 import { newKey, type OrderFormValues } from './orderForm';
+
+const ADD_MEDIA = '__add_media__';
+const OPEN_RATE_CARD = '__open_rate_card__';
 
 interface ItemRowProps {
   form: UseFormReturnType<OrderFormValues>;
@@ -53,6 +67,9 @@ export function ItemRow({
 }: ItemRowProps) {
   const { t } = useTranslation();
   const item = form.values.items[index];
+  const { can } = useAuth();
+  const navigate = useNavigate();
+  const [mediaSearch, setMediaSearch] = useState('');
   const [moreOpen, setMoreOpen] = useState(
     Boolean(item.finishing || item.design_file_ref || item.description),
   );
@@ -69,13 +86,39 @@ export function ItemRow({
   const perUnit = item.per_piece ? t('piece') : t('sq ft');
   const rateSource = result?.rate_source;
 
-  const chooseMedia = (value: string | null) => {
-    const chosen = mediaTypes.find((m) => String(m.id) === value);
+  const applyMedia = (chosen: MediaType | undefined) => {
+    const value = chosen ? String(chosen.id) : null;
     form.setFieldValue(path('media_type'), value);
     form.setFieldValue(path('per_piece'), chosen?.pricing_unit === 'piece');
     // A returning customer gets the rate they paid last time; staff can switch back.
     const previous = value ? lastRates[value] : undefined;
     form.setFieldValue(path('rate'), previous ? toNumber(previous.last_rate) : '');
+  };
+
+  // Something not on the rate card yet: the owner can add it without leaving the order.
+  const typed = mediaSearch.trim();
+  const canAddMedia = can(Perm.CATALOG_MANAGE);
+  const exists = mediaTypes.some((m) => m.name.toLowerCase() === typed.toLowerCase());
+  const showAdd =
+    canAddMedia && typed.length >= 2 && !exists && !mediaOptions.some((o) => o.label === typed);
+  const selectData = [
+    ...mediaOptions,
+    ...(showAdd
+      ? [{ value: ADD_MEDIA, label: t('Add “{{name}}” to the rate card', { name: typed }) }]
+      : []),
+    ...(canAddMedia ? [{ value: OPEN_RATE_CARD, label: t('Open rate card…') }] : []),
+  ];
+
+  const chooseMedia = (value: string | null) => {
+    if (value === ADD_MEDIA) {
+      openMediaTypeModal({ initialName: typed, onSaved: (created) => applyMedia(created) });
+      return;
+    }
+    if (value === OPEN_RATE_CARD) {
+      navigate('/settings/rate-card');
+      return;
+    }
+    applyMedia(mediaTypes.find((m) => String(m.id) === value));
   };
 
   const activeAddOns = addOns.filter(
@@ -149,8 +192,25 @@ export function ItemRow({
           <Select
             label={t('Media')}
             placeholder={t('Choose material')}
-            data={mediaOptions}
+            data={selectData}
             searchable
+            searchValue={mediaSearch}
+            onSearchChange={setMediaSearch}
+            nothingFoundMessage={
+              canAddMedia ? undefined : t('Not on the rate card. Ask the owner to add it.')
+            }
+            renderOption={({ option }) =>
+              option.value === ADD_MEDIA || option.value === OPEN_RATE_CARD ? (
+                <Group gap={6} wrap="nowrap" c="orange.8">
+                  {option.value === ADD_MEDIA ? <IconPlus size={15} /> : <IconSettings size={15} />}
+                  <Text size="sm" fw={500} c="inherit">
+                    {option.label}
+                  </Text>
+                </Group>
+              ) : (
+                option.label
+              )
+            }
             {...form.getInputProps(path('media_type'))}
             onChange={chooseMedia}
           />
