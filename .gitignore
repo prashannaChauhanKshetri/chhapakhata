@@ -14,6 +14,10 @@ backend/media/
 backend/staticfiles/
 backend/backups/
 backend/logs/
+# Docker stack data on the server: database dumps and online-backup credentials
+deploy/backups/
+deploy/rclone/*
+!deploy/rclone/.gitkeep
 
 # Node
 node_modules/
@@ -36,3 +40,10 @@ Thumbs.db
 
 # Local HTTPS certificates for the dev server (private keys)
 .certs/
+
+# Private keys (SSH/EC2 key pairs, certificates' keys): never in the repository
+*.pem
+*.key
+*.ppk
+id_rsa*
+id_ed25519*

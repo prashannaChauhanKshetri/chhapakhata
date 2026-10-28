@@ -1,6 +1,6 @@
 # Deployment at the shop
 
-The shop computer runs four containers: PostgreSQL, the Django API, a background worker (nightly backups) and Caddy (HTTPS and the web app). Staff devices on the shop network open `https://chhapakhata.local` (or the computer's IP).
+The shop computer runs four containers: PostgreSQL, the Django API, a background worker (nightly backups) and Caddy (HTTPS and the web app). Staff devices on the shop network open `https://chhapakhata.local` (or the computer's IP). To run the same stack on a cloud server with a public address instead, see [deploy-aws.md](deploy-aws.md).
 
 ## 1. Prepare the computer
 

@@ -7,5 +7,5 @@ COPY frontend/ ./
 RUN npm run build
 
 FROM caddy:2.10-alpine
-COPY deploy/Caddyfile deploy/Caddyfile.http /etc/caddy/
+COPY deploy/Caddyfile deploy/Caddyfile.http deploy/Caddyfile.public /etc/caddy/
 COPY --from=build /src/dist /srv/app

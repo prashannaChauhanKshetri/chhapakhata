@@ -46,16 +46,18 @@ services:
     command: ["api"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/', timeout=3)"]
-      interval: 30s
+      interval: 10s
       timeout: 5s
       retries: 3
+      start_period: 120s
 
   worker:
     <<: *backend
     command: ["worker"]
     depends_on:
+      # Wait until the api has applied migrations, or the scheduler finds no tables.
       api:
-        condition: service_started
+        condition: service_healthy
 
   web:
     build:
@@ -65,6 +67,7 @@ services:
     command: ["caddy", "run", "--config", "/etc/caddy/${CADDYFILE:-Caddyfile}", "--adapter", "caddyfile"]
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-chhapakhata.local}
+      ACME_EMAIL: ${ACME_EMAIL:-}
     ports:
       - "80:80"
       - "443:443"

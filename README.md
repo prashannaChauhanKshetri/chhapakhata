@@ -86,6 +86,6 @@ docs/      Project report, architecture, guides, ADRs, import templates
 - [Architecture](docs/architecture.md) · [Domain model](docs/domain-model.md) · [API conventions](docs/api.md)
 - [Roles and permissions](docs/rbac.md) · [Pricing rules](docs/pricing.md) · [Billing and tax](docs/billing-and-tax.md) · [Inventory](docs/inventory.md)
 - [Design system](docs/design-system.md)
-- [Deployment at the shop](docs/deployment.md) · [Backup and restore](docs/backup-restore.md)
+- [Deployment at the shop](docs/deployment.md) · [Online on AWS EC2](docs/deploy-aws.md) · [Backup and restore](docs/backup-restore.md)
 - User guide: [English](docs/user-guide/en.md) · [नेपाली (draft)](docs/user-guide/ne.md)
 - [Architecture decision records](docs/adr/)

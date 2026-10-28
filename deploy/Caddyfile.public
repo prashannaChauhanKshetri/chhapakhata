@@ -1,0 +1,56 @@
+# Internet-facing server (e.g. AWS EC2) with a real domain name.
+# Caddy gets and renews a free Let's Encrypt certificate for SITE_ADDRESS
+# automatically, so phones and browsers trust it with no setup. Ports 80 and
+# 443 must be reachable from the internet for the certificate check.
+{
+	admin off
+	email {$ACME_EMAIL}
+}
+
+{$SITE_ADDRESS} {
+
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy same-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# Public certificate, no plain-HTTP fallback: browsers may insist on HTTPS.
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle /django-admin/* {
+		reverse_proxy api:8000
+	}
+	handle_path /static/* {
+		root * /data/static
+		file_server
+	}
+	# Private uploads (the shop's stamp and signature) are never served as
+	# files; the app hands them out to signed-in users only.
+	handle /media/private/* {
+		respond 404
+	}
+	handle_path /media/* {
+		root * /data/media
+		file_server
+	}
+
+	# The single-page app: unknown paths fall back to index.html.
+	handle {
+		root * /srv/app
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		# The service worker and app manifest must be re-checked on every visit,
+		# or installed phones would keep running an old version.
+		@app_shell path /sw.js /manifest.webmanifest /index.html /
+		header @app_shell Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
