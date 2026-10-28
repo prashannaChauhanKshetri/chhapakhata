@@ -224,5 +224,9 @@ class LedgerSummaryTotalsSerializer(serializers.Serializer):
 class LedgerSummarySerializer(serializers.Serializer):
     date_from = serializers.DateField(allow_null=True)
     date_to = serializers.DateField()
-    rows = LedgerSummaryRowSerializer(many=True)
-    totals = LedgerSummaryTotalsSerializer()
+    count = serializers.IntegerField(help_text="Customers in the whole result")
+    page = serializers.IntegerField()
+    page_size = serializers.IntegerField()
+    ordering = serializers.CharField()
+    rows = LedgerSummaryRowSerializer(many=True, help_text="This page of customers")
+    totals = LedgerSummaryTotalsSerializer(help_text="Totals over all pages")

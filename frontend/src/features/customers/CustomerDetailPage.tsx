@@ -115,6 +115,8 @@ function AdjustBalanceForm({ customer, onDone }: { customer: Customer; onDone: (
 
 type StatementRow = StatementEntry & { kind?: 'opening' | 'closing' };
 
+const STATEMENT_PAGE_SIZE = 50;
+
 function entryLink(r: StatementEntry): string | null {
   if (r.invoice_id) return `/invoices/${r.invoice_id}`;
   if (r.order_id) return `/orders/${r.order_id}`;
@@ -125,6 +127,7 @@ function StatementPanel({ customerId }: { customerId: number }) {
   const { t } = useTranslation();
   const { data: periods } = usePeriods();
   const [period, setPeriod] = useState<PeriodValue>({ key: 'this_fy', from: null, to: null });
+  const [statementPage, setStatementPage] = useState(1);
   const resolved = resolvePeriod(period, periods);
   const waiting = resolved.key !== 'all' && resolved.key !== 'custom' && !resolved.to;
   const query = { from: resolved.from ?? undefined, to: resolved.to ?? undefined };
@@ -141,35 +144,48 @@ function StatementPanel({ customerId }: { customerId: number }) {
 
   if (error) return <QueryError error={error} onRetry={() => void refetch()} />;
   const blank = { reference: '', invoice_id: null, payment_id: null, order_id: null };
+  // Long statements are paged; opening sits on the first page, closing on the last.
+  const entries = data?.entries ?? [];
+  const pages = Math.max(1, Math.ceil(entries.length / STATEMENT_PAGE_SIZE));
+  const page = Math.min(statementPage, pages);
+  const pageEntries = entries.slice((page - 1) * STATEMENT_PAGE_SIZE, page * STATEMENT_PAGE_SIZE);
   const rows: StatementRow[] = data
     ? [
-        {
-          ...blank,
-          id: -1,
-          kind: 'opening',
-          date: data.date_from ?? '',
-          date_bs: '',
-          entry_type: 'opening',
-          entry_type_label: t('Opening balance'),
-          narration: data.date_from ? t('Brought forward') : t('Start of the ledger'),
-          debit: '0',
-          credit: '0',
-          balance: data.opening_balance,
-        },
-        ...data.entries,
-        {
-          ...blank,
-          id: -2,
-          kind: 'closing',
-          date: data.date_to,
-          date_bs: '',
-          entry_type: 'closing',
-          entry_type_label: t('Closing balance'),
-          narration: t('Carried forward'),
-          debit: data.total_debit,
-          credit: data.total_credit,
-          balance: data.closing_balance,
-        },
+        ...(page === 1
+          ? [
+              {
+                ...blank,
+                id: -1,
+                kind: 'opening',
+                date: data.date_from ?? '',
+                date_bs: '',
+                entry_type: 'opening',
+                entry_type_label: t('Opening balance'),
+                narration: data.date_from ? t('Brought forward') : t('Start of the ledger'),
+                debit: '0',
+                credit: '0',
+                balance: data.opening_balance,
+              } satisfies StatementRow,
+            ]
+          : []),
+        ...pageEntries,
+        ...(page === pages
+          ? [
+              {
+                ...blank,
+                id: -2,
+                kind: 'closing',
+                date: data.date_to,
+                date_bs: '',
+                entry_type: 'closing',
+                entry_type_label: t('Closing balance'),
+                narration: t('Carried forward'),
+                debit: data.total_debit,
+                credit: data.total_credit,
+                balance: data.closing_balance,
+              } satisfies StatementRow,
+            ]
+          : []),
       ]
     : [];
   const closing = toNumber(data?.closing_balance);
@@ -178,7 +194,13 @@ function StatementPanel({ customerId }: { customerId: number }) {
   return (
     <Stack gap="md">
       <Group justify="space-between" gap="sm" wrap="wrap" align="flex-end">
-        <PeriodPicker value={period} onChange={setPeriod} />
+        <PeriodPicker
+          value={period}
+          onChange={(next) => {
+            setPeriod(next);
+            setStatementPage(1);
+          }}
+        />
         <Group gap="xs">
           <Button
             variant="default"
@@ -256,6 +278,18 @@ function StatementPanel({ customerId }: { customerId: number }) {
         verticalSpacing="xs"
         fetching={isFetching && !data}
         records={rows}
+        totalRecords={entries.length}
+        recordsPerPage={STATEMENT_PAGE_SIZE}
+        page={page}
+        onPageChange={setStatementPage}
+        // Count ledger entries only, not the opening and closing rows.
+        paginationText={({ totalRecords }) =>
+          t('Entries {{from}}–{{to}} of {{total}}', {
+            from: totalRecords ? (page - 1) * STATEMENT_PAGE_SIZE + 1 : 0,
+            to: Math.min(page * STATEMENT_PAGE_SIZE, totalRecords),
+            total: totalRecords,
+          })
+        }
         idAccessor={(r) => `${r.entry_type}-${r.id}`}
         rowStyle={(r) =>
           r.kind ? { background: 'var(--mantine-color-slate-0)', fontWeight: 500 } : undefined

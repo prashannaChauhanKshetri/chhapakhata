@@ -4021,7 +4021,14 @@ export interface components {
             date_from: string | null;
             /** Format: date */
             date_to: string;
+            /** @description Customers in the whole result */
+            count: number;
+            page: number;
+            page_size: number;
+            ordering: string;
+            /** @description This page of customers */
             rows: components["schemas"]["LedgerSummaryRow"][];
+            /** @description Totals over all pages */
             totals: components["schemas"]["LedgerSummaryTotals"];
         };
         LedgerSummaryRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
@@ -13852,6 +13859,11 @@ export interface operations {
                 export?: "json" | "pdf" | "xlsx";
                 /** @description Start date (AD, YYYY-MM-DD) */
                 from?: string;
+                /** @description e.g. -closing_balance, customer_name */
+                ordering?: string;
+                page?: number;
+                /** @description Up to 200 (default 25) */
+                page_size?: number;
                 /** @description Customer name or phone */
                 search?: string;
                 /** @description End date (AD, YYYY-MM-DD) */

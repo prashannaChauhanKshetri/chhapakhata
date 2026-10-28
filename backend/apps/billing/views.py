@@ -223,6 +223,49 @@ class PaymentViewSet(
         )
 
 
+SUMMARY_ORDERING = {
+    "customer_name",
+    "opening_balance",
+    "debit",
+    "credit",
+    "closing_balance",
+    "last_payment_date",
+}
+
+
+def _page_of_summary(data: dict, params) -> dict:
+    """Sort and page the balance rows; totals still cover every customer."""
+    ordering = params.get("ordering") or "-closing_balance"
+    key = ordering.lstrip("-")
+    if key not in SUMMARY_ORDERING:
+        raise ValidationError(
+            {"ordering": [f"Sort by one of: {', '.join(sorted(SUMMARY_ORDERING))}."]}
+        )
+    rows = data["rows"]
+    if key == "customer_name":
+        rows.sort(key=lambda r: r["customer_name"].lower(), reverse=ordering.startswith("-"))
+    else:
+        # Rows without a value (e.g. never paid) always go last.
+        present = [r for r in rows if r[key] is not None]
+        missing = [r for r in rows if r[key] is None]
+        present.sort(key=lambda r: r[key], reverse=ordering.startswith("-"))
+        rows = present + missing
+    try:
+        page = max(int(params.get("page") or 1), 1)
+        page_size = min(max(int(params.get("page_size") or 25), 1), 200)
+    except ValueError as exc:
+        raise ValidationError({"page": ["Use whole numbers for page and page_size."]}) from exc
+    start = (page - 1) * page_size
+    return {
+        **data,
+        "rows": rows[start : start + page_size],
+        "count": len(rows),
+        "page": page,
+        "page_size": page_size,
+        "ordering": ordering,
+    }
+
+
 class LedgerEntryFilter(django_filters.FilterSet):
     date_from = django_filters.DateFilter(field_name="entry_date", lookup_expr="gte")
     date_to = django_filters.DateFilter(field_name="entry_date", lookup_expr="lte")
@@ -255,6 +298,9 @@ class LedgerViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             OpenApiParameter("search", str, description="Customer name or phone"),
             OpenApiParameter("balance", str, enum=["due", "advance", "settled"]),
             OpenApiParameter("export", str, enum=["json", "pdf", "xlsx"]),
+            OpenApiParameter("ordering", str, description="e.g. -closing_balance, customer_name"),
+            OpenApiParameter("page", int),
+            OpenApiParameter("page_size", int, description="Up to 200 (default 25)"),
         ],
         responses=LedgerSummarySerializer,
     )
@@ -271,7 +317,7 @@ class LedgerViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         )
         fmt = output_format(params)
         if fmt == "json":
-            return Response(LedgerSummarySerializer(data).data)
+            return Response(LedgerSummarySerializer(_page_of_summary(data, params)).data)
         totals = data["totals"]
         report = Report(
             slug="ledger-summary",

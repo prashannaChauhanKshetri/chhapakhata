@@ -69,3 +69,39 @@ def test_ledger_api_and_permissions(api, owner, desk, operator, ledger_data):
 def test_periods_endpoint(api, operator):
     keys = [p["key"] for p in api(operator).get("/api/v1/utils/periods/").json()]
     assert keys == ["today", "this_month", "last_month", "this_fy", "last_fy"]
+
+
+def test_summary_is_paged_and_sorted_with_totals_over_all_pages(api, owner, desk, ledger_data):
+    for n in range(5):
+        customer = Customer.objects.create(name=f"Page Customer {n}")
+        services.post_opening_balance(
+            customer=customer, amount=D(100 * (n + 1)), user=owner, as_of=dt.date(2026, 7, 1)
+        )
+    client = api(desk)
+    first = client.get("/api/v1/ledger/summary/", {"page_size": 3}).json()
+    assert first["count"] == 7  # 2 from the fixture + 5 here
+    assert len(first["rows"]) == 3
+    assert first["ordering"] == "-closing_balance"
+    balances = [D(r["closing_balance"]) for r in first["rows"]]
+    assert balances == sorted(balances, reverse=True)
+    # Totals cover every customer, not just the page.
+    assert first["totals"]["customers"] == 7
+    last = client.get("/api/v1/ledger/summary/", {"page_size": 3, "page": 3}).json()
+    assert len(last["rows"]) == 1
+
+    by_name = client.get("/api/v1/ledger/summary/", {"ordering": "customer_name"}).json()
+    names = [r["customer_name"] for r in by_name["rows"]]
+    assert names == sorted(names, key=str.lower)
+    never_paid_last = client.get(
+        "/api/v1/ledger/summary/", {"ordering": "-last_payment_date"}
+    ).json()["rows"]
+    assert never_paid_last[0]["last_payment_date"] is not None
+    assert never_paid_last[-1]["last_payment_date"] is None
+
+    assert client.get("/api/v1/ledger/summary/", {"ordering": "password"}).status_code == 400
+    assert client.get("/api/v1/ledger/summary/", {"page": "x"}).status_code == 400
+    # Exports still list everyone.
+    assert (
+        api(owner).get("/api/v1/ledger/summary/", {"export": "xlsx", "page_size": 1}).status_code
+        == 200
+    )

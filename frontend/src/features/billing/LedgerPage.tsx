@@ -11,7 +11,6 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { useDebouncedValue } from '@mantine/hooks';
 import { IconFileSpreadsheet, IconPrinter, IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from 'mantine-datatable';
@@ -59,15 +58,15 @@ function usePeriod(initial: string) {
 function BalancesTab() {
   const { t } = useTranslation();
   const { period, setPeriod, resolved, ready } = usePeriod('this_fy');
-  const [search, setSearch] = useState('');
-  const [debounced] = useDebouncedValue(search, 300);
-  const [balance, setBalance] = useState('');
-  const query = {
+  // Page, sort, search and the due/advance filter live in the address bar.
+  const list = useListState(['balance'] as const, '-closing_balance');
+  const filters = {
     from: resolved.from ?? undefined,
     to: resolved.to ?? undefined,
-    search: debounced || undefined,
-    balance: balance || undefined,
+    search: list.debouncedSearch || undefined,
+    balance: list.filters.balance || undefined,
   };
+  const query = { ...filters, page: list.page, page_size: PAGE_SIZE, ordering: list.ordering };
   const { data, error, isFetching, refetch } = useQuery({
     queryKey: ['ledger', 'summary', query],
     queryFn: () => apiGet<LedgerSummary>('/api/v1/ledger/summary/', query),
@@ -75,7 +74,7 @@ function BalancesTab() {
     enabled: ready,
   });
   const exportAs = (kind: 'pdf' | 'xlsx') =>
-    openFile(withQuery('/api/v1/ledger/summary/', { ...query, export: kind }), {
+    openFile(withQuery('/api/v1/ledger/summary/', { ...filters, export: kind }), {
       download: kind === 'xlsx',
     }).catch((e) => notifyError(e, t('Could not create the file')));
 
@@ -119,13 +118,13 @@ function BalancesTab() {
             label={t('Customer')}
             placeholder={t('Name or phone')}
             leftSection={<IconSearch size={16} />}
-            value={search}
-            onChange={(e) => setSearch(e.currentTarget.value)}
+            value={list.search}
+            onChange={(e) => list.setSearch(e.currentTarget.value)}
             w={220}
           />
           <SegmentedControl
-            value={balance}
-            onChange={setBalance}
+            value={list.filters.balance}
+            onChange={(v) => list.setFilter('balance', v || null)}
             data={[
               { value: '', label: t('All') },
               { value: 'due', label: t('Due') },
@@ -160,11 +159,18 @@ function BalancesTab() {
             highlightOnHover
             idAccessor="customer_id"
             records={data?.rows ?? []}
+            totalRecords={data?.count ?? 0}
+            recordsPerPage={PAGE_SIZE}
+            page={list.page}
+            onPageChange={list.setPage}
+            sortStatus={list.sortStatus as never}
+            onSortStatusChange={list.setSort as never}
             fetching={isFetching && !data}
             noRecordsText={t('No customer had ledger activity or a balance in this period')}
             columns={[
               {
                 accessor: 'customer_name',
+                sortable: true,
                 title: t('Customer'),
                 render: (r) => (
                   <div>
@@ -179,12 +185,14 @@ function BalancesTab() {
               },
               {
                 accessor: 'opening_balance',
+                sortable: true,
                 title: t('Opening'),
                 textAlign: 'right',
                 render: (r) => <Balance value={r.opening_balance} size="sm" />,
               },
               {
                 accessor: 'debit',
+                sortable: true,
                 title: t('Billed (Dr)'),
                 textAlign: 'right',
                 render: (r) =>
@@ -192,6 +200,7 @@ function BalancesTab() {
               },
               {
                 accessor: 'credit',
+                sortable: true,
                 title: t('Received (Cr)'),
                 textAlign: 'right',
                 render: (r) =>
@@ -199,6 +208,7 @@ function BalancesTab() {
               },
               {
                 accessor: 'closing_balance',
+                sortable: true,
                 title: t('Closing'),
                 textAlign: 'right',
                 render: (r) => (
@@ -212,6 +222,7 @@ function BalancesTab() {
               },
               {
                 accessor: 'last_payment_date',
+                sortable: true,
                 title: t('Last payment'),
                 visibleMediaQuery: '(min-width: 62em)',
                 render: (r) => (
