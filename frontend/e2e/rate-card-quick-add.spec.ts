@@ -35,7 +35,8 @@ test('owner adds a new material to the rate card while taking an order', async (
   await page.getByRole('option', { name: 'Open rate card…' }).click();
   await page.getByRole('button', { name: 'Leave and discard' }).click();
   await expect(page).toHaveURL(/\/settings\/rate-card$/);
-  await expect(page.getByText(name)).toBeVisible();
+  // In the rate-card table (the "added" notice may still show the name too).
+  await expect(page.getByRole('cell', { name, exact: true })).toBeVisible();
 });
 
 test('front desk cannot change the rate card from an order', async ({ browser }) => {
