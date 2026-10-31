@@ -87,6 +87,9 @@
   </table>
 </div>
 
-{% include "documents/_signatures.html" with left_label="Accepted by customer" %}
-<div class="footer-note">This is a quotation, not a tax invoice. Prepared by {{ order.created_by }} · {{ generated_at|date:"d M Y, H:i" }}</div>
+<div class="doc-end-space"></div>
+<div class="doc-end">
+  {% include "documents/_signatures.html" with left_label="Accepted by customer" %}
+  <div class="footer-note">This is a quotation, not a tax invoice. Prepared by {{ order.created_by }} · {{ generated_at|date:"d M Y, H:i" }}</div>
+</div>
 {% endblock %}

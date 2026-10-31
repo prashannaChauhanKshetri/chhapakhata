@@ -54,6 +54,8 @@
   /* Line tables */
   table.lines { width: 100%; border-collapse: collapse; margin-top: 4pt; }
   table.lines th { font-size: 7.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4pt; color: #334155; background: #F8FAFC; border-top: 0.75pt solid #CBD5E1; border-bottom: 0.75pt solid #CBD5E1; padding: 5pt 6pt; text-align: left; }
+  /* Number columns: the heading lines up with its figures. */
+  table.lines th.num, table.lines td.num { text-align: right; }
   table.lines td { padding: 5pt 6pt; border-bottom: 0.5pt solid #E2E8F0; vertical-align: top; }
   table.lines .detail { font-size: 7.5pt; color: #64748B; margin-top: 1pt; }
   table.lines tr { page-break-inside: avoid; }
@@ -74,6 +76,13 @@
   .sign .art { height: 46pt; position: relative; }
   .sign .art img.signature { max-height: 40pt; max-width: 120pt; }
   .sign .art img.stamp { position: absolute; left: 50%; top: -6pt; margin-left: -30pt; max-height: 60pt; max-width: 60pt; opacity: 0.85; }
+
+  /* Signatures and the closing note sit at the foot of the last page instead
+     of mid-page. The spacer keeps that much room free below the content, so
+     the block (placed against the page bottom) never covers a line. */
+  .doc-end-space { height: 34mm; break-inside: avoid; }
+  .doc-end { position: absolute; left: 0; right: 0; bottom: 0; }
+  .doc-end .signatures { margin-top: 0; }
 
   .footer-note { margin-top: 14pt; font-size: 7.5pt; color: #64748B; border-top: 0.5pt solid #E2E8F0; padding-top: 5pt; }
 
