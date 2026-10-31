@@ -15,6 +15,7 @@ if (-not (Test-Path .env)) {
   $content = Get-Content .env.example -Raw
   $content = $content -replace '(?m)^SECRET_KEY=.*$', ("SECRET_KEY=" + (New-Secret 60))
   $content = $content -replace '(?m)^POSTGRES_PASSWORD=.*$', ("POSTGRES_PASSWORD=" + (New-Secret 32))
+  $content = $content -replace '(?m)^APP_DB_PASSWORD=.*$', ("APP_DB_PASSWORD=" + (New-Secret 32))
   Set-Content -Path .env -Value $content -NoNewline
   Write-Host 'Created deploy\.env with fresh secrets. Review SITE_ADDRESS and ALLOWED_HOSTS, then run this script again.'
   exit 0

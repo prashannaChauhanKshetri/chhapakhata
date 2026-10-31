@@ -9,8 +9,9 @@ setup: ## Install backend and frontend dependencies, copy fonts
 	cd frontend && npm install && npm run fonts:pdf
 	@test -f .env || (cp .env.example .env && echo "Created .env; edit DATABASE_URL if needed")
 
-db: ## Create the local database and apply migrations
+db: ## Create the local database and its non-superuser app role, then apply migrations
 	createdb chhapakhata 2>/dev/null || true
+	scripts/db-app-role.sh chhapakhata
 	cd backend && uv run python manage.py migrate
 
 seed: ## Fill an empty database with demo data (owner / frontdesk / operator, password Demo@2083)
@@ -18,10 +19,11 @@ seed: ## Fill an empty database with demo data (owner / frontdesk / operator, pa
 
 # A second, separate database holding six years of simulated shop history.
 HISTORY_DB ?= chhapakhata_history
-HISTORY_URL := postgres://localhost:5432/$(HISTORY_DB)
+HISTORY_URL := postgres://chhapakhata_app@localhost:5432/$(HISTORY_DB)
 
 history: ## Build the separate history database: the shop from 1 Shrawan 2077 to today (takes a while)
 	dropdb --if-exists $(HISTORY_DB) && createdb $(HISTORY_DB)
+	scripts/db-app-role.sh $(HISTORY_DB)
 	cd backend && DATABASE_URL=$(HISTORY_URL) uv run python manage.py migrate -v0
 	cd backend && DATABASE_URL=$(HISTORY_URL) uv run python manage.py seed_history
 

@@ -23,6 +23,8 @@ if ($answer -ne 'RESTORE') { Write-Host 'Cancelled.'; exit 1 }
 docker compose stop api worker web
 docker compose exec -T db sh -c 'dropdb -U chhapakhata --if-exists chhapakhata && createdb -U chhapakhata chhapakhata'
 Get-Content $DumpPath -AsByteStream -ReadCount 0 | docker compose exec -T db pg_restore -U chhapakhata -d chhapakhata --no-owner --exit-on-error
+# Restored as the superuser: hand the tables back to the app's own role.
+Get-Content db\app-role.sql -Raw | docker compose exec -T db psql -X -q -U chhapakhata -d chhapakhata -v app_role=chhapakhata_app -f -
 
 if (Test-Path $Media) {
   docker compose run --rm -T -v "${Folder}:/restore:ro" --entrypoint sh api -c "rm -rf /data/media/* && tar -xzf /restore/$(Split-Path $Media -Leaf) -C /data"

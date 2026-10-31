@@ -25,6 +25,8 @@ read -r -p "Type RESTORE to continue: " answer
 docker compose stop api worker web
 docker compose exec -T db sh -c 'dropdb -U chhapakhata --if-exists chhapakhata && createdb -U chhapakhata chhapakhata'
 docker compose exec -T db pg_restore -U chhapakhata -d chhapakhata --no-owner --exit-on-error < "$dump"
+# Restored as the superuser: hand the tables back to the app's role.
+./scripts/app-role.sh
 
 if [ -f "$media" ]; then
   docker compose run --rm -T -v "$(cd "$(dirname "$media")" && pwd)":/restore:ro --entrypoint sh api \

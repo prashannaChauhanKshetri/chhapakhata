@@ -10,7 +10,8 @@ x-backend: &backend
   image: chhapakhata-backend:latest
   env_file: .env
   environment:
-    DATABASE_URL: postgres://chhapakhata:${POSTGRES_PASSWORD}@db:5432/chhapakhata
+    # The app's own non-superuser role, so row-level security keeps businesses apart.
+    DATABASE_URL: postgres://chhapakhata_app:${APP_DB_PASSWORD}@db:5432/chhapakhata
   volumes:
     - media:/data/media
     - static:/data/static
@@ -29,8 +30,12 @@ services:
       POSTGRES_DB: chhapakhata
       POSTGRES_USER: chhapakhata
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql/data
+      # A new database volume creates the app's role (see db/app-role.sql).
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+      - ./db/app-role.sql:/opt/chhapakhata/app-role.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U chhapakhata -d chhapakhata"]
       interval: 5s

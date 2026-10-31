@@ -24,7 +24,8 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U ci" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      DATABASE_URL: postgres://ci:ci@localhost:5432/chhapakhata
+      # The app's own role: not a superuser, so the tests run under row-level security.
+      DATABASE_URL: postgres://chhapakhata_app:app@localhost:5432/chhapakhata
       SECRET_KEY: ci-only-secret
     defaults:
       run:
@@ -37,6 +38,10 @@ jobs:
           sudo apt-get install -y libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 postgresql-common
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y postgresql-client-17
+      - name: Database role for the app
+        run: >-
+          psql -X -q postgres://ci:ci@localhost:5432/chhapakhata
+          -v app_role=chhapakhata_app -v app_password=app -f ../deploy/db/app-role.sql
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.9.25"
