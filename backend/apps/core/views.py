@@ -4,7 +4,6 @@ import datetime as dt
 import mimetypes
 
 import django_filters
-from django.db import connection
 from django.http import FileResponse
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import mixins, serializers, viewsets
@@ -24,6 +23,7 @@ from .dates import (
     local_today,
     named_periods,
 )
+from .health import health_status
 from .models import ActivityLog, ShopSettings
 from .permissions import AUTHENTICATED, Perm
 from .serializers import (
@@ -180,17 +180,8 @@ class HealthView(APIView):
         )
     )
     def get(self, request):
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT 1")
-            db_status = "ok"
-        except Exception:
-            db_status = "unavailable"
-        status_code = 200 if db_status == "ok" else 503
-        return Response(
-            {"status": "ok" if db_status == "ok" else "degraded", "database": db_status},
-            status=status_code,
-        )
+        body, status_code = health_status()
+        return Response(body, status=status_code)
 
 
 def _api_error(request, status_code: int, code: str, detail: str, fallback):
