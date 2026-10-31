@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from apps.core.models import ShopSettings
 from apps.inventory.models import StockItem, StockKind
+from apps.tenancy.validators import unique_in_business
 
 from .models import AddOn, MediaType
 
@@ -36,6 +37,7 @@ class MediaTypeSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["updated_at"]
+        extra_kwargs = {"name": unique_in_business(MediaType)}
 
     def get_effective_min_sqft(self, obj: MediaType) -> str:
         if obj.min_sqft is not None:
@@ -65,6 +67,7 @@ class AddOnSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["updated_at"]
+        extra_kwargs = {"name": unique_in_business(AddOn)}
 
 
 class RateHistorySerializer(serializers.Serializer):

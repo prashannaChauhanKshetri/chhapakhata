@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "simple_history",
     "django_q",
     # Project apps
+    "apps.tenancy",
     "apps.core",
     "apps.accounts",
     "apps.customers",
@@ -60,6 +61,8 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Scopes the request (and PostgreSQL row-level security) to the user's business.
+    "apps.tenancy.middleware.BusinessMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",

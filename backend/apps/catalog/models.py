@@ -9,6 +9,7 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 
 from apps.core.models import TimeStampedModel
+from apps.tenancy.models import BusinessOwned
 
 
 class LengthUnit(models.TextChoices):
@@ -22,7 +23,7 @@ class PricingUnit(models.TextChoices):
     PIECE = "piece", "Per piece"
 
 
-class MediaType(TimeStampedModel):
+class MediaType(BusinessOwned, TimeStampedModel):
     """An item on the rate card.
 
     Most media are priced by area (Star Flex at Rs 35 per sq ft). Some work is
@@ -30,7 +31,7 @@ class MediaType(TimeStampedModel):
     those the size is optional and the minimum sq ft rule does not apply.
     """
 
-    name = models.CharField(max_length=80, unique=True)
+    name = models.CharField(max_length=80)
     pricing_unit = models.CharField(
         max_length=5, choices=PricingUnit.choices, default=PricingUnit.SQFT
     )
@@ -64,6 +65,9 @@ class MediaType(TimeStampedModel):
 
     class Meta:
         ordering = ["sort_order", "name"]
+        constraints = [
+            models.UniqueConstraint(fields=["business", "name"], name="uniq_media_type_name")
+        ]
 
     def __str__(self) -> str:
         return self.name
@@ -81,10 +85,10 @@ class AddOnBasis(models.TextChoices):
     PERCENT = "percent", "Percent of print amount"
 
 
-class AddOn(TimeStampedModel):
+class AddOn(BusinessOwned, TimeStampedModel):
     """Extra charge on an item: design, eyelets, framing, lamination, pockets, urgent."""
 
-    name = models.CharField(max_length=80, unique=True)
+    name = models.CharField(max_length=80)
     basis = models.CharField(max_length=20, choices=AddOnBasis.choices)
     rate = models.DecimalField(
         max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0"))]
@@ -104,6 +108,7 @@ class AddOn(TimeStampedModel):
     class Meta:
         ordering = ["sort_order", "name"]
         verbose_name = "add-on"
+        constraints = [models.UniqueConstraint(fields=["business", "name"], name="uniq_addon_name")]
 
     def __str__(self) -> str:
         return self.name

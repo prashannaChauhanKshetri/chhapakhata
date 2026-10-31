@@ -7,6 +7,7 @@ from django.db import connection, transaction
 
 from apps.core.models import DocumentSequence, ShopSettings, validate_number_pattern
 from apps.core.sequences import DocType, next_number
+from apps.tenancy.context import use_business
 
 
 @pytest.mark.django_db
@@ -53,16 +54,17 @@ def test_requires_transaction():
 
 
 @pytest.mark.django_db(transaction=True)
-def test_concurrent_allocation_never_duplicates():
+def test_concurrent_allocation_never_duplicates(business):
     results: list[int] = []
     lock = threading.Lock()
 
     def worker():
-        for _ in range(5):
-            with transaction.atomic():
-                allocated = next_number(DocType.RECEIPT)
-            with lock:
-                results.append(allocated.sequence)
+        with use_business(business):  # a new thread starts with no business
+            for _ in range(5):
+                with transaction.atomic():
+                    allocated = next_number(DocType.RECEIPT)
+                with lock:
+                    results.append(allocated.sequence)
         connection.close()
 
     threads = [threading.Thread(target=worker) for _ in range(4)]

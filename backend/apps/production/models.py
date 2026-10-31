@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 
 from apps.core.models import TimeStampedModel
+from apps.tenancy.models import BusinessOwned
 
 
 class Stage(models.IntegerChoices):
@@ -30,10 +31,10 @@ class Priority(models.IntegerChoices):
     URGENT = 1, "Urgent"
 
 
-class Job(TimeStampedModel):
+class Job(BusinessOwned, TimeStampedModel):
     """Production work for one order item, tracked through the shop's six stages."""
 
-    job_no = models.CharField(max_length=30, unique=True)
+    job_no = models.CharField(max_length=30)
     order = models.ForeignKey("orders.Order", on_delete=models.CASCADE, related_name="jobs")
     order_item = models.OneToOneField(
         "orders.OrderItem", on_delete=models.CASCADE, related_name="job"
@@ -58,12 +59,13 @@ class Job(TimeStampedModel):
 
     class Meta:
         ordering = ["deadline", "id"]
+        constraints = [models.UniqueConstraint(fields=["business", "job_no"], name="uniq_job_no")]
 
     def __str__(self) -> str:
         return self.job_no
 
 
-class JobStageEvent(models.Model):
+class JobStageEvent(BusinessOwned):
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name="events")
     from_stage = models.PositiveSmallIntegerField(choices=Stage.choices, null=True, blank=True)
     to_stage = models.PositiveSmallIntegerField(choices=Stage.choices)

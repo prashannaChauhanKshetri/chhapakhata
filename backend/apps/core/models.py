@@ -9,6 +9,9 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from simple_history.models import HistoricalRecords
 
+from apps.tenancy.context import business_default, require_business_id
+from apps.tenancy.models import Business, BusinessOwned
+
 from .storage import private_storage
 
 
@@ -37,8 +40,16 @@ def validate_number_pattern(value: str) -> None:
             )
 
 
+def branding_path(instance: ShopSettings, filename: str) -> str:
+    return f"branding/{instance.business_id}/{filename}"
+
+
 class ShopSettings(models.Model):
-    """Single-row settings for the shop: identity, tax, pricing defaults and numbering."""
+    """Each business's settings: identity, tax, pricing defaults and numbering."""
+
+    business = models.OneToOneField(
+        Business, on_delete=models.PROTECT, default=business_default, related_name="settings"
+    )
 
     # Identity (printed on every document)
     name = models.CharField(max_length=150, default="OM Traders and Suppliers")
@@ -81,9 +92,11 @@ class ShopSettings(models.Model):
 
     # Documents
     # Private: served only to signed-in users (see apps/core/storage.py).
-    logo = models.ImageField(upload_to="branding/", storage=private_storage, blank=True)
-    stamp_image = models.ImageField(upload_to="branding/", storage=private_storage, blank=True)
-    signature_image = models.ImageField(upload_to="branding/", storage=private_storage, blank=True)
+    logo = models.ImageField(upload_to=branding_path, storage=private_storage, blank=True)
+    stamp_image = models.ImageField(upload_to=branding_path, storage=private_storage, blank=True)
+    signature_image = models.ImageField(
+        upload_to=branding_path, storage=private_storage, blank=True
+    )
     invoice_footer_note = models.CharField(
         max_length=255, blank=True, default="Thank you for your business."
     )
@@ -123,17 +136,22 @@ class ShopSettings(models.Model):
     def __str__(self) -> str:
         return self.name
 
-    def save(self, *args, **kwargs):
-        self.pk = 1  # enforce the singleton
-        super().save(*args, **kwargs)
-
     @classmethod
     def load(cls) -> ShopSettings:
-        obj, _ = cls.objects.get_or_create(pk=1)
+        """The current business's settings, created with its name on first use."""
+        business_id = require_business_id()
+        obj, _ = cls.objects.get_or_create(
+            business_id=business_id,
+            defaults={
+                "name": lambda: Business.objects.get(pk=business_id).name,
+                "tagline": "",
+                "address": "",
+            },
+        )
         return obj
 
 
-class DocumentSequence(models.Model):
+class DocumentSequence(BusinessOwned):
     """Gap-free counters for document numbers, optionally reset per fiscal year."""
 
     doc_type = models.CharField(max_length=20)
@@ -142,7 +160,9 @@ class DocumentSequence(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["doc_type", "fiscal_year"], name="uniq_sequence_scope")
+            models.UniqueConstraint(
+                fields=["business", "doc_type", "fiscal_year"], name="uniq_sequence_scope"
+            )
         ]
 
     def __str__(self) -> str:
@@ -150,7 +170,7 @@ class DocumentSequence(models.Model):
         return f"{self.doc_type}{scope}: {self.last_number}"
 
 
-class ActivityLog(models.Model):
+class ActivityLog(BusinessOwned):
     """Who did what, and when, for important business actions."""
 
     actor = models.ForeignKey(

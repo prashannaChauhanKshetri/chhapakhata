@@ -7,11 +7,24 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from apps.core.permissions import Role, permissions_for
+from apps.tenancy.context import business_default
 
 
 class User(AbstractUser):
-    """A shop staff account. Each person has a personal login and one role."""
+    """A shop staff account. Each person has a personal login and one role.
 
+    Usernames are unique across the site; the account's business decides which
+    shop's data it sees. Platform superusers have no business.
+    """
+
+    business = models.ForeignKey(
+        "tenancy.Business",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        default=business_default,
+        related_name="users",
+    )
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.FRONT_DESK)
     phone = models.CharField(max_length=20, blank=True)
     max_discount_percent = models.DecimalField(

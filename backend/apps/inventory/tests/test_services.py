@@ -14,6 +14,7 @@ from apps.inventory.models import (
     StockKind,
     StockUnit,
 )
+from apps.tenancy.context import use_business
 
 pytestmark = pytest.mark.django_db
 
@@ -111,7 +112,7 @@ def test_finish_roll_writes_off_leftover(star_flex_rolls, star_flex_stock, owner
 
 
 @pytest.mark.django_db(transaction=True)
-def test_concurrent_wastage_never_overdraws(owner, operator, supplier):
+def test_concurrent_wastage_never_overdraws(business, owner, operator, supplier):
     item = StockItem.objects.create(name="Vinyl", kind=StockKind.ROLL_MEDIA, unit=StockUnit.SQFT)
     services.receive_purchase(
         user=owner,
@@ -132,9 +133,10 @@ def test_concurrent_wastage_never_overdraws(owner, operator, supplier):
 
     def worker():
         try:
-            services.record_wastage(
-                user=operator, stock_item=item, roll=roll.pk, quantity=D("3"), reason="Test"
-            )
+            with use_business(business):  # a new thread starts with no business
+                services.record_wastage(
+                    user=operator, stock_item=item, roll=roll.pk, quantity=D("3"), reason="Test"
+                )
             outcomes.append("ok")
         except BusinessError:
             outcomes.append("blocked")

@@ -10,6 +10,7 @@ from apps.catalog.models import AddOnBasis, LengthUnit, PricingUnit
 from apps.core.dates import local_today
 from apps.core.models import TimeStampedModel
 from apps.core.money import fmt_qty
+from apps.tenancy.models import BusinessOwned
 
 MONEY = {"max_digits": 12, "decimal_places": 2, "default": Decimal("0.00")}
 
@@ -40,8 +41,8 @@ class RateSource(models.TextChoices):
     CUSTOM = "custom", "Custom rate"
 
 
-class Order(TimeStampedModel):
-    order_no = models.CharField(max_length=30, unique=True)
+class Order(BusinessOwned, TimeStampedModel):
+    order_no = models.CharField(max_length=30)
     customer = models.ForeignKey(
         "customers.Customer", on_delete=models.PROTECT, related_name="orders"
     )
@@ -81,6 +82,9 @@ class Order(TimeStampedModel):
 
     class Meta:
         ordering = ["-created_at", "-id"]
+        constraints = [
+            models.UniqueConstraint(fields=["business", "order_no"], name="uniq_order_no")
+        ]
 
     def __str__(self) -> str:
         return self.order_no
@@ -90,7 +94,7 @@ class Order(TimeStampedModel):
         return self.status == OrderStatus.QUOTATION
 
 
-class OrderItem(models.Model):
+class OrderItem(BusinessOwned):
     """One printed item: size, media and quantity, with prices snapshotted at entry."""
 
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
@@ -145,7 +149,7 @@ class OrderItem(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["order", "line_no"], name="uniq_order_line"),
             models.UniqueConstraint(
-                fields=["import_ref"],
+                fields=["business", "import_ref"],
                 condition=~models.Q(import_ref=""),
                 name="uniq_order_item_import_ref",
             ),
@@ -181,7 +185,7 @@ class OrderItem(models.Model):
         return self.billable_sqft > self.sqft
 
 
-class OrderItemAddOn(models.Model):
+class OrderItemAddOn(BusinessOwned):
     item = models.ForeignKey(OrderItem, on_delete=models.CASCADE, related_name="addons")
     addon = models.ForeignKey("catalog.AddOn", on_delete=models.PROTECT, related_name="+")
     name = models.CharField(max_length=80)

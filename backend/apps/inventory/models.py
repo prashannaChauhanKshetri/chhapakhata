@@ -10,6 +10,7 @@ from django.db import models
 
 from apps.core.models import TimeStampedModel
 from apps.core.money import fmt_qty
+from apps.tenancy.models import BusinessOwned
 
 QTY = {"max_digits": 12, "decimal_places": 2}
 
@@ -41,8 +42,8 @@ DEFAULT_UNIT = {
 }
 
 
-class StockItem(TimeStampedModel):
-    name = models.CharField(max_length=100, unique=True)
+class StockItem(BusinessOwned, TimeStampedModel):
+    name = models.CharField(max_length=100)
     kind = models.CharField(max_length=20, choices=StockKind.choices)
     unit = models.CharField(max_length=10, choices=StockUnit.choices)
     low_stock_level = models.DecimalField(
@@ -55,6 +56,9 @@ class StockItem(TimeStampedModel):
 
     class Meta:
         ordering = ["kind", "name"]
+        constraints = [
+            models.UniqueConstraint(fields=["business", "name"], name="uniq_stock_item_name")
+        ]
 
     def __str__(self) -> str:
         return self.name
@@ -73,10 +77,10 @@ class RollStatus(models.TextChoices):
     FINISHED = "finished", "Finished"
 
 
-class Roll(TimeStampedModel):
+class Roll(BusinessOwned, TimeStampedModel):
     """One physical roll, e.g. a 10 ft × 100 ft Star Flex roll = 1,000 sq ft."""
 
-    code = models.CharField(max_length=20, unique=True)
+    code = models.CharField(max_length=20)
     stock_item = models.ForeignKey(StockItem, on_delete=models.PROTECT, related_name="rolls")
     width_ft = models.DecimalField(
         max_digits=6, decimal_places=2, validators=[MinValueValidator(Decimal("0.01"))]
@@ -97,13 +101,14 @@ class Roll(TimeStampedModel):
 
     class Meta:
         ordering = ["stock_item", "status", "code"]
+        constraints = [models.UniqueConstraint(fields=["business", "code"], name="uniq_roll_code")]
 
     def __str__(self) -> str:
         return f"{self.code} · {self.stock_item.name} {fmt_qty(self.width_ft)} ft"
 
 
-class Supplier(TimeStampedModel):
-    name = models.CharField(max_length=150, unique=True)
+class Supplier(BusinessOwned, TimeStampedModel):
+    name = models.CharField(max_length=150)
     phone = models.CharField(max_length=20, blank=True)
     address = models.CharField(max_length=255, blank=True)
     pan_no = models.CharField("PAN / VAT no.", max_length=9, blank=True)
@@ -111,13 +116,16 @@ class Supplier(TimeStampedModel):
 
     class Meta:
         ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(fields=["business", "name"], name="uniq_supplier_name")
+        ]
 
     def __str__(self) -> str:
         return self.name
 
 
-class Purchase(TimeStampedModel):
-    purchase_no = models.CharField(max_length=30, unique=True)
+class Purchase(BusinessOwned, TimeStampedModel):
+    purchase_no = models.CharField(max_length=30)
     supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name="purchases")
     purchase_date = models.DateField(db_index=True)
     bill_no = models.CharField("Supplier bill no.", max_length=40, blank=True)
@@ -129,12 +137,15 @@ class Purchase(TimeStampedModel):
 
     class Meta:
         ordering = ["-purchase_date", "-id"]
+        constraints = [
+            models.UniqueConstraint(fields=["business", "purchase_no"], name="uniq_purchase_no")
+        ]
 
     def __str__(self) -> str:
         return self.purchase_no
 
 
-class PurchaseLine(models.Model):
+class PurchaseLine(BusinessOwned):
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name="lines")
     stock_item = models.ForeignKey(StockItem, on_delete=models.PROTECT, related_name="+")
     quantity = models.DecimalField(**QTY)
@@ -163,7 +174,7 @@ class AppendOnlyError(RuntimeError):
     pass
 
 
-class StockMovement(models.Model):
+class StockMovement(BusinessOwned):
     """Append-only stock ledger. Corrections are new adjustment rows, never edits."""
 
     stock_item = models.ForeignKey(StockItem, on_delete=models.PROTECT, related_name="movements")

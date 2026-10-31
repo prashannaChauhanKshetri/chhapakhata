@@ -15,8 +15,36 @@ from apps.customers.models import Customer
 from apps.inventory import services as stock
 from apps.inventory.models import StockItem, StockKind, StockUnit, Supplier
 from apps.orders import services as orders
+from apps.tenancy.context import use_business
+from apps.tenancy.models import Business
 
 D = Decimal
+
+
+DB_FIXTURES = {"db", "transactional_db", "django_db_setup"}
+
+
+@pytest.fixture(autouse=True)
+def business(request):
+    """Database tests run inside one business, like a signed-in request.
+
+    The first business comes from the migrations; transactional tests flush
+    it, so it is created again when missing.
+    """
+    names = set(request.fixturenames)
+    if not names & DB_FIXTURES and not request.node.get_closest_marker("django_db"):
+        yield None
+        return
+    marker = request.node.get_closest_marker("django_db")
+    transactional = "transactional_db" in names or (
+        marker is not None and marker.kwargs.get("transaction")
+    )
+    request.getfixturevalue("transactional_db" if transactional else "db")
+    current = Business.objects.order_by("pk").first() or Business.objects.create(
+        name="OM Traders and Suppliers", slug="om-traders-and-suppliers"
+    )
+    with use_business(current):
+        yield current
 
 
 def make_user(username: str, role: str, **extra) -> User:
@@ -147,7 +175,8 @@ def api():
     def _client(user=None) -> APIClient:
         client = APIClient()
         if user is not None:
-            client.force_authenticate(user)
+            # A real session, so BusinessMiddleware scopes requests to the user's business.
+            client.force_login(user, backend="django.contrib.auth.backends.ModelBackend")
         return client
 
     return _client

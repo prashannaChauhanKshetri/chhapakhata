@@ -17,6 +17,7 @@ from django.conf import settings
 from django.db import models
 
 from apps.core.dates import local_today
+from apps.tenancy.models import BusinessOwned
 
 MONEY = {"max_digits": 12, "decimal_places": 2, "default": Decimal("0.00")}
 
@@ -26,8 +27,8 @@ class InvoiceStatus(models.TextChoices):
     CANCELLED = "cancelled", "Cancelled"
 
 
-class Invoice(models.Model):
-    invoice_no = models.CharField(max_length=40, unique=True)
+class Invoice(BusinessOwned):
+    invoice_no = models.CharField(max_length=40)
     fiscal_year = models.CharField(max_length=7, db_index=True)
     sequence = models.PositiveIntegerField()
     order = models.ForeignKey("orders.Order", on_delete=models.PROTECT, related_name="invoices")
@@ -79,7 +80,10 @@ class Invoice(models.Model):
     class Meta:
         ordering = ["-invoice_date", "-sequence"]
         constraints = [
-            models.UniqueConstraint(fields=["fiscal_year", "sequence"], name="uniq_invoice_fy_seq"),
+            models.UniqueConstraint(fields=["business", "invoice_no"], name="uniq_invoice_no"),
+            models.UniqueConstraint(
+                fields=["business", "fiscal_year", "sequence"], name="uniq_invoice_fy_seq"
+            ),
             models.UniqueConstraint(
                 fields=["order"],
                 condition=models.Q(status="issued"),
@@ -95,7 +99,7 @@ class Invoice(models.Model):
         return self.status == InvoiceStatus.CANCELLED
 
 
-class InvoiceLine(models.Model):
+class InvoiceLine(BusinessOwned):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="lines")
     line_no = models.PositiveSmallIntegerField()
     description = models.CharField(max_length=200)
@@ -137,8 +141,8 @@ class PaymentStatus(models.TextChoices):
     VOID = "void", "Void"
 
 
-class Payment(models.Model):
-    receipt_no = models.CharField(max_length=40, unique=True)
+class Payment(BusinessOwned):
+    receipt_no = models.CharField(max_length=40)
     fiscal_year = models.CharField(max_length=7)
     sequence = models.PositiveIntegerField()
     customer = models.ForeignKey(
@@ -175,7 +179,10 @@ class Payment(models.Model):
     class Meta:
         ordering = ["-payment_date", "-id"]
         constraints = [
-            models.UniqueConstraint(fields=["fiscal_year", "sequence"], name="uniq_receipt_fy_seq"),
+            models.UniqueConstraint(fields=["business", "receipt_no"], name="uniq_receipt_no"),
+            models.UniqueConstraint(
+                fields=["business", "fiscal_year", "sequence"], name="uniq_receipt_fy_seq"
+            ),
             models.CheckConstraint(
                 condition=models.Q(amount__gt=0), name="payment_amount_positive"
             ),
@@ -201,7 +208,7 @@ class LedgerEntryType(models.TextChoices):
     IMPORTED_WORK = "imported_work", "Work (imported)"
 
 
-class LedgerEntry(models.Model):
+class LedgerEntry(BusinessOwned):
     """Append-only customer ledger. Balance = sum(debit) - sum(credit); positive means due."""
 
     customer = models.ForeignKey(

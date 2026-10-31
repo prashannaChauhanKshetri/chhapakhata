@@ -5,6 +5,7 @@ from decimal import Decimal
 from rest_framework import serializers
 
 from apps.core.serializers import BSDateField, UserRefSerializer
+from apps.tenancy.validators import unique_in_business
 
 from .models import (
     DEFAULT_UNIT,
@@ -45,7 +46,7 @@ class StockItemSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["on_hand", "updated_at"]
-        extra_kwargs = {"unit": {"required": False}}
+        extra_kwargs = {"unit": {"required": False}, "name": unique_in_business(StockItem)}
 
     def validate(self, attrs):
         kind = attrs.get("kind", getattr(self.instance, "kind", None))
@@ -95,6 +96,7 @@ class SupplierSerializer(serializers.ModelSerializer):
     class Meta:
         model = Supplier
         fields = ["id", "name", "phone", "address", "pan_no", "is_active"]
+        extra_kwargs = {"name": unique_in_business(Supplier)}
 
 
 class PurchaseLineSerializer(serializers.ModelSerializer):

@@ -8,6 +8,7 @@ from django.db.models.functions import Upper
 from simple_history.models import HistoricalRecords
 
 from apps.core.models import TimeStampedModel
+from apps.tenancy.models import BusinessOwned
 
 pan_validator = RegexValidator(r"^\d{9}$", "PAN / VAT numbers in Nepal have 9 digits.")
 phone_validator = RegexValidator(
@@ -20,7 +21,7 @@ class CustomerType(models.TextChoices):
     BUSINESS = "business", "Business / Organisation"
 
 
-class Customer(TimeStampedModel):
+class Customer(BusinessOwned, TimeStampedModel):
     name = models.CharField(max_length=150)
     phone = models.CharField(max_length=20, blank=True, validators=[phone_validator])
     alt_phone = models.CharField(
