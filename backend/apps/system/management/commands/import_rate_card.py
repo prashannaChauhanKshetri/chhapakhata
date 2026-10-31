@@ -12,15 +12,16 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 from django.db import transaction
 
 from apps.catalog.models import AddOn, AddOnBasis, MediaType
 from apps.inventory.models import StockItem
 from apps.system.importers import boolean, decimal, read_rows, text
+from apps.tenancy.commands import BusinessCommand
 
 
-class Command(BaseCommand):
+class Command(BusinessCommand):
     help = "Create or update media types and add-ons from CSV or Excel."
 
     def add_arguments(self, parser):

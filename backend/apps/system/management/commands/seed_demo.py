@@ -15,7 +15,7 @@ from contextlib import contextmanager
 from decimal import Decimal
 from unittest import mock
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 from django.db import transaction
 from django.utils import timezone
 
@@ -32,6 +32,7 @@ from apps.orders import services as orders
 from apps.orders.models import Order
 from apps.production.models import Stage
 from apps.production.services import move_job
+from apps.tenancy.commands import BusinessCommand
 
 D = Decimal
 
@@ -42,7 +43,7 @@ def travel_to(moment: dt.datetime):
         yield
 
 
-class Command(BaseCommand):
+class Command(BusinessCommand):
     help = "Create demo users, rate card, stock, customers and three weeks of orders."
 
     def add_arguments(self, parser):
@@ -91,9 +92,10 @@ class Command(BaseCommand):
             user = User(username=username, first_name=first, last_name=last, role=role)
             user.set_password(password)
             user.save()
-        self.owner = User.objects.get(username="owner")
-        self.desk = User.objects.get(username="frontdesk")
-        self.op = User.objects.get(username="operator")
+        staff = User.objects.filter(business=self.business)
+        self.owner = staff.get(username="owner")
+        self.desk = staff.get(username="frontdesk")
+        self.op = staff.get(username="operator")
 
     def _catalog_and_stock(self):
         rolls = {}

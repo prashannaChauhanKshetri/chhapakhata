@@ -7,16 +7,17 @@ from __future__ import annotations
 
 import getpass
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 
 from apps.accounts import services
 from apps.accounts.models import User
 from apps.core.exceptions import BusinessError
 from apps.core.permissions import Role
+from apps.tenancy.commands import BusinessCommand
 
 
-class Command(BaseCommand):
-    help = "Create an owner (admin) account."
+class Command(BusinessCommand):
+    help = "Create an owner (admin) account in a business."
 
     def add_arguments(self, parser):
         parser.add_argument("--username", required=True)
@@ -32,7 +33,7 @@ class Command(BaseCommand):
             password = getpass.getpass("Password: ")
             if password != getpass.getpass("Repeat password: "):
                 raise CommandError("Passwords do not match.")
-        actor = User.objects.filter(role=Role.OWNER, is_active=True).first()
+        actor = User.objects.filter(business=self.business, role=Role.OWNER, is_active=True).first()
         try:
             user = services.create_user(
                 actor=actor,

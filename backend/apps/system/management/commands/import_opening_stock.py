@@ -9,16 +9,17 @@ remaining_sqft (one row per roll; remaining empty = full roll).
 
 from __future__ import annotations
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 from django.db import transaction
 
 from apps.accounts.models import User
 from apps.inventory.models import DEFAULT_UNIT, StockItem, StockKind
 from apps.inventory.services import RollSpec, add_opening_stock
 from apps.system.importers import decimal, read_rows, text
+from apps.tenancy.commands import BusinessCommand
 
 
-class Command(BaseCommand):
+class Command(BusinessCommand):
     help = "Create stock items and bring opening quantities and rolls into stock."
 
     def add_arguments(self, parser):
@@ -27,7 +28,7 @@ class Command(BaseCommand):
         parser.add_argument("--dry-run", action="store_true")
 
     def handle(self, *args, **options):
-        owner = User.objects.filter(username=options["owner"]).first()
+        owner = User.objects.filter(username=options["owner"], business=self.business).first()
         if owner is None:
             raise CommandError(f"No user '{options['owner']}'.")
         errors: list[str] = []

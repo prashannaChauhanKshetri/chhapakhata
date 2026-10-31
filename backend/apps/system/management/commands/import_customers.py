@@ -10,16 +10,17 @@ from __future__ import annotations
 
 import datetime as dt
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 from django.db import transaction
 
 from apps.accounts.models import User
 from apps.billing.services import post_opening_balance
 from apps.customers.models import Customer, CustomerType
 from apps.system.importers import decimal, read_rows, text
+from apps.tenancy.commands import BusinessCommand
 
 
-class Command(BaseCommand):
+class Command(BusinessCommand):
     help = "Import customers and opening balances from CSV or Excel."
 
     def add_arguments(self, parser):
@@ -29,7 +30,7 @@ class Command(BaseCommand):
         parser.add_argument("--dry-run", action="store_true", help="Check the file without saving")
 
     def handle(self, *args, **options):
-        owner = User.objects.filter(username=options["owner"]).first()
+        owner = User.objects.filter(username=options["owner"], business=self.business).first()
         if owner is None:
             raise CommandError(f"No user '{options['owner']}'.")
         as_of = dt.date.fromisoformat(options["as_of"]) if options["as_of"] else None

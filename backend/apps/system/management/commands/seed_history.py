@@ -31,7 +31,7 @@ from decimal import Decimal
 from typing import Any
 from unittest import mock
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 from django.db import connection, transaction
 from django.utils import timezone
 
@@ -51,6 +51,7 @@ from apps.orders import services as orders
 from apps.orders.models import Order, OrderStatus
 from apps.production.models import Stage
 from apps.production.services import move_job, needs_material
+from apps.tenancy.commands import BusinessCommand
 
 D = Decimal
 OPENING_BS = (2077, 4, 1)  # 1 Shrawan 2077: first day of FY 2077/78
@@ -336,7 +337,7 @@ class Event:
     action: Callable[[], None] = field(compare=False)
 
 
-class Command(BaseCommand):
+class Command(BusinessCommand):
     help = "Simulate the shop from its first day (1 Shrawan 2077 BS) until today, in an empty database."
 
     def add_arguments(self, parser):
@@ -348,8 +349,11 @@ class Command(BaseCommand):
     # -- entry -----------------------------------------------------------------
 
     def handle(self, *args, **options):
-        if Order.objects.exists() or User.objects.exists():
-            raise CommandError("This database is not empty. Use a fresh database (`make history`).")
+        if Order.objects.exists() or User.objects.filter(business=self.business).exists():
+            raise CommandError(
+                f"The business '{self.business.slug}' is not empty. Use a new business "
+                "(manage.py create_business) or a fresh database (`make history`)."
+            )
         self.rng = random.Random(options["seed"])
         self.tz = timezone.get_current_timezone()
         self.password = options["password"]
