@@ -34,7 +34,7 @@ import { useAuth } from '@/auth/AuthContext';
 import { ChangePasswordForm } from '@/auth/ChangePasswordForm';
 import { Logo } from '@/components/Logo';
 import { TextSizeControl } from '@/components/TextSizeControl';
-import { PageLoader } from '@/components/PageLoader';
+import { PageSkeleton } from '@/components/Skeletons';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
 
@@ -251,7 +251,7 @@ export function AppLayout() {
             </Group>
           )}
           <Box className={classes.content}>
-            <Suspense fallback={<PageLoader />} key={location.pathname}>
+            <Suspense fallback={<PageSkeleton />} key={location.pathname}>
               <Outlet />
             </Suspense>
           </Box>

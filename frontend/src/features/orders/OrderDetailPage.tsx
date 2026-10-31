@@ -36,7 +36,7 @@ import { DualDate } from '@/components/DualDate';
 import { KeyValue } from '@/components/KeyValue';
 import { Money } from '@/components/Money';
 import { PageHeader } from '@/components/PageHeader';
-import { PageLoader } from '@/components/PageLoader';
+import { DetailSkeleton } from '@/components/Skeletons';
 import { QueryError } from '@/components/QueryError';
 import { openReasonModal } from '@/components/ReasonModal';
 import { SectionCard } from '@/components/SectionCard';
@@ -66,7 +66,7 @@ export default function OrderDetailPage() {
   });
 
   if (error) return <QueryError error={error} onRetry={() => void refetch()} />;
-  if (!order) return <PageLoader />;
+  if (!order) return <DetailSkeleton />;
   const a = order.actions;
 
   const refresh = async () => {

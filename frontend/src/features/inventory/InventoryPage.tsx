@@ -12,7 +12,7 @@ import {
 } from '@mantine/core';
 import { IconPlus, IconSearch, IconTruckDelivery } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import { DataTable } from 'mantine-datatable';
+import { DataTable } from '@/components/DataTable';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 

@@ -8,7 +8,7 @@ import {
   IconTool,
 } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { DataTable } from 'mantine-datatable';
+import { DataTable } from '@/components/DataTable';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
@@ -18,7 +18,7 @@ import { apiGet } from '@/api/http';
 import type { Paginated, Roll, StockItem, StockMovement } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { PageHeader } from '@/components/PageHeader';
-import { PageLoader } from '@/components/PageLoader';
+import { DetailSkeleton } from '@/components/Skeletons';
 import { QueryError } from '@/components/QueryError';
 import { SectionCard } from '@/components/SectionCard';
 import { StatCard } from '@/components/StatCard';
@@ -65,7 +65,7 @@ export default function StockItemPage() {
   });
 
   if (error) return <QueryError error={error} onRetry={() => void refetch()} />;
-  if (!item) return <PageLoader />;
+  if (!item) return <DetailSkeleton />;
   const rollList = rolls?.results ?? [];
   const activeRolls = rollList.filter((r) => r.status === 'active');
 

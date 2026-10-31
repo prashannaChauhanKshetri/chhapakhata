@@ -23,7 +23,7 @@ import { ensureCsrfCookie, fetchWithTimeout } from '@/api/client';
 import { ApiError } from '@/api/errors';
 import { FILE_TIMEOUT_MS } from '@/api/files';
 import type { ShopSettings } from '@/api/types';
-import { PageLoader } from '@/components/PageLoader';
+import { FormSkeleton } from '@/components/Skeletons';
 import { SectionCard } from '@/components/SectionCard';
 import { handleFormError, notifySuccess } from '@/lib/forms';
 import { toNumber } from '@/lib/format';
@@ -299,6 +299,6 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
 
 export function ShopSettingsTab() {
   const { data } = useShopSettings();
-  if (!data) return <PageLoader />;
+  if (!data) return <FormSkeleton sections={3} />;
   return <ShopForm key={data.updated_at} shop={data} />;
 }

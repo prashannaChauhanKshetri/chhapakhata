@@ -9,7 +9,7 @@ import { RouterProvider } from 'react-router';
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext';
 import { LoginPage } from '@/auth/LoginPage';
-import { PageLoader } from '@/components/PageLoader';
+import { AppSkeleton } from '@/components/Skeletons';
 
 import { AppErrorBoundary } from './AppErrorBoundary';
 import { checkConnectionSoon, persistOptions, useConnection } from './offline';
@@ -64,7 +64,7 @@ function Gate() {
     }
   }, [user]);
 
-  if (loading) return connection === 'online' ? <PageLoader /> : <NoServerYet />;
+  if (loading) return connection === 'online' ? <AppSkeleton /> : <NoServerYet />;
   if (!user) return <LoginPage />;
   return <RouterProvider router={router} />;
 }

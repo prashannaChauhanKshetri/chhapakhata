@@ -27,7 +27,7 @@ import { apiGet } from '@/api/http';
 import type { Customer, CustomerRate, OrderDetail, PricePreview } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
 import { PageHeader } from '@/components/PageHeader';
-import { PageLoader } from '@/components/PageLoader';
+import { FormSkeleton } from '@/components/Skeletons';
 import { QueryError } from '@/components/QueryError';
 import { handleFormError, notifySuccess } from '@/lib/forms';
 import { formatAmount, formatNPR, formatQty, toNumber } from '@/lib/format';
@@ -476,7 +476,7 @@ export default function OrderFormPage() {
 
   if (orderQuery.error)
     return <QueryError error={orderQuery.error} onRetry={() => void orderQuery.refetch()} />;
-  if (!ready) return <PageLoader />;
+  if (!ready) return <FormSkeleton />;
   return (
     <OrderFormInner
       key={id ?? 'new'}

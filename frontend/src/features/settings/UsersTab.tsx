@@ -24,7 +24,7 @@ import {
   IconUserPlus,
 } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { DataTable } from 'mantine-datatable';
+import { DataTable } from '@/components/DataTable';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

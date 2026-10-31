@@ -13,7 +13,7 @@ import { DualDate } from '@/components/DualDate';
 import { KeyValue } from '@/components/KeyValue';
 import { Money } from '@/components/Money';
 import { PageHeader } from '@/components/PageHeader';
-import { PageLoader } from '@/components/PageLoader';
+import { DetailSkeleton } from '@/components/Skeletons';
 import { QueryError } from '@/components/QueryError';
 import { openReasonModal } from '@/components/ReasonModal';
 import { SectionCard } from '@/components/SectionCard';
@@ -40,7 +40,7 @@ export default function InvoiceDetailPage() {
   });
 
   if (error) return <QueryError error={error} onRetry={() => void refetch()} />;
-  if (!invoice) return <PageLoader />;
+  if (!invoice) return <DetailSkeleton />;
   const cancelled = invoice.status === 'cancelled';
 
   const print = async (size: 'a4' | 'a5' | '80mm') => {

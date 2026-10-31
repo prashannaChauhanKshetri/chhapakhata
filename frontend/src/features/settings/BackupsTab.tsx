@@ -1,7 +1,7 @@
 import { Alert, Button, Card, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { IconCloudUpload, IconDatabase, IconDownload } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { DataTable } from 'mantine-datatable';
+import { DataTable } from '@/components/DataTable';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

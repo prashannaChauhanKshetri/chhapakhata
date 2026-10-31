@@ -14,6 +14,7 @@ import { useAuth } from '@/auth/AuthContext';
 import { EmptyState } from '@/components/EmptyState';
 import { PageHeader } from '@/components/PageHeader';
 import { QueryError } from '@/components/QueryError';
+import { ReportSkeleton } from '@/components/Skeletons';
 import { notifyError } from '@/lib/forms';
 import { formatAmount, formatDate, formatQty } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
@@ -178,7 +179,7 @@ export default function ReportPage() {
                 onChange={setOperator}
               />
             )}
-            {isFetching && <Loader size="xs" color="slate.4" mb={10} />}
+            {isFetching && report && <Loader size="xs" color="slate.4" mb={10} />}
           </Group>
         </Card>
       )}
@@ -186,9 +187,7 @@ export default function ReportPage() {
       {error ? (
         <QueryError error={error} onRetry={() => void refetch()} />
       ) : !report ? (
-        <Card>
-          <Loader size="sm" />
-        </Card>
+        <ReportSkeleton />
       ) : (
         <Stack gap="lg">
           {report.summary.length > 0 && (

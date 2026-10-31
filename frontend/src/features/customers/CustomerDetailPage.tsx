@@ -23,7 +23,7 @@ import {
   IconReceipt2,
 } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { DataTable } from 'mantine-datatable';
+import { DataTable } from '@/components/DataTable';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router';
@@ -37,7 +37,7 @@ import { Balance } from '@/components/Balance';
 import { KeyValue } from '@/components/KeyValue';
 import { Money } from '@/components/Money';
 import { PageHeader } from '@/components/PageHeader';
-import { PageLoader } from '@/components/PageLoader';
+import { DetailSkeleton } from '@/components/Skeletons';
 import {
   PeriodPicker,
   type PeriodValue,
@@ -429,7 +429,7 @@ export default function CustomerDetailPage() {
   });
 
   if (error) return <QueryError error={error} onRetry={() => void refetch()} />;
-  if (!customer) return <PageLoader />;
+  if (!customer) return <DetailSkeleton />;
   const balance = toNumber(customer.balance);
   // Work in progress is billed when invoiced; show it so the counter sees the full picture.
   // Imported work-log orders are already charged to the ledger, so they are not counted.

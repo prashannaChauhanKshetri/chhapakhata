@@ -1,7 +1,7 @@
 import { Button, Card, Group, Stack, Text, TextInput } from '@mantine/core';
 import { IconSearch, IconTruckDelivery } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import { DataTable } from 'mantine-datatable';
+import { DataTable } from '@/components/DataTable';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 

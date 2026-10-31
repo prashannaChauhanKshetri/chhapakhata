@@ -17,7 +17,7 @@ import { Link } from 'react-router';
 import { apiGet } from '@/api/http';
 import type { ReportInfo } from '@/api/types';
 import { PageHeader } from '@/components/PageHeader';
-import { PageLoader } from '@/components/PageLoader';
+import { PageSkeleton } from '@/components/Skeletons';
 import { QueryError } from '@/components/QueryError';
 
 const META: Record<string, { icon: Icon; description: string }> = {
@@ -52,7 +52,7 @@ export default function ReportsPage() {
     queryFn: () => apiGet<ReportInfo[]>('/api/v1/reports/'),
   });
   if (error) return <QueryError error={error} onRetry={() => void refetch()} />;
-  if (!data) return <PageLoader />;
+  if (!data) return <PageSkeleton />;
   return (
     <>
       <PageHeader

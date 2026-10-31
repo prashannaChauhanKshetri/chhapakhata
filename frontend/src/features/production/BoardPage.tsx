@@ -39,6 +39,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { PageHeader } from '@/components/PageHeader';
 import { QueryError } from '@/components/QueryError';
 import { StageBadge } from '@/components/StatusBadge';
+import { BoardSkeleton } from '@/components/Skeletons';
 import { STAGES } from '@/lib/status';
 
 import { useMediaTypes } from '../orders/useCatalog';
@@ -199,7 +200,7 @@ export default function BoardPage() {
           {t('Delivered today ({{n}})', { n: data.columns.find((c) => c.stage === 6)?.count ?? 0 })}
         </Chip>
       )}
-      {isFetching && <Loader size="xs" color="slate.4" />}
+      {isFetching && data && <Loader size="xs" color="slate.4" />}
     </Group>
   );
 
@@ -239,9 +240,7 @@ export default function BoardPage() {
       {error ? (
         <QueryError error={error} onRetry={() => void refetch()} />
       ) : !data ? (
-        <Card>
-          <Loader size="sm" />
-        </Card>
+        <BoardSkeleton />
       ) : data.total_open === 0 && data.columns.every((c) => c.count === 0) ? (
         <Card>
           <EmptyState

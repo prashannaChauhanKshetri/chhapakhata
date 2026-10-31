@@ -16,7 +16,7 @@ import { useForm } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { IconDotsVertical, IconHistory, IconPencil, IconPlus } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import { DataTable } from 'mantine-datatable';
+import { DataTable } from '@/components/DataTable';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
