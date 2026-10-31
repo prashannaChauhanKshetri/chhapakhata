@@ -74,7 +74,7 @@ cd ~/chhapakhata/deploy
 nano .env
 ```
 
-Set these lines (keep the generated `SECRET_KEY` and `POSTGRES_PASSWORD`):
+Set these lines (keep the generated `SECRET_KEY`, `POSTGRES_PASSWORD` and `APP_DB_PASSWORD`):
 
 ```ini
 SITE_ADDRESS=demo.yourdomain.com
@@ -121,6 +121,15 @@ docker compose exec api python manage.py seed_demo --password 'choose-a-long-pas
 docker compose exec api python manage.py seed_history --password 'choose-a-long-password'
 ```
 
+**More shops on the same server.** Each business has its own data, settings and bill numbering, and its staff see only their own shop. Create one with its owner (you are asked for the owner's password):
+
+```bash
+docker compose exec api python manage.py create_business --name "Sharma Prints" --owner-username ram
+docker compose exec api python manage.py list_businesses
+```
+
+With more than one business, the data commands above need `--business <slug>` (the slug is shown by `list_businesses`), for example `seed_demo --business sharma-prints`.
+
 ## 6. Phones
 
 Open the site on the phone and sign in. Android/Chrome: account menu → **Install app on this device**. iPhone: Safari → Share → **Add to Home Screen**. No certificate needs installing, because Let's Encrypt is trusted everywhere.
@@ -140,6 +149,17 @@ After new code is pushed to GitHub:
 
 ```bash
 cd ~/chhapakhata/deploy && ./scripts/update.sh    # backs up, pulls, rebuilds, restarts
+```
+
+**Upgrading a server installed before 31 October 2026** (the multi-business version): that `update.sh` is older and cannot set up the new database role. Run these steps once instead:
+
+```bash
+cd ~/chhapakhata/deploy
+./scripts/backup-now.sh
+git -C .. pull --ff-only
+./scripts/app-role.sh          # adds APP_DB_PASSWORD to .env, creates the app's database role
+docker compose up -d --build   # migrations move the existing shop into the first business
+docker compose exec api python manage.py list_businesses
 ```
 
 ## 9. Looking after it

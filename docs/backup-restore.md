@@ -36,7 +36,7 @@ cd deploy
 # Windows: powershell -ExecutionPolicy Bypass -File scripts\restore.ps1 backups\sets\chhapakhata-db-20261109-210000.dump
 ```
 
-The script verifies the checksum, asks you to type `RESTORE`, stops the app, recreates the database, restores it, restores images, and starts the app again.
+The script verifies the checksum, asks you to type `RESTORE`, stops the app, recreates the database, restores it, gives the tables back to the app's own database role, restores images, and starts the app again. A backup holds every business on the server, so a restore replaces all of them together.
 
 To restore from the online copy first download the files:
 
