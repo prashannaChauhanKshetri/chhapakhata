@@ -14,6 +14,7 @@ from rest_framework.views import APIView
 
 from apps.core.activity import log_activity
 from apps.core.permissions import AUTHENTICATED, Perm
+from apps.tenancy.context import activate
 
 from . import services
 from .lockout import lockout_response
@@ -60,7 +61,14 @@ class LoginView(APIView):
             return lockout_response(django_request)
         if user is None or not user.is_active:
             raise ValidationError({"non_field_errors": ["Incorrect username or password."]})
+        if user.business is not None and not user.business.is_active:
+            raise ValidationError(
+                {"non_field_errors": ["This business's account is paused. Contact support."]}
+            )
         login(django_request, user)
+        # The middleware saw an anonymous visitor; the rest of this request
+        # (activity log, /me data) belongs to the user's business.
+        activate(user.business_id)
         log_activity(user, "auth.login", user, request=request)
         return Response(MeSerializer(user).data)
 
@@ -111,7 +119,7 @@ class UserViewSet(
 ):
     """Staff accounts. Accounts are deactivated, never deleted, so history keeps names."""
 
-    queryset = User.objects.filter(is_superuser=False)
+    queryset = User.objects.filter(is_superuser=False)  # narrowed per business below
     serializer_class = UserSerializer
     search_fields = ["username", "first_name", "last_name", "phone"]
     filterset_fields = ["role", "is_active"]
@@ -125,6 +133,9 @@ class UserViewSet(
         "reset_password": Perm.USERS_MANAGE,
         "operators": Perm.PRODUCTION_VIEW,
     }
+
+    def get_queryset(self):
+        return super().get_queryset().filter(business_id=self.request.user.business_id)
 
     def perform_create(self, serializer):
         data = dict(serializer.validated_data)
@@ -162,5 +173,7 @@ class UserViewSet(
     @action(detail=False, methods=["get"], pagination_class=None)
     def operators(self, request):
         """Active production operators, for assigning jobs."""
-        qs = User.objects.filter(is_active=True, role="operator")
+        qs = User.objects.filter(
+            business_id=request.user.business_id, is_active=True, role="operator"
+        )
         return Response(UserSerializer(qs, many=True).data)

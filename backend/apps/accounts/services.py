@@ -1,4 +1,8 @@
-"""User account rules: the contract's active-user cap and keeping one owner."""
+"""User account rules: the contract's active-user cap and keeping one owner.
+
+Users are not under row-level security (sign-in must find them before a
+business is known), so every query here filters by business itself.
+"""
 
 from __future__ import annotations
 
@@ -16,16 +20,16 @@ from apps.core.permissions import Role
 from .models import User
 
 
-def active_user_count(exclude: User | None = None) -> int:
-    qs = User.objects.filter(is_active=True, is_superuser=False)
+def active_user_count(business_id: int | None, exclude: User | None = None) -> int:
+    qs = User.objects.filter(business_id=business_id, is_active=True, is_superuser=False)
     if exclude is not None and exclude.pk:
         qs = qs.exclude(pk=exclude.pk)
     return qs.count()
 
 
-def _check_cap(exclude: User | None = None) -> None:
+def _check_cap(business_id: int | None, exclude: User | None = None) -> None:
     limit = settings.MAX_ACTIVE_USERS
-    if active_user_count(exclude) >= limit:
+    if active_user_count(business_id, exclude) >= limit:
         raise BusinessError(
             f"Your plan includes {limit} active user accounts. "
             "Deactivate an account before adding another."
@@ -40,14 +44,20 @@ def _check_password(password: str, user: User) -> None:
 
 
 def _remaining_owners(excluding: User) -> int:
-    return User.objects.filter(is_active=True, role=Role.OWNER).exclude(pk=excluding.pk).count()
+    return (
+        User.objects.filter(business_id=excluding.business_id, is_active=True, role=Role.OWNER)
+        .exclude(pk=excluding.pk)
+        .count()
+    )
 
 
 @transaction.atomic
 def create_user(*, actor: User, password: str, request: Any = None, **fields: Any) -> User:
     user = User(**fields)
+    if actor is not None and actor.business_id is not None:
+        user.business_id = actor.business_id  # staff join their owner's business
     if user.is_active:
-        _check_cap()
+        _check_cap(user.business_id)
     _check_password(password, user)
     user.set_password(password)
     user.save()
@@ -64,7 +74,7 @@ def update_user(*, actor: User, user: User, request: Any = None, **fields: Any) 
         fields.get("is_active") is False or fields.get("role", Role.OWNER) != Role.OWNER
     )
     if becoming_active:
-        _check_cap(exclude=user)
+        _check_cap(user.business_id, exclude=user)
     if leaving_owner and _remaining_owners(user) == 0:
         raise BusinessError("At least one active owner account must remain.")
     for key, value in fields.items():

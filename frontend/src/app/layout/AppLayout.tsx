@@ -152,6 +152,12 @@ export function AppLayout() {
                   </UnstyledButton>
                 </Menu.Target>
                 <Menu.Dropdown>
+                  {user?.business && (
+                    <>
+                      <Menu.Label>{user.business.name}</Menu.Label>
+                      <Menu.Divider />
+                    </>
+                  )}
                   <Box px="sm" py={6}>
                     <TextSizeControl />
                   </Box>

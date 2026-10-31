@@ -28,6 +28,7 @@ from django.utils import timezone
 from openpyxl import Workbook
 
 from apps.core.activity import log_activity
+from apps.tenancy.context import current_business_id
 
 from .models import BackupRun, BackupStatus, BackupTrigger, OffsiteStatus
 
@@ -58,11 +59,18 @@ def _sha256(path: Path) -> str:
 
 def _dump_database(target: Path) -> None:
     db = connection.settings_dict
-    env = {**os.environ, "PGPASSWORD": str(db.get("PASSWORD") or "")}
+    # Every business's rows: the app role is under row-level security, so the
+    # dump runs with the policies on and the platform bypass set.
+    env = {
+        **os.environ,
+        "PGPASSWORD": str(db.get("PASSWORD") or ""),
+        "PGOPTIONS": "-c app.rls_bypass=on",
+    }
     cmd = [
         _bin("pg_dump"),
         "--format=custom",
         "--no-owner",
+        "--enable-row-security",
         "--file",
         str(target),
         "--dbname",
@@ -199,7 +207,8 @@ def run_backup(trigger: str = BackupTrigger.SCHEDULED, user: Any = None) -> Back
     run.save()
     if run.status == BackupStatus.SUCCESS:
         sync_offsite(run)
-    log_activity(user, f"backup.{run.status}", run, message=run.message[:200])
+    if current_business_id() is not None:  # the nightly backup belongs to no one business
+        log_activity(user, f"backup.{run.status}", run, message=run.message[:200])
     return run
 
 
@@ -244,7 +253,11 @@ def _cell(value: Any) -> Any:
 
 
 def export_all_data() -> bytes:
-    """Every business table as one Excel workbook (one sheet per table)."""
+    """The current business's tables as one Excel workbook (one sheet per table).
+
+    Row-level security limits each sheet to the current business; users are
+    global, so that sheet is filtered here.
+    """
     wb = Workbook()
     wb.remove(wb.active)
     for app_label, model_name, exclude in EXPORT_MODELS:
@@ -267,7 +280,8 @@ def export_all_data() -> bytes:
         "last_login",
     ]
     ws.append(columns)
-    for row in users.objects.order_by("pk").values_list(*columns):
+    staff = users.objects.filter(business_id=current_business_id())
+    for row in staff.order_by("pk").values_list(*columns):
         ws.append([_cell(v) for v in row])
     buffer = io.BytesIO()
     wb.save(buffer)

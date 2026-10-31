@@ -98,7 +98,8 @@ class ReportView(APIView):
         if slug == "operator-log":
             if Perm.REPORTS_ALL in held:
                 operator_id = params.get("operator")
-                operator = User.objects.filter(pk=operator_id).first() if operator_id else None
+                staff = User.objects.filter(business_id=request.user.business_id)
+                operator = staff.filter(pk=operator_id).first() if operator_id else None
             else:
                 operator = request.user  # staff only ever see their own log
 

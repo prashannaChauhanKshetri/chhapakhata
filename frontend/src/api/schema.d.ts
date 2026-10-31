@@ -2136,6 +2136,10 @@ export interface components {
             count: number;
             jobs: components["schemas"]["Job"][];
         };
+        BusinessRef: {
+            readonly id: number;
+            readonly name: string;
+        };
         ChangePasswordRequest: {
             current_password: string;
             new_password: string;
@@ -4109,6 +4113,7 @@ export interface components {
             readonly role_label: string;
             readonly permissions: string[];
             readonly discount_limit: string | null;
+            readonly business: components["schemas"]["BusinessRef"] | null;
         };
         MediaType: {
             readonly id: number;

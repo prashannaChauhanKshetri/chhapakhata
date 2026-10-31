@@ -2,10 +2,25 @@ from __future__ import annotations
 
 from rest_framework import serializers
 
+from apps.tenancy.context import current_business_id
+
 from .models import User
 
 
+class StaffField(serializers.PrimaryKeyRelatedField):
+    """A user of the current business (users are not under row-level security)."""
+
+    def get_queryset(self):
+        return super().get_queryset().filter(business_id=current_business_id())
+
+
+class BusinessRefSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(read_only=True)
+
+
 class MeSerializer(serializers.ModelSerializer):
+    business = BusinessRefSerializer(read_only=True, allow_null=True)
     full_name = serializers.CharField(source="get_full_name", read_only=True)
     role_label = serializers.CharField(source="get_role_display", read_only=True)
     permissions = serializers.SerializerMethodField()
@@ -25,6 +40,7 @@ class MeSerializer(serializers.ModelSerializer):
             "role_label",
             "permissions",
             "discount_limit",
+            "business",
         ]
 
     def get_permissions(self, obj: User) -> list[str]:

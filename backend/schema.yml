@@ -16641,6 +16641,18 @@ components:
       - jobs
       - label
       - stage
+    BusinessRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - name
     ChangePasswordRequest:
       type: object
       properties:
@@ -20853,7 +20865,13 @@ components:
           type: string
           nullable: true
           readOnly: true
+        business:
+          allOf:
+          - $ref: '#/components/schemas/BusinessRef'
+          readOnly: true
+          nullable: true
       required:
+      - business
       - discount_limit
       - email
       - first_name

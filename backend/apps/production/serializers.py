@@ -7,6 +7,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.accounts.models import User
+from apps.accounts.serializers import StaffField
 from apps.core.permissions import Role
 from apps.core.serializers import UserRefSerializer
 from apps.inventory.models import Roll
@@ -139,7 +140,7 @@ class JobDetailSerializer(JobSerializer):
 
 
 class JobUpdateSerializer(serializers.ModelSerializer):
-    operator = serializers.PrimaryKeyRelatedField(
+    operator = StaffField(
         queryset=User.objects.filter(is_active=True, role=Role.OPERATOR),
         allow_null=True,
         required=False,
