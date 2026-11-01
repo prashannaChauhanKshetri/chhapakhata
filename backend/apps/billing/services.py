@@ -17,9 +17,9 @@ from django.utils import timezone
 from apps.catalog.models import AddOnBasis
 from apps.catalog.pricing import perimeter_ft
 from apps.core.activity import log_activity
-from apps.core.dates import bs_string, local_today
+from apps.core.dates import bs_string, fiscal_year_for, fiscal_year_range, local_today
 from apps.core.exceptions import BusinessError
-from apps.core.money import amount_in_words, fmt_qty, q2
+from apps.core.money import amount_in_words, fmt_qty, format_npr, q2
 from apps.core.sequences import DocType, next_number
 from apps.orders.models import Order, OrderStatus
 
@@ -381,6 +381,91 @@ def post_opening_balance(
         narration="Opening balance",
         created_by=user,
     )
+
+
+def previous_year_end(today: dt.date | None = None) -> dt.date:
+    """Last day of the previous fiscal year (end of Asar), where carried-in balances sit.
+
+    A balance dated there is this year's opening balance on every statement,
+    not a new charge inside the year.
+    """
+    start, _ = fiscal_year_range(fiscal_year_for(today or local_today()))
+    return start - dt.timedelta(days=1)
+
+
+def opening_entries(customer: Any):
+    return customer.ledger_entries.filter(entry_type=LedgerEntryType.OPENING).order_by(
+        "entry_date", "id"
+    )
+
+
+def _signed(amount: Decimal) -> str:
+    if amount == 0:
+        return "nil"
+    side = "due" if amount > 0 else "advance"
+    return f"{format_npr(abs(amount))} {side}"
+
+
+@transaction.atomic
+def set_opening_balance(
+    *,
+    customer: Any,
+    amount: Decimal | str,
+    user: Any,
+    as_of: dt.date | None = None,
+    reason: str = "",
+    request: Any = None,
+) -> LedgerEntry:
+    """Set or correct the balance a customer carried in from the previous year.
+
+    Positive means the customer owes the shop; negative is an advance. The
+    ledger stays append-only: the first time posts the opening entry (dated
+    at the end of the previous fiscal year unless ``as_of`` says otherwise);
+    a correction posts the difference on the same date, with a reason, so
+    the history of every change stays visible.
+    """
+    customer = type(customer).objects.select_for_update().get(pk=customer.pk)
+    target = q2(amount)
+    if as_of is not None and as_of > local_today():
+        raise BusinessError({"as_of": ["The date cannot be in the future."]})
+    entries = list(opening_entries(customer))
+    current = q2(sum((e.debit - e.credit for e in entries), Decimal("0")))
+    if entries:
+        reason = _require_reason(reason)
+        if target == current:
+            raise BusinessError({"amount": [f"The opening balance is already {_signed(current)}."]})
+        if as_of is not None and as_of != entries[0].entry_date:
+            raise BusinessError(
+                {"as_of": ["A correction keeps the date of the first opening balance."]}
+            )
+        entry_date = entries[0].entry_date
+        change = f"from {_signed(current)} to {_signed(target)}"
+        narration = f"Opening balance changed {change}: {reason}"
+    else:
+        if target == 0:
+            raise BusinessError({"amount": ["Enter the amount carried in from last year."]})
+        entry_date = as_of or previous_year_end()
+        reason = (reason or "").strip()
+        narration = f"Opening balance: {reason}" if reason else "Opening balance"
+    difference = target - current
+    entry = LedgerEntry.objects.create(
+        customer=customer,
+        entry_date=entry_date,
+        entry_type=LedgerEntryType.OPENING,
+        debit=difference if difference > 0 else Decimal("0"),
+        credit=-difference if difference < 0 else Decimal("0"),
+        narration=narration[:255],
+        created_by=user,
+    )
+    log_activity(
+        user,
+        "ledger.opening_changed" if entries else "ledger.opening_set",
+        customer,
+        message=f"{_signed(current)} → {_signed(target)}"[:255],
+        metadata={"from": str(current), "to": str(target), "date": entry_date.isoformat()},
+        request=request,
+    )
+    return entry
 
 
 @transaction.atomic

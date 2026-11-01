@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import django_filters
 from django.db import transaction
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -8,10 +10,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.billing import services as billing_services
+from apps.billing.models import LedgerEntryType
 from apps.billing.selectors import balance_subquery, customer_statement
 from apps.catalog.models import MediaType
 from apps.core.activity import log_activity
-from apps.core.dates import local_today
+from apps.core.dates import bs_string, local_today
 from apps.core.documents import pdf_response, render_pdf, xlsx_response
 from apps.core.params import output_format, parse_range
 from apps.core.permissions import Perm
@@ -24,6 +27,8 @@ from .models import Customer
 from .serializers import (
     CustomerSerializer,
     LedgerAdjustmentSerializer,
+    OpeningBalanceInputSerializer,
+    OpeningBalanceSerializer,
     StatementSerializer,
 )
 
@@ -65,6 +70,8 @@ class CustomerViewSet(
         "partial_update": Perm.CUSTOMERS_MANAGE,
         "statement": Perm.LEDGER_VIEW,
         "adjust_balance": Perm.LEDGER_MANAGE,
+        "opening_balance": Perm.LEDGER_VIEW,
+        "set_opening_balance": Perm.LEDGER_MANAGE,
         "rates": Perm.ORDERS_VIEW,
     }
 
@@ -74,10 +81,15 @@ class CustomerViewSet(
     @transaction.atomic
     def perform_create(self, serializer):
         opening = serializer.validated_data.pop("opening_balance", None)
+        opening_date = serializer.validated_data.pop("opening_date", None)
         customer = serializer.save(created_by=self.request.user)
         if opening:
-            billing_services.post_opening_balance(
-                customer=customer, amount=opening, user=self.request.user
+            billing_services.set_opening_balance(
+                customer=customer,
+                amount=opening,
+                as_of=opening_date,
+                user=self.request.user,
+                request=self.request,
             )
         log_activity(self.request.user, "customer.created", customer, request=self.request)
 
@@ -161,6 +173,41 @@ class CustomerViewSet(
         rows = sorted(last.values(), key=lambda r: r.order_date, reverse=True)
         data = [{**r.__dict__, "card_rate": card.get(r.media_type_id)} for r in rows]
         return Response(CustomerRateSerializer(data, many=True).data)
+
+    def _opening(self, customer: Customer) -> Response:
+        entries = list(billing_services.opening_entries(customer).select_related("created_by"))
+        default = billing_services.previous_year_end()
+        first = entries[0].entry_date if entries else None
+        data = {
+            "amount": sum((e.debit - e.credit for e in entries), Decimal("0")),
+            "date": first,
+            "date_bs": bs_string(first),
+            "default_date": default,
+            "default_date_bs": bs_string(default),
+            "has_other_entries": customer.ledger_entries.exclude(
+                entry_type=LedgerEntryType.OPENING
+            ).exists(),
+            "entries": entries,
+        }
+        return Response(OpeningBalanceSerializer(data).data)
+
+    @extend_schema(responses=OpeningBalanceSerializer)
+    @action(detail=True, methods=["get"], url_path="opening-balance")
+    def opening_balance(self, request, pk=None):
+        """The balance carried in from the previous year, with every change to it."""
+        return self._opening(self.get_object())
+
+    @extend_schema(request=OpeningBalanceInputSerializer, responses=OpeningBalanceSerializer)
+    @opening_balance.mapping.post
+    def set_opening_balance(self, request, pk=None):
+        """Set or correct the opening balance (owner). Corrections need a reason."""
+        customer = self.get_object()
+        serializer = OpeningBalanceInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        billing_services.set_opening_balance(
+            customer=customer, user=request.user, request=request, **serializer.validated_data
+        )
+        return self._opening(customer)
 
     @extend_schema(request=LedgerAdjustmentSerializer, responses=CustomerSerializer)
     @action(detail=True, methods=["post"], url_path="adjust-balance")

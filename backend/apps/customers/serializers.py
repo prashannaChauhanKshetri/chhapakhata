@@ -20,6 +20,12 @@ class CustomerSerializer(serializers.ModelSerializer):
         required=False,
         help_text="Existing due (positive) or advance (negative) when the customer is added.",
     )
+    opening_date = serializers.DateField(
+        write_only=True,
+        required=False,
+        allow_null=True,
+        help_text="Date of that balance (default: last day of the previous fiscal year)",
+    )
     created_at_bs = BSDateField(source="created_at")
 
     class Meta:
@@ -37,6 +43,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             "is_active",
             "balance",
             "opening_balance",
+            "opening_date",
             "created_at",
             "created_at_bs",
         ]
@@ -56,6 +63,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         validated_data.pop("opening_balance", None)
+        validated_data.pop("opening_date", None)
         return super().update(instance, validated_data)
 
 
@@ -72,6 +80,46 @@ class LedgerAdjustmentSerializer(serializers.Serializer):
         help_text="Positive increases what the customer owes; negative reduces it.",
     )
     narration = serializers.CharField(max_length=255)
+
+
+class OpeningBalanceInputSerializer(serializers.Serializer):
+    amount = serializers.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        help_text="Due carried in (positive) or advance (negative); 0 clears it.",
+    )
+    as_of = serializers.DateField(
+        required=False,
+        allow_null=True,
+        help_text="Only when first set (default: last day of the previous fiscal year)",
+    )
+    reason = serializers.CharField(
+        max_length=200, required=False, allow_blank=True, help_text="Required for a correction"
+    )
+
+
+class OpeningEntrySerializer(serializers.Serializer):
+    date = serializers.DateField(source="entry_date")
+    date_bs = BSDateField(source="entry_date")
+    debit = serializers.DecimalField(max_digits=12, decimal_places=2)
+    credit = serializers.DecimalField(max_digits=12, decimal_places=2)
+    narration = serializers.CharField()
+    created_by = serializers.CharField(source="created_by.get_full_name", default="")
+    created_at = serializers.DateTimeField()
+
+
+class OpeningBalanceSerializer(serializers.Serializer):
+    """The balance a customer carried in from the previous year, and its history."""
+
+    amount = serializers.DecimalField(max_digits=14, decimal_places=2)
+    date = serializers.DateField(allow_null=True)
+    date_bs = serializers.CharField(allow_null=True)
+    default_date = serializers.DateField(help_text="Last day of the previous fiscal year")
+    default_date_bs = serializers.CharField()
+    has_other_entries = serializers.BooleanField(
+        help_text="The customer has invoices, payments or imported work too"
+    )
+    entries = OpeningEntrySerializer(many=True)
 
 
 class StatementEntrySerializer(serializers.Serializer):

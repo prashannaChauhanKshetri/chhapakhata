@@ -2627,6 +2627,285 @@ paths:
               schema:
                 $ref: '#/components/schemas/Customer'
           description: ''
+  /api/v1/customers/{id}/opening-balance/:
+    get:
+      operationId: customers_opening_balance_retrieve
+      description: The balance carried in from the previous year, with every change
+        to it.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this customer.
+        required: true
+      tags:
+      - customers
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomersOpeningBalanceRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpeningBalance'
+          description: ''
+    post:
+      operationId: customers_opening_balance_create
+      description: Set or correct the opening balance (owner). Corrections need a
+        reason.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this customer.
+        required: true
+      tags:
+      - customers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpeningBalanceInputRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OpeningBalanceInputRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OpeningBalanceInputRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomersOpeningBalanceCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpeningBalance'
+          description: ''
   /api/v1/customers/{id}/rates/:
     get:
       operationId: customers_rates_list
@@ -17165,6 +17444,13 @@ components:
           writeOnly: true
           description: Existing due (positive) or advance (negative) when the customer
             is added.
+        opening_date:
+          type: string
+          format: date
+          writeOnly: true
+          nullable: true
+          description: 'Date of that balance (default: last day of the previous fiscal
+            year)'
       required:
       - name
     CustomerTypeEnum:
@@ -17383,6 +17669,7 @@ components:
       - $ref: '#/components/schemas/CustomersCreateNotesErrorComponent'
       - $ref: '#/components/schemas/CustomersCreateIsActiveErrorComponent'
       - $ref: '#/components/schemas/CustomersCreateOpeningBalanceErrorComponent'
+      - $ref: '#/components/schemas/CustomersCreateOpeningDateErrorComponent'
       discriminator:
         propertyName: attr
         mapping:
@@ -17396,6 +17683,7 @@ components:
           notes: '#/components/schemas/CustomersCreateNotesErrorComponent'
           is_active: '#/components/schemas/CustomersCreateIsActiveErrorComponent'
           opening_balance: '#/components/schemas/CustomersCreateOpeningBalanceErrorComponent'
+          opening_date: '#/components/schemas/CustomersCreateOpeningDateErrorComponent'
     CustomersCreateErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/CustomersCreateValidationError'
@@ -17537,6 +17825,28 @@ components:
       - attr
       - code
       - detail
+    CustomersCreateOpeningDateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - opening_date
+          type: string
+          description: '* `opening_date` - opening_date'
+        code:
+          enum:
+          - datetime
+          - invalid
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     CustomersCreatePanNoErrorComponent:
       type: object
       properties:
@@ -17652,6 +17962,151 @@ components:
       required:
       - errors
       - type
+    CustomersOpeningBalanceCreateAmountErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - amount
+          type: string
+          description: '* `amount` - amount'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    CustomersOpeningBalanceCreateAsOfErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - as_of
+          type: string
+          description: '* `as_of` - as_of'
+        code:
+          enum:
+          - datetime
+          - invalid
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    CustomersOpeningBalanceCreateError:
+      oneOf:
+      - $ref: '#/components/schemas/CustomersOpeningBalanceCreateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/CustomersOpeningBalanceCreateAmountErrorComponent'
+      - $ref: '#/components/schemas/CustomersOpeningBalanceCreateAsOfErrorComponent'
+      - $ref: '#/components/schemas/CustomersOpeningBalanceCreateReasonErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/CustomersOpeningBalanceCreateNonFieldErrorsErrorComponent'
+          amount: '#/components/schemas/CustomersOpeningBalanceCreateAmountErrorComponent'
+          as_of: '#/components/schemas/CustomersOpeningBalanceCreateAsOfErrorComponent'
+          reason: '#/components/schemas/CustomersOpeningBalanceCreateReasonErrorComponent'
+    CustomersOpeningBalanceCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/CustomersOpeningBalanceCreateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/CustomersOpeningBalanceCreateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    CustomersOpeningBalanceCreateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    CustomersOpeningBalanceCreateReasonErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - reason
+          type: string
+          description: '* `reason` - reason'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    CustomersOpeningBalanceCreateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomersOpeningBalanceCreateError'
+      required:
+      - errors
+      - type
+    CustomersOpeningBalanceRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
     CustomersPartialUpdateAddressErrorComponent:
       type: object
       properties:
@@ -17742,6 +18197,7 @@ components:
       - $ref: '#/components/schemas/CustomersPartialUpdateNotesErrorComponent'
       - $ref: '#/components/schemas/CustomersPartialUpdateIsActiveErrorComponent'
       - $ref: '#/components/schemas/CustomersPartialUpdateOpeningBalanceErrorComponent'
+      - $ref: '#/components/schemas/CustomersPartialUpdateOpeningDateErrorComponent'
       discriminator:
         propertyName: attr
         mapping:
@@ -17755,6 +18211,7 @@ components:
           notes: '#/components/schemas/CustomersPartialUpdateNotesErrorComponent'
           is_active: '#/components/schemas/CustomersPartialUpdateIsActiveErrorComponent'
           opening_balance: '#/components/schemas/CustomersPartialUpdateOpeningBalanceErrorComponent'
+          opening_date: '#/components/schemas/CustomersPartialUpdateOpeningDateErrorComponent'
     CustomersPartialUpdateErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/CustomersPartialUpdateValidationError'
@@ -17890,6 +18347,28 @@ components:
             * `max_string_length` - max_string_length
             * `max_whole_digits` - max_whole_digits
             * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    CustomersPartialUpdateOpeningDateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - opening_date
+          type: string
+          description: '* `opening_date` - opening_date'
+        code:
+          enum:
+          - datetime
+          - invalid
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
         detail:
           type: string
       required:
@@ -18115,6 +18594,7 @@ components:
       - $ref: '#/components/schemas/CustomersUpdateNotesErrorComponent'
       - $ref: '#/components/schemas/CustomersUpdateIsActiveErrorComponent'
       - $ref: '#/components/schemas/CustomersUpdateOpeningBalanceErrorComponent'
+      - $ref: '#/components/schemas/CustomersUpdateOpeningDateErrorComponent'
       discriminator:
         propertyName: attr
         mapping:
@@ -18128,6 +18608,7 @@ components:
           notes: '#/components/schemas/CustomersUpdateNotesErrorComponent'
           is_active: '#/components/schemas/CustomersUpdateIsActiveErrorComponent'
           opening_balance: '#/components/schemas/CustomersUpdateOpeningBalanceErrorComponent'
+          opening_date: '#/components/schemas/CustomersUpdateOpeningDateErrorComponent'
     CustomersUpdateErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/CustomersUpdateValidationError'
@@ -18263,6 +18744,28 @@ components:
             * `max_string_length` - max_string_length
             * `max_whole_digits` - max_whole_digits
             * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    CustomersUpdateOpeningDateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - opening_date
+          type: string
+          description: '* `opening_date` - opening_date'
+        code:
+          enum:
+          - datetime
+          - invalid
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
         detail:
           type: string
       required:
@@ -22347,6 +22850,96 @@ components:
         * `pending` - Waiting for internet
         * `success` - Copied online
         * `failed` - Failed
+    OpeningBalance:
+      type: object
+      description: The balance a customer carried in from the previous year, and its
+        history.
+      properties:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        date:
+          type: string
+          format: date
+          nullable: true
+        date_bs:
+          type: string
+          nullable: true
+        default_date:
+          type: string
+          format: date
+          description: Last day of the previous fiscal year
+        default_date_bs:
+          type: string
+        has_other_entries:
+          type: boolean
+          description: The customer has invoices, payments or imported work too
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpeningEntry'
+      required:
+      - amount
+      - date
+      - date_bs
+      - default_date
+      - default_date_bs
+      - entries
+      - has_other_entries
+    OpeningBalanceInputRequest:
+      type: object
+      properties:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          description: Due carried in (positive) or advance (negative); 0 clears it.
+        as_of:
+          type: string
+          format: date
+          nullable: true
+          description: 'Only when first set (default: last day of the previous fiscal
+            year)'
+        reason:
+          type: string
+          description: Required for a correction
+          maxLength: 200
+      required:
+      - amount
+    OpeningEntry:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        date_bs:
+          type: string
+          readOnly: true
+        debit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        credit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        narration:
+          type: string
+        created_by:
+          type: string
+          default: ''
+        created_at:
+          type: string
+          format: date-time
+      required:
+      - created_at
+      - created_by
+      - credit
+      - date
+      - date_bs
+      - debit
+      - narration
     OpeningStockRequest:
       type: object
       properties:
@@ -26161,6 +26754,13 @@ components:
           writeOnly: true
           description: Existing due (positive) or advance (negative) when the customer
             is added.
+        opening_date:
+          type: string
+          format: date
+          writeOnly: true
+          nullable: true
+          description: 'Date of that balance (default: last day of the previous fiscal
+            year)'
     PatchedJobUpdateRequest:
       type: object
       properties:
