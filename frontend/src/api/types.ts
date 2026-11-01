@@ -11,6 +11,7 @@ export type ActivityLog = S['ActivityLog'];
 export type DateConversion = S['DateConversion'];
 
 export type Customer = S['Customer'];
+export type OpeningBalance = S['OpeningBalance'];
 export type CustomerRef = S['CustomerRef'];
 export type Statement = S['Statement'];
 export type StatementEntry = S['StatementEntry'];

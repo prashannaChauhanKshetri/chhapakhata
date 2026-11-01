@@ -211,6 +211,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/customers/{id}/opening-balance/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The balance carried in from the previous year, with every change to it. */
+        get: operations["customers_opening_balance_retrieve"];
+        put?: never;
+        /** @description Set or correct the opening balance (owner). Corrections need a reason. */
+        post: operations["customers_opening_balance_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/customers/{id}/rates/": {
         parameters: {
             query?: never;
@@ -2255,6 +2273,11 @@ export interface components {
              * @description Existing due (positive) or advance (negative) when the customer is added.
              */
             opening_balance?: string;
+            /**
+             * Format: date
+             * @description Date of that balance (default: last day of the previous fiscal year)
+             */
+            opening_date?: string | null;
         };
         /**
          * @description * `individual` - Individual
@@ -2372,7 +2395,7 @@ export interface components {
             code: "invalid_choice" | "null";
             detail: string;
         };
-        CustomersCreateError: components["schemas"]["CustomersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersCreateNameErrorComponent"] | components["schemas"]["CustomersCreatePhoneErrorComponent"] | components["schemas"]["CustomersCreateAltPhoneErrorComponent"] | components["schemas"]["CustomersCreateAddressErrorComponent"] | components["schemas"]["CustomersCreatePanNoErrorComponent"] | components["schemas"]["CustomersCreateCustomerTypeErrorComponent"] | components["schemas"]["CustomersCreateNotesErrorComponent"] | components["schemas"]["CustomersCreateIsActiveErrorComponent"] | components["schemas"]["CustomersCreateOpeningBalanceErrorComponent"];
+        CustomersCreateError: components["schemas"]["CustomersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersCreateNameErrorComponent"] | components["schemas"]["CustomersCreatePhoneErrorComponent"] | components["schemas"]["CustomersCreateAltPhoneErrorComponent"] | components["schemas"]["CustomersCreateAddressErrorComponent"] | components["schemas"]["CustomersCreatePanNoErrorComponent"] | components["schemas"]["CustomersCreateCustomerTypeErrorComponent"] | components["schemas"]["CustomersCreateNotesErrorComponent"] | components["schemas"]["CustomersCreateIsActiveErrorComponent"] | components["schemas"]["CustomersCreateOpeningBalanceErrorComponent"] | components["schemas"]["CustomersCreateOpeningDateErrorComponent"];
         CustomersCreateErrorResponse400: components["schemas"]["CustomersCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         CustomersCreateIsActiveErrorComponent: {
             /**
@@ -2455,6 +2478,20 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "null";
             detail: string;
         };
+        CustomersCreateOpeningDateErrorComponent: {
+            /**
+             * @description * `opening_date` - opening_date (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "opening_date";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "datetime" | "invalid";
+            detail: string;
+        };
         CustomersCreatePanNoErrorComponent: {
             /**
              * @description * `pan_no` - pan_no (enum property replaced by openapi-typescript)
@@ -2520,6 +2557,81 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["CustomersListError"][];
         };
+        CustomersOpeningBalanceCreateAmountErrorComponent: {
+            /**
+             * @description * `amount` - amount (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "amount";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "null" | "required";
+            detail: string;
+        };
+        CustomersOpeningBalanceCreateAsOfErrorComponent: {
+            /**
+             * @description * `as_of` - as_of (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "as_of";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "datetime" | "invalid";
+            detail: string;
+        };
+        CustomersOpeningBalanceCreateError: components["schemas"]["CustomersOpeningBalanceCreateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersOpeningBalanceCreateAmountErrorComponent"] | components["schemas"]["CustomersOpeningBalanceCreateAsOfErrorComponent"] | components["schemas"]["CustomersOpeningBalanceCreateReasonErrorComponent"];
+        CustomersOpeningBalanceCreateErrorResponse400: components["schemas"]["CustomersOpeningBalanceCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        CustomersOpeningBalanceCreateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        CustomersOpeningBalanceCreateReasonErrorComponent: {
+            /**
+             * @description * `reason` - reason (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "reason";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        CustomersOpeningBalanceCreateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["CustomersOpeningBalanceCreateError"][];
+        };
+        CustomersOpeningBalanceRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         CustomersPartialUpdateAddressErrorComponent: {
             /**
              * @description * `address` - address (enum property replaced by openapi-typescript)
@@ -2568,7 +2680,7 @@ export interface components {
             code: "invalid_choice" | "null";
             detail: string;
         };
-        CustomersPartialUpdateError: components["schemas"]["CustomersPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersPartialUpdateNameErrorComponent"] | components["schemas"]["CustomersPartialUpdatePhoneErrorComponent"] | components["schemas"]["CustomersPartialUpdateAltPhoneErrorComponent"] | components["schemas"]["CustomersPartialUpdateAddressErrorComponent"] | components["schemas"]["CustomersPartialUpdatePanNoErrorComponent"] | components["schemas"]["CustomersPartialUpdateCustomerTypeErrorComponent"] | components["schemas"]["CustomersPartialUpdateNotesErrorComponent"] | components["schemas"]["CustomersPartialUpdateIsActiveErrorComponent"] | components["schemas"]["CustomersPartialUpdateOpeningBalanceErrorComponent"];
+        CustomersPartialUpdateError: components["schemas"]["CustomersPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersPartialUpdateNameErrorComponent"] | components["schemas"]["CustomersPartialUpdatePhoneErrorComponent"] | components["schemas"]["CustomersPartialUpdateAltPhoneErrorComponent"] | components["schemas"]["CustomersPartialUpdateAddressErrorComponent"] | components["schemas"]["CustomersPartialUpdatePanNoErrorComponent"] | components["schemas"]["CustomersPartialUpdateCustomerTypeErrorComponent"] | components["schemas"]["CustomersPartialUpdateNotesErrorComponent"] | components["schemas"]["CustomersPartialUpdateIsActiveErrorComponent"] | components["schemas"]["CustomersPartialUpdateOpeningBalanceErrorComponent"] | components["schemas"]["CustomersPartialUpdateOpeningDateErrorComponent"];
         CustomersPartialUpdateErrorResponse400: components["schemas"]["CustomersPartialUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         CustomersPartialUpdateIsActiveErrorComponent: {
             /**
@@ -2649,6 +2761,20 @@ export interface components {
              * @enum {string}
              */
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "null";
+            detail: string;
+        };
+        CustomersPartialUpdateOpeningDateErrorComponent: {
+            /**
+             * @description * `opening_date` - opening_date (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "opening_date";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "datetime" | "invalid";
             detail: string;
         };
         CustomersPartialUpdatePanNoErrorComponent: {
@@ -2766,7 +2892,7 @@ export interface components {
             code: "invalid_choice" | "null";
             detail: string;
         };
-        CustomersUpdateError: components["schemas"]["CustomersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersUpdateNameErrorComponent"] | components["schemas"]["CustomersUpdatePhoneErrorComponent"] | components["schemas"]["CustomersUpdateAltPhoneErrorComponent"] | components["schemas"]["CustomersUpdateAddressErrorComponent"] | components["schemas"]["CustomersUpdatePanNoErrorComponent"] | components["schemas"]["CustomersUpdateCustomerTypeErrorComponent"] | components["schemas"]["CustomersUpdateNotesErrorComponent"] | components["schemas"]["CustomersUpdateIsActiveErrorComponent"] | components["schemas"]["CustomersUpdateOpeningBalanceErrorComponent"];
+        CustomersUpdateError: components["schemas"]["CustomersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersUpdateNameErrorComponent"] | components["schemas"]["CustomersUpdatePhoneErrorComponent"] | components["schemas"]["CustomersUpdateAltPhoneErrorComponent"] | components["schemas"]["CustomersUpdateAddressErrorComponent"] | components["schemas"]["CustomersUpdatePanNoErrorComponent"] | components["schemas"]["CustomersUpdateCustomerTypeErrorComponent"] | components["schemas"]["CustomersUpdateNotesErrorComponent"] | components["schemas"]["CustomersUpdateIsActiveErrorComponent"] | components["schemas"]["CustomersUpdateOpeningBalanceErrorComponent"] | components["schemas"]["CustomersUpdateOpeningDateErrorComponent"];
         CustomersUpdateErrorResponse400: components["schemas"]["CustomersUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         CustomersUpdateIsActiveErrorComponent: {
             /**
@@ -2847,6 +2973,20 @@ export interface components {
              * @enum {string}
              */
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "null";
+            detail: string;
+        };
+        CustomersUpdateOpeningDateErrorComponent: {
+            /**
+             * @description * `opening_date` - opening_date (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "opening_date";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "datetime" | "invalid";
             detail: string;
         };
         CustomersUpdatePanNoErrorComponent: {
@@ -4796,6 +4936,51 @@ export interface components {
          * @enum {string}
          */
         OffsiteStatusEnum: "skipped" | "pending" | "success" | "failed";
+        /** @description The balance a customer carried in from the previous year, and its history. */
+        OpeningBalance: {
+            /** Format: decimal */
+            amount: string;
+            /** Format: date */
+            date: string | null;
+            date_bs: string | null;
+            /**
+             * Format: date
+             * @description Last day of the previous fiscal year
+             */
+            default_date: string;
+            default_date_bs: string;
+            /** @description The customer has invoices, payments or imported work too */
+            has_other_entries: boolean;
+            entries: components["schemas"]["OpeningEntry"][];
+        };
+        OpeningBalanceInputRequest: {
+            /**
+             * Format: decimal
+             * @description Due carried in (positive) or advance (negative); 0 clears it.
+             */
+            amount: string;
+            /**
+             * Format: date
+             * @description Only when first set (default: last day of the previous fiscal year)
+             */
+            as_of?: string | null;
+            /** @description Required for a correction */
+            reason?: string;
+        };
+        OpeningEntry: {
+            /** Format: date */
+            date: string;
+            readonly date_bs: string;
+            /** Format: decimal */
+            debit: string;
+            /** Format: decimal */
+            credit: string;
+            narration: string;
+            /** @default  */
+            created_by: string;
+            /** Format: date-time */
+            created_at: string;
+        };
         OpeningStockRequest: {
             /** Format: decimal */
             quantity?: string | null;
@@ -6808,6 +6993,11 @@ export interface components {
              * @description Existing due (positive) or advance (negative) when the customer is added.
              */
             opening_balance?: string;
+            /**
+             * Format: date
+             * @description Date of that balance (default: last day of the previous fiscal year)
+             */
+            opening_date?: string | null;
         };
         PatchedJobUpdateRequest: {
             operator?: number | null;
@@ -12172,6 +12362,184 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CustomersAdjustBalanceCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    customers_opening_balance_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this customer. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningBalance"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomersOpeningBalanceRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    customers_opening_balance_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this customer. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpeningBalanceInputRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["OpeningBalanceInputRequest"];
+                "multipart/form-data": components["schemas"]["OpeningBalanceInputRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OpeningBalance"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomersOpeningBalanceCreateErrorResponse400"];
                 };
             };
             401: {

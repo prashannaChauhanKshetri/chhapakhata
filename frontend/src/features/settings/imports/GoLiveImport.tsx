@@ -24,6 +24,7 @@ import { Link } from 'react-router';
 
 import { openFile } from '@/api/files';
 import type { TableImportResult } from '@/api/types';
+import { usePeriods } from '@/components/PeriodPicker';
 import { SectionCard } from '@/components/SectionCard';
 import { notifyError, notifySuccess } from '@/lib/forms';
 import { formatAmount, todayISO } from '@/lib/format';
@@ -267,7 +268,11 @@ export function GoLiveImport({ kind }: { kind: GoLiveKind }) {
   const url = `/api/v1/system/import/${kind}/`;
   const [file, setFile] = useState<File | null>(null);
   const [columns, setColumns] = useState<ColumnChoices | null>(null);
-  const [asOf, setAsOf] = useState<string | null>(todayISO());
+  // Balances carried in from last year: default to the day last fiscal year closed.
+  const { data: periods } = usePeriods();
+  const lastYearEnd = periods?.find((p) => p.key === 'last_fy')?.date_to ?? null;
+  const [chosenAsOf, setAsOf] = useState<string | null>(null);
+  const asOf = chosenAsOf ?? lastYearEnd;
   const [result, setResult] = useState<TableImportResult | null>(null);
   const [busy, setBusy] = useState<'check' | 'import' | null>(null);
 
@@ -327,6 +332,7 @@ export function GoLiveImport({ kind }: { kind: GoLiveKind }) {
           {kind === 'customers' && (
             <DatePickerInput
               label={t('Balances as on')}
+              description={t('Last year’s closing day')}
               valueFormat="D MMM YYYY"
               maxDate={todayISO()}
               value={asOf}

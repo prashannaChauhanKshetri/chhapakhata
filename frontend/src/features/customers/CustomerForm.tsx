@@ -114,9 +114,9 @@ export function CustomerForm({ customer, initialName, onSaved, onCancel }: Custo
         />
         {isNew && (
           <NumberInput
-            label={t('Existing balance (optional)')}
+            label={t('Balance from last year (optional)')}
             description={t(
-              'Amount the customer already owes. Enter a negative number for an advance they have with you.',
+              'What the customer already owes, as at the end of last fiscal year. Enter a negative number for an advance. You can correct it later with Opening balance.',
             )}
             prefix="Rs. "
             thousandSeparator=","

@@ -16,6 +16,7 @@ import { useForm } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import {
   IconAdjustments,
+  IconCalendarStats,
   IconFileSpreadsheet,
   IconPencil,
   IconPlus,
@@ -53,6 +54,7 @@ import { ORDER_STATUS } from '@/lib/status';
 
 import { openReceivePayment } from '../billing/ReceivePaymentForm';
 import { openCustomerModal } from './CustomerForm';
+import { openOpeningBalance } from './OpeningBalanceForm';
 
 function AdjustBalanceForm({ customer, onDone }: { customer: Customer; onDone: () => void }) {
   const client = useQueryClient();
@@ -461,13 +463,24 @@ export default function CustomerDetailPage() {
         actions={
           <>
             {can(Perm.LEDGER_MANAGE) && (
-              <Button
-                variant="default"
-                leftSection={<IconAdjustments size={16} />}
-                onClick={adjust}
-              >
-                {t('Adjust balance')}
-              </Button>
+              <>
+                <Button
+                  variant="default"
+                  leftSection={<IconCalendarStats size={16} />}
+                  onClick={() =>
+                    openOpeningBalance(customer, t('Opening balance (from last year)'))
+                  }
+                >
+                  {t('Opening balance')}
+                </Button>
+                <Button
+                  variant="default"
+                  leftSection={<IconAdjustments size={16} />}
+                  onClick={adjust}
+                >
+                  {t('Adjust balance')}
+                </Button>
+              </>
             )}
             {can(Perm.CUSTOMERS_MANAGE) && (
               <Button
