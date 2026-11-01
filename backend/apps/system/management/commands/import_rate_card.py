@@ -1,86 +1,27 @@
-"""Import or update the rate card.
+"""Import or update the rate card (media and add-ons).
 
-Media columns: kind=media, name, rate, min_sqft (optional), material (stock item
-name, optional), active.
-Add-on columns: kind=addon, name, rate, basis (fixed, per_piece, per_sqft,
-per_running_ft, percent), default_quantity, active.
+Columns are matched loosely (see apps/system/go_live.py): Kind (media or
+add-on), Name, Rate, Per (sq ft or piece), Minimum sq ft, Material, Basis,
+Default quantity, Active. The same import is in Settings → Import.
 
     uv run python manage.py import_rate_card rate_card.xlsx
 """
 
 from __future__ import annotations
 
-from decimal import Decimal
-
-from django.core.management.base import CommandError
-from django.db import transaction
-
-from apps.catalog.models import AddOn, AddOnBasis, MediaType
-from apps.inventory.models import StockItem
-from apps.system.importers import boolean, decimal, read_rows, text
+from apps.accounts.models import User
+from apps.core.permissions import Role
+from apps.system.go_live import run_from_command
 from apps.tenancy.commands import BusinessCommand
 
 
 class Command(BusinessCommand):
-    help = "Create or update media types and add-ons from CSV or Excel."
+    help = "Create or update media types and add-ons from Excel or CSV."
 
     def add_arguments(self, parser):
         parser.add_argument("path")
         parser.add_argument("--dry-run", action="store_true")
 
     def handle(self, *args, **options):
-        errors: list[str] = []
-        counts = {"media": 0, "addon": 0}
-        with transaction.atomic():
-            for order, (number, row) in enumerate(read_rows(options["path"])):
-                try:
-                    kind = text(row, "kind").lower() or "media"
-                    name = text(row, "name")
-                    rate = decimal(row, "rate")
-                    if not name or rate is None:
-                        raise ValueError("name and rate are required")
-                    if kind == "media":
-                        material_name = text(row, "material")
-                        material = None
-                        if material_name:
-                            material = StockItem.objects.filter(name__iexact=material_name).first()
-                            if material is None:
-                                raise ValueError(f"stock item '{material_name}' does not exist")
-                        MediaType.objects.update_or_create(
-                            name=name,
-                            defaults={
-                                "rate": rate,
-                                "min_sqft": decimal(row, "min_sqft"),
-                                "material": material,
-                                "is_active": boolean(row, "active"),
-                                "sort_order": order,
-                            },
-                        )
-                    elif kind == "addon":
-                        basis = text(row, "basis").lower()
-                        if basis not in AddOnBasis.values:
-                            raise ValueError(f"basis must be one of {', '.join(AddOnBasis.values)}")
-                        AddOn.objects.update_or_create(
-                            name=name,
-                            defaults={
-                                "basis": basis,
-                                "rate": rate,
-                                "default_quantity": decimal(row, "default_quantity", Decimal("1")),
-                                "is_active": boolean(row, "active"),
-                                "sort_order": order,
-                            },
-                        )
-                    else:
-                        raise ValueError("kind must be 'media' or 'addon'")
-                    counts[kind] += 1
-                except Exception as exc:
-                    errors.append(f"row {number}: {exc}")
-            if errors:
-                for line in errors:
-                    self.stderr.write(line)
-                raise CommandError(f"{len(errors)} row(s) have problems; nothing was saved.")
-            if options["dry_run"]:
-                transaction.set_rollback(True)
-        self.stdout.write(
-            self.style.SUCCESS(f"Media types: {counts['media']}, add-ons: {counts['addon']}")
-        )
+        owner = User.objects.filter(business=self.business, role=Role.OWNER, is_active=True).first()
+        run_from_command(self, "rate-card", options["path"], user=owner, dry_run=options["dry_run"])

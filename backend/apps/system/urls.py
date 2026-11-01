@@ -14,5 +14,11 @@ urlpatterns = [
     path(
         "system/work-log/template/", views.WorkLogTemplateView.as_view(), name="work-log-template"
     ),
+    path("system/import/<str:kind>/", views.GoLiveImportView.as_view(), name="go-live-import"),
+    path(
+        "system/import/<str:kind>/template/",
+        views.GoLiveTemplateView.as_view(),
+        name="go-live-template",
+    ),
     *router.urls,
 ]

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import json
+
+from django.http import Http404
 from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field
 from rest_framework import mixins, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -17,7 +20,7 @@ from apps.core.params import parse_range
 from apps.core.permissions import Perm
 from apps.core.serializers import UserRefSerializer
 
-from . import services, work_log
+from . import go_live, services, sheets, work_log
 from .models import BackupRun, BackupTrigger
 from .selectors import backup_status
 
@@ -89,26 +92,82 @@ XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 
 
-class WorkLogUploadSerializer(serializers.Serializer):
-    file = serializers.FileField(help_text="The work log as .xlsx or .csv")
+class ImportUploadSerializer(serializers.Serializer):
+    file = serializers.FileField(help_text="The sheet as .xlsx, .xls or .csv")
     dry_run = serializers.BooleanField(
         default=True, help_text="Check the file and show what would be imported, without saving."
     )
     skip_errors = serializers.BooleanField(
         default=False, help_text="Import the valid rows and leave out rows with errors."
     )
+    columns = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text='JSON {"header text": "field"} correcting the column guesses; "" leaves a '
+        "column out.",
+    )
 
     def validate_file(self, value):
         if value.size > MAX_UPLOAD_BYTES:
             raise serializers.ValidationError("The file is larger than 10 MB.")
-        if not value.name.lower().endswith((".xlsx", ".xlsm", ".csv")):
-            raise serializers.ValidationError("Upload an Excel (.xlsx) or CSV file.")
+        if not value.name.lower().endswith(sheets.FILE_TYPES):
+            raise serializers.ValidationError("Upload an Excel (.xlsx, .xls) or CSV file.")
         return value
+
+    def validate_columns(self, value):
+        if not value:
+            return None
+        try:
+            raw = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise serializers.ValidationError("Columns must be JSON.") from exc
+        if not isinstance(raw, dict) or not all(isinstance(v, str) for v in raw.values()):
+            raise serializers.ValidationError('Columns must look like {"Header": "field"}.')
+        allowed = set(self.context.get("fields", ())) | {""}
+        unknown = sorted(set(raw.values()) - allowed)
+        if unknown:
+            raise serializers.ValidationError(f"Unknown field(s): {', '.join(unknown)}.")
+        return {sheets.header_key(k): v for k, v in raw.items() if sheets.header_key(k)}
+
+
+class GoLiveUploadSerializer(ImportUploadSerializer):
+    as_of = serializers.DateField(
+        required=False,
+        allow_null=True,
+        help_text="Date of the opening balances (customers only; default today)",
+    )
 
 
 class RowMessageSerializer(serializers.Serializer):
     row = serializers.IntegerField()
     message = serializers.CharField()
+    sheet = serializers.CharField(help_text="Sheet name when the file has several")
+
+
+class ImportFieldSerializer(serializers.Serializer):
+    field = serializers.CharField()
+    label = serializers.CharField()
+
+
+class SheetFieldsMixin(serializers.Serializer):
+    """What the reader understood, so the person importing can correct it."""
+
+    sheets = serializers.ListField(child=serializers.CharField())
+    header_row = serializers.IntegerField()
+    columns = serializers.DictField(child=serializers.CharField(), help_text="field -> header")
+    headers = serializers.ListField(child=serializers.CharField())
+    needs_columns = serializers.BooleanField(
+        help_text="No header was recognised: choose the columns and check again"
+    )
+    problem = serializers.CharField()
+    field_choices = serializers.SerializerMethodField(
+        help_text="Every field this import understands, for correcting columns"
+    )
+
+    @extend_schema_field(ImportFieldSerializer(many=True))
+    def get_field_choices(self, obj) -> list[dict[str, str]]:
+        labels = self.context["columns"].labels()
+        return [{"field": f, "label": label} for f, label in labels.items()]
 
 
 class NewItemSerializer(serializers.Serializer):
@@ -125,11 +184,9 @@ class WorkLogTotalsSerializer(serializers.Serializer):
     balance = serializers.DecimalField(max_digits=14, decimal_places=2)
 
 
-class WorkLogImportResultSerializer(serializers.Serializer):
+class WorkLogImportResultSerializer(SheetFieldsMixin):
     dry_run = serializers.BooleanField(help_text="True when nothing was saved")
     file_name = serializers.CharField()
-    header_row = serializers.IntegerField()
-    columns = serializers.DictField(child=serializers.CharField())
     rows_read = serializers.IntegerField()
     rows_imported = serializers.IntegerField()
     rows_skipped_duplicate = serializers.IntegerField()
@@ -147,6 +204,24 @@ class WorkLogImportResultSerializer(serializers.Serializer):
     warnings = RowMessageSerializer(many=True)
 
 
+class TableImportResultSerializer(SheetFieldsMixin):
+    kind = serializers.CharField()
+    dry_run = serializers.BooleanField(help_text="True when nothing was saved")
+    file_name = serializers.CharField()
+    rows_read = serializers.IntegerField()
+    created = serializers.IntegerField()
+    updated = serializers.IntegerField()
+    skipped = serializers.IntegerField()
+    rows_skipped_error = serializers.IntegerField()
+    summary = serializers.DictField(child=serializers.CharField())
+    errors = RowMessageSerializer(many=True)
+    warnings = RowMessageSerializer(many=True)
+
+
+def _field_names(columns: sheets.Columns) -> list[str]:
+    return [c.field for c in columns.fields]
+
+
 class WorkLogImportView(APIView):
     """Upload the shop's Excel work log: check it first (dry run), then import."""
 
@@ -154,11 +229,14 @@ class WorkLogImportView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
     @extend_schema(
-        request={"multipart/form-data": WorkLogUploadSerializer},
+        request={"multipart/form-data": ImportUploadSerializer},
         responses=WorkLogImportResultSerializer,
     )
     def post(self, request):
-        serializer = WorkLogUploadSerializer(data=request.data)
+        columns = work_log.COLUMNS
+        serializer = ImportUploadSerializer(
+            data=request.data, context={"fields": _field_names(columns)}
+        )
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         upload = data["file"]
@@ -169,11 +247,76 @@ class WorkLogImportView(APIView):
                 user=request.user,
                 dry_run=data["dry_run"],
                 skip_errors=data["skip_errors"],
+                columns=data.get("columns"),
                 request=request,
             )
         except ValueError as exc:
             raise ValidationError({"file": [str(exc)]}) from exc
-        return Response(WorkLogImportResultSerializer(result).data)
+        return Response(WorkLogImportResultSerializer(result, context={"columns": columns}).data)
+
+
+def _kind(kind: str) -> go_live.Kind:
+    if kind not in go_live.KINDS:
+        raise Http404
+    return go_live.KINDS[kind]
+
+
+class GoLiveImportView(APIView):
+    """Upload customers with opening balances, the rate card or opening stock.
+
+    The same check-first flow as the work log: a dry run shows what would be
+    added, updated or skipped, and the columns can be corrected.
+    """
+
+    required_perms = Perm.SETTINGS_MANAGE
+    parser_classes = [MultiPartParser, FormParser]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("kind", str, OpenApiParameter.PATH, enum=sorted(go_live.KINDS))
+        ],
+        request={"multipart/form-data": GoLiveUploadSerializer},
+        responses=TableImportResultSerializer,
+    )
+    def post(self, request, kind: str):
+        spec = _kind(kind)
+        serializer = GoLiveUploadSerializer(
+            data=request.data, context={"fields": _field_names(spec.columns)}
+        )
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        upload = data["file"]
+        try:
+            result = go_live.run_import(
+                kind,
+                upload.read(),
+                name=upload.name,
+                user=request.user,
+                dry_run=data["dry_run"],
+                skip_errors=data["skip_errors"],
+                columns=data.get("columns"),
+                as_of=data.get("as_of"),
+                request=request,
+            )
+        except ValueError as exc:
+            raise ValidationError({"file": [str(exc)]}) from exc
+        return Response(TableImportResultSerializer(result, context={"columns": spec.columns}).data)
+
+
+class GoLiveTemplateView(APIView):
+    """A sample sheet for a go-live import, with the usual columns."""
+
+    required_perms = Perm.SETTINGS_MANAGE
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("kind", str, OpenApiParameter.PATH, enum=sorted(go_live.KINDS))
+        ],
+        responses={(200, XLSX): bytes},
+    )
+    def get(self, request, kind: str):
+        _kind(kind)
+        return xlsx_response(go_live.template(kind), f"{kind}-template")
 
 
 class WorkLogExportView(APIView):

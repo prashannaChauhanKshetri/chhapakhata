@@ -41,7 +41,9 @@ def test_import_all_templates(owner):
 
 def test_bad_rows_save_nothing(owner, tmp_path):
     bad = tmp_path / "customers.csv"
-    bad.write_text("name,phone,pan_no\nGood Customer,9800000000,\nBad PAN,9800000001,12345\n")
+    bad.write_text(
+        "name,phone,opening_balance\nGood Customer,9800000000,\nBad Balance,9800000001,lots\n"
+    )
     with pytest.raises(CommandError):
         call_command("import_customers", str(bad), owner="owner")
     assert Customer.objects.count() == 0

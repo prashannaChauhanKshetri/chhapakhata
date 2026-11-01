@@ -13350,6 +13350,289 @@ paths:
                 type: string
                 format: binary
           description: ''
+  /api/v1/system/import/{kind}/:
+    post:
+      operationId: system_import_create
+      description: |-
+        Upload customers with opening balances, the rate card or opening stock.
+
+        The same check-first flow as the work log: a dry run shows what would be
+        added, updated or skipped, and the columns can be corrected.
+      parameters:
+      - in: path
+        name: kind
+        schema:
+          type: string
+          enum:
+          - customers
+          - opening-stock
+          - rate-card
+        required: true
+      tags:
+      - system
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoLiveUploadRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemImportCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TableImportResult'
+          description: ''
+  /api/v1/system/import/{kind}/template/:
+    get:
+      operationId: system_import_template_retrieve
+      description: A sample sheet for a go-live import, with the usual columns.
+      parameters:
+      - in: path
+        name: kind
+        schema:
+          type: string
+          enum:
+          - customers
+          - opening-stock
+          - rate-card
+        required: true
+      tags:
+      - system
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemImportTemplateRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/v1/system/work-log/export/:
     get:
       operationId: system_work_log_export_retrieve
@@ -13500,7 +13783,7 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/WorkLogUploadRequest'
+              $ref: '#/components/schemas/ImportUploadRequest'
         required: true
       security:
       - cookieAuth: []
@@ -18368,6 +18651,32 @@ components:
           type: string
           default: ''
           maxLength: 255
+    GoLiveUploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          description: The sheet as .xlsx, .xls or .csv
+        dry_run:
+          type: boolean
+          default: true
+          description: Check the file and show what would be imported, without saving.
+        skip_errors:
+          type: boolean
+          default: false
+          description: Import the valid rows and leave out rows with errors.
+        columns:
+          type: string
+          description: 'JSON {"header text": "field"} correcting the column guesses;
+            "" leaves a column out.'
+        as_of:
+          type: string
+          format: date
+          nullable: true
+          description: Date of the opening balances (customers only; default today)
+      required:
+      - file
     GranularityEnum:
       enum:
       - day
@@ -18393,6 +18702,37 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    ImportField:
+      type: object
+      properties:
+        field:
+          type: string
+        label:
+          type: string
+      required:
+      - field
+      - label
+    ImportUploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+          description: The sheet as .xlsx, .xls or .csv
+        dry_run:
+          type: boolean
+          default: true
+          description: Check the file and show what would be imported, without saving.
+        skip_errors:
+          type: boolean
+          default: false
+          description: Import the valid rows and leave out rows with errors.
+        columns:
+          type: string
+          description: 'JSON {"header text": "field"} correcting the column guesses;
+            "" leaves a column out.'
+      required:
+      - file
     InsightSummary:
       type: object
       properties:
@@ -28001,9 +28341,13 @@ components:
           type: integer
         message:
           type: string
+        sheet:
+          type: string
+          description: Sheet name when the file has several
       required:
       - message
       - row
+      - sheet
     ServerErrorEnum:
       enum:
       - server_error
@@ -31567,6 +31911,20 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    SystemImportCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    SystemImportTemplateRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
     SystemWorkLogExportRetrieveErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/ParseErrorResponse'
@@ -31588,6 +31946,85 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    TableImportResult:
+      type: object
+      description: What the reader understood, so the person importing can correct
+        it.
+      properties:
+        sheets:
+          type: array
+          items:
+            type: string
+        header_row:
+          type: integer
+        columns:
+          type: object
+          additionalProperties:
+            type: string
+          description: field -> header
+        headers:
+          type: array
+          items:
+            type: string
+        needs_columns:
+          type: boolean
+          description: 'No header was recognised: choose the columns and check again'
+        problem:
+          type: string
+        field_choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportField'
+          readOnly: true
+          description: Every field this import understands, for correcting columns
+        kind:
+          type: string
+        dry_run:
+          type: boolean
+          description: True when nothing was saved
+        file_name:
+          type: string
+        rows_read:
+          type: integer
+        created:
+          type: integer
+        updated:
+          type: integer
+        skipped:
+          type: integer
+        rows_skipped_error:
+          type: integer
+        summary:
+          type: object
+          additionalProperties:
+            type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/RowMessage'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/RowMessage'
+      required:
+      - columns
+      - created
+      - dry_run
+      - errors
+      - field_choices
+      - file_name
+      - header_row
+      - headers
+      - kind
+      - needs_columns
+      - problem
+      - rows_read
+      - rows_skipped_error
+      - sheets
+      - skipped
+      - summary
+      - updated
+      - warnings
     TopCustomer:
       type: object
       properties:
@@ -33045,18 +33482,40 @@ components:
         * `other_qr` - Other QR
     WorkLogImportResult:
       type: object
+      description: What the reader understood, so the person importing can correct
+        it.
       properties:
-        dry_run:
-          type: boolean
-          description: True when nothing was saved
-        file_name:
-          type: string
+        sheets:
+          type: array
+          items:
+            type: string
         header_row:
           type: integer
         columns:
           type: object
           additionalProperties:
             type: string
+          description: field -> header
+        headers:
+          type: array
+          items:
+            type: string
+        needs_columns:
+          type: boolean
+          description: 'No header was recognised: choose the columns and check again'
+        problem:
+          type: string
+        field_choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportField'
+          readOnly: true
+          description: Every field this import understands, for correcting columns
+        dry_run:
+          type: boolean
+          description: True when nothing was saved
+        file_name:
+          type: string
         rows_read:
           type: integer
         rows_imported:
@@ -33105,18 +33564,23 @@ components:
       - date_to
       - dry_run
       - errors
+      - field_choices
       - file_name
       - header_row
+      - headers
       - matched_customers
+      - needs_columns
       - new_customers
       - new_items
       - orders
       - payments
+      - problem
       - rows_already_in_system
       - rows_imported
       - rows_read
       - rows_skipped_duplicate
       - rows_skipped_error
+      - sheets
       - totals
       - warnings
     WorkLogTotals:
@@ -33148,23 +33612,6 @@ components:
       - discount
       - paid
       - vat
-    WorkLogUploadRequest:
-      type: object
-      properties:
-        file:
-          type: string
-          format: binary
-          description: The work log as .xlsx or .csv
-        dry_run:
-          type: boolean
-          default: true
-          description: Check the file and show what would be imported, without saving.
-        skip_errors:
-          type: boolean
-          default: false
-          description: Import the valid rows and leave out rows with errors.
-      required:
-      - file
   securitySchemes:
     cookieAuth:
       type: apiKey
