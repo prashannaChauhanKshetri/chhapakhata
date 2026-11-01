@@ -74,7 +74,7 @@ Open a customer to see the **balance** and the **Statement** tab. Pick a **Perio
 | Shop name, PAN/VAT, VAT on/off, logo, stamp, signature, invoice note | Settings → Shop |
 | Rates, minimum sq ft, add-ons (with rate history) | Settings → Rate card |
 | Staff accounts, roles, discount limits, password resets | Settings → Users |
-| Import the old Excel work log; export orders in the same layout | Settings → Import & export (or Orders → Excel import / export) |
+| Import the old Excel work log, customers with their opening balances, the rate card or opening stock; export orders in the work-log layout | Settings → Import & export (or Orders → Excel import / export) |
 | Backups, online copy status, Excel export of all data | Settings → Backups & export |
 | Who did what | Settings → Activity log |
 | Record a purchase from a supplier | Purchases → Record purchase |
@@ -83,6 +83,17 @@ Open a customer to see the **balance** and the **Statement** tab. Pick a **Perio
 | Cancel an invoice / void a payment | Invoice → Cancel invoice / Payments → ⋮ → Void |
 | Correct a customer's balance | Customer → Adjust balance |
 | Reports (sales, dues, collections, material, operators, stock) | Reports |
+
+### Importing your own sheets
+
+Settings → **Import & export** takes the sheets the shop already keeps: the work log, a customer list with dues and advances, the rate card and opening stock. Your sheet does not need a special layout:
+
+- **Any spreadsheet file:** Excel (.xlsx, .xls, .xlsm, .xlsb), LibreOffice or Google Sheets (.ods) and CSV. A workbook with one sheet per month is read sheet by sheet.
+- **Any column names, in any order:** "Particular", "Customer's Name" or "Party Name" all mean the customer, and Nepali headings like मिति work too. A title row above the headings is fine.
+- **Numbers and dates as you write them:** amounts like "Rs. 1,200/-", sizes like "12x4", and BS or AD dates (2083.04.01, 1 Shrawan 2083, 17/07/2026, Nepali digits).
+- **Gaps from merged cells:** a missing date or customer is taken from the row above, and "Total" lines are left out.
+
+Choose the file and it is **checked first**; nothing is saved yet. You see what will be added, plus **notes** (what was guessed) and **problems** (rows that cannot be read, with the row number). If a column was read wrongly, press **Change columns** and pick what each column holds. Then press **Import**. Uploading the same sheet again only adds what is new, so dues and stock are never counted twice. **Sample sheet** downloads an example layout.
 
 Every morning, glance at the dashboard: today's sales and collection, pending dues, late jobs, low stock, and the **backup** status.
 
