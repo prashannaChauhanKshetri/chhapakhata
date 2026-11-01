@@ -81,8 +81,17 @@ Open a customer to see the **balance** and the **Statement** tab. Pick a **Perio
 | Correct stock after a physical count | Inventory → item → Adjust after count |
 | Finish a roll (write off the end) | Inventory → item → Rolls → Mark finished |
 | Cancel an invoice / void a payment | Invoice → Cancel invoice / Payments → ⋮ → Void |
-| Correct a customer's balance | Customer → Adjust balance |
+| Set or correct what a customer owed from last year (opening balance) | Customer → Opening balance |
+| Correct a customer's balance for something that happened this year | Customer → Adjust balance |
 | Reports (sales, dues, collections, material, operators, stock) | Reports |
+
+### Opening balance from last year
+
+What a customer owed the shop (or had paid in advance) when the last fiscal year closed is their **opening balance**. Open the customer and press **Opening balance**. Choose **Customer owes us (Dr)** or **Advance with us (Cr)** and enter the amount. The date is filled in as the last day of the previous fiscal year (end of Asar), so this year's statements open with it instead of showing it as a new charge.
+
+If the figure was wrong, press **Opening balance** again and enter the right amount with a reason, for example "the old khata showed 4,200". The ledger is never edited: a correction is added on the same date and listed under **Changes** with your name, so the earlier figure is still visible. Uploading a corrected customer sheet in Settings → Import & export fixes opening balances the same way.
+
+Use **Adjust balance** only for something that happened this year, such as a write-off or a missed charge.
 
 ### Importing your own sheets
 
