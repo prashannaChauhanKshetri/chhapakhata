@@ -23,21 +23,19 @@ Export writes orders in the same layout, so the shop can keep using Excel.
 
 from __future__ import annotations
 
-import csv
 import datetime as dt
 import hashlib
 import io
 import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
-from decimal import Decimal, InvalidOperation
-from pathlib import Path
+from decimal import Decimal
 from typing import Any, BinaryIO
 
 from django.db import transaction
 from django.db.models import Prefetch
 from django.utils import timezone
-from openpyxl import Workbook, load_workbook
+from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
@@ -51,7 +49,7 @@ from apps.billing.models import (
 )
 from apps.catalog.models import MediaType, PricingUnit
 from apps.core.activity import log_activity
-from apps.core.dates import bs_string, from_bs, local_today
+from apps.core.dates import bs_string, local_today
 from apps.core.money import ZERO, fmt_qty, q2
 from apps.core.sequences import DocType, next_number
 from apps.customers.models import Customer
@@ -63,61 +61,110 @@ from apps.orders.models import (
     OrderStatus,
     RateSource,
 )
+from apps.system import sheets
+from apps.system.sheets import Column, Columns, Message
 
 MAX_MESSAGES = 300
 TOLERANCE = Decimal("1.00")  # rupees of rounding allowed between columns
 
-# Header text (normalised) -> field. Checked in order; the first match wins.
-_HEADERS: list[tuple[str, tuple[str, ...]]] = [
-    ("date", ("date", "miti", "date bs", "date (bs)", "bs date")),
-    ("customer", ("particular", "particulars", "customer", "customer name", "party", "name")),
-    ("address", ("address", "place", "location")),
-    ("phone", ("phone", "mobile", "contact", "phone no", "mobile no")),
-    ("item", ("items", "item", "work", "media", "material", "product")),
-    ("height", ("height", "h", "length")),
-    ("width", ("width", "w", "breadth")),
-    ("quantity", ("qty", "quantity", "pcs", "nos")),
-    ("sqft", ("sqft", "sq ft", "sq.ft", "sq. ft", "area", "total sqft")),
-    ("unit", ("unit",)),
-    ("rate", ("rate", "price")),
-    ("amount", ("amount", "total", "total amount")),
-    ("details", ("details", "detail", "description", "remarks", "remark", "particular details")),
-    ("discount", ("discount", "disc")),
-    ("vat", ("vat", "vat amount")),
-    ("balance", ("balance", "due", "remaining", "balance due")),
-    ("order_no", ("order no", "order", "order number")),
-]
-REQUIRED = ("date", "customer", "item")
 
-
-def _norm(value: Any) -> str:
-    return re.sub(r"\s+", " ", str(value or "").strip().lower())
-
-
-def _field_for(header: str) -> str | None:
-    h = _norm(header)
-    if not h:
-        return None
-    if h.startswith("payment") or h.startswith("paid") or h in ("received", "advance"):
-        # "Payment Mode", "Payment Method", "Payment Type" (or a narrow column showing
-        # just "Payment M") name the mode; any other payment column is the amount paid.
-        rest = h.removeprefix("payment").strip(" .:-")
+def _payment_column(key: str) -> str | None:
+    # "Payment Mode", "Payment Method", "Payment Type" (or a narrow column showing
+    # just "Payment M") name the mode; any other payment column is the amount paid.
+    first = key.split()[0]
+    if first in ("payment", "paid", "received", "advance", "receipt", "भुक्तानी"):
+        rest = key[len(first) :].strip()
         return "mode" if rest.startswith(("m", "type", "via")) else "paid"
-    if h in ("mode", "pay mode", "payment mode"):
-        return "mode"
-    for name, aliases in _HEADERS:
-        if h in aliases:
-            return name
     return None
 
 
+COLUMNS = Columns(
+    fields=[
+        Column("order_no", "Order no.", ("order no", "order number"), ("order no", "order id")),
+        Column("date", "Date", ("date", "miti", "date bs", "bs date"), ("date", "miti", "मिति")),
+        Column("mode", "Payment mode", ("mode", "pay mode"), ("mode", "method")),
+        Column("paid", "Payment", (), ("paid", "received", "receipt", "भुक्तानी", "प्राप्त")),
+        Column(
+            "balance",
+            "Balance",
+            ("balance", "due", "remaining", "balance due"),
+            ("balance", "due", "remaining", "baki", "बाँकी", "बाकी"),
+        ),
+        Column("discount", "Discount", ("discount", "disc"), ("discount", "छुट")),
+        Column("vat", "VAT", ("vat", "vat amount"), ("vat", "भ्याट")),
+        Column("rate", "Rate", ("rate", "price"), ("rate", "price", "दर", "मूल्य")),
+        Column(
+            "sqft",
+            "Sq ft",
+            ("sqft", "sq ft", "sq", "area", "total sqft"),
+            ("sqft", "sq ft", "sq feet", "square", "area", "वर्ग"),
+        ),
+        Column("size", "Size", ("size",), ("size", "dimension", "साइज")),
+        Column(
+            "height",
+            "Height",
+            ("height", "h", "length"),
+            ("height", "length", "lambai", "लम्बाइ", "लम्बाई", "उचाइ"),
+        ),
+        Column("width", "Width", ("width", "w", "breadth"), ("width", "breadth", "चौडाइ", "चौडाई")),
+        Column(
+            "quantity",
+            "Qty",
+            ("qty", "quantity", "pcs", "nos"),
+            ("qty", "quantity", "pcs", "piece", "nos", "संख्या", "परिमाण", "थान"),
+        ),
+        Column("unit", "Unit", ("unit",)),
+        Column(
+            "amount",
+            "Amount",
+            ("amount", "total", "total amount"),
+            ("amount", "total", "रकम", "जम्मा", "कुल", "value"),
+        ),
+        Column(
+            "phone",
+            "Phone",
+            ("phone", "mobile", "contact", "phone no", "mobile no"),
+            ("phone", "mobile", "contact", "mob", "cell", "फोन", "मोबाइल"),
+        ),
+        Column(
+            "address",
+            "Address",
+            ("address", "place", "location"),
+            ("address", "place", "location", "city", "ठेगाना"),
+        ),
+        Column(
+            "details",
+            "Details",
+            ("details", "detail", "description", "remarks", "remark", "particular details"),
+            ("detail", "description", "remark", "note", "विवरण", "कैफियत"),
+        ),
+        Column(
+            "item",
+            "Items",
+            ("items", "item", "work", "media", "material", "product"),
+            ("item", "media", "material", "product", "work", "job", "print", "सामान", "काम"),
+        ),
+        Column(
+            "customer",
+            "Particular (customer)",
+            ("particular", "particulars", "customer", "customer name", "party", "name"),
+            ("customer", "party", "client", "name", "particular", "नाम", "ग्राहक"),
+        ),
+    ],
+    required=("date", "customer"),
+    any_of=("item", "amount"),
+    special=_payment_column,
+)
+
+_TOTAL_LINES = {"total", "grand total", "sub total", "subtotal", "जम्मा", "कुल", "कुल जम्मा"}
+
+
+def _is_total_line(text: str) -> bool:
+    key = sheets.header_key(text)
+    return key in _TOTAL_LINES or key.startswith(("total ", "grand total"))
+
+
 # ---------- reading ----------
-
-
-@dataclass
-class Message:
-    row: int
-    message: str
 
 
 @dataclass
@@ -142,89 +189,27 @@ class SheetRow:
     wallet: str
     discount: Decimal
     vat: Decimal
+    sheet: str = ""
     fingerprint: str = ""
 
 
 @dataclass
 class ParsedSheet:
+    info: sheets.SheetInfo = field(default_factory=sheets.SheetInfo)
     rows: list[SheetRow] = field(default_factory=list)
     errors: list[Message] = field(default_factory=list)
     warnings: list[Message] = field(default_factory=list)
-    columns: dict[str, str] = field(default_factory=dict)
-    header_row: int = 1
     rows_read: int = 0
     already_in_system: int = 0
 
 
-def _raw_rows(content: bytes, name: str) -> list[tuple[Any, ...]]:
-    if Path(name).suffix.lower() == ".csv":
-        text = content.decode("utf-8-sig", errors="replace")
-        return [tuple(r) for r in csv.reader(io.StringIO(text))]
-    try:
-        wb = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
-    except Exception as exc:  # openpyxl raises several unrelated types for bad files
-        raise ValueError("This is not an Excel (.xlsx) or CSV file.") from exc
-    ws = wb.active
-    return [tuple(r) for r in ws.iter_rows(values_only=True)]
-
-
-def _find_header(rows: list[tuple[Any, ...]]) -> tuple[int, dict[int, str]]:
-    for index, row in enumerate(rows[:15]):
-        mapping: dict[int, str] = {}
-        for col, value in enumerate(row):
-            name = _field_for(value)
-            if name and name not in mapping.values():
-                mapping[col] = name
-        if all(f in mapping.values() for f in REQUIRED):
-            return index, mapping
-    raise ValueError(
-        "Could not find the header row. The sheet needs at least the columns "
-        "Date, Particular (customer) and Items."
-    )
-
-
-def _cell_text(value: Any) -> str:
-    if value is None:
-        return ""
-    if isinstance(value, float) and value.is_integer():
-        value = int(value)
-    return re.sub(r"\s+", " ", str(value)).strip()
+_cell_text = sheets.cell_text
+_norm = sheets.norm
+parse_date = sheets.parse_date
 
 
 def _decimal(value: Any, label: str) -> Decimal:
-    if value in (None, ""):
-        return ZERO
-    if isinstance(value, (int, float, Decimal)):
-        return Decimal(str(value))
-    cleaned = str(value).replace(",", "").replace("Rs.", "").replace("Rs", "").strip()
-    if cleaned in ("", "-"):
-        return ZERO
-    try:
-        return Decimal(cleaned)
-    except InvalidOperation as exc:
-        raise ValueError(f"{label} must be a number, not '{value}'.") from exc
-
-
-_DATE_RE = re.compile(r"^\s*(\d{4})\s*[.\-/]\s*(\d{1,2})\s*[.\-/]\s*(\d{1,2})\s*$")
-
-
-def parse_date(value: Any) -> dt.date:
-    """Read a BS date like ``2083.04.01`` (or an AD date / Excel date cell)."""
-    if isinstance(value, dt.datetime):
-        return value.date()
-    if isinstance(value, dt.date):
-        return value
-    text = _cell_text(value)
-    match = _DATE_RE.match(text)
-    if not match:
-        raise ValueError(f"Date '{text}' is not in the form YYYY.MM.DD.")
-    year, month, day = (int(p) for p in match.groups())
-    try:
-        if year >= 2050:  # Bikram Sambat (AD 2050 is far in the future)
-            return from_bs(year, month, day)
-        return dt.date(year, month, day)
-    except (ValueError, OverflowError) as exc:
-        raise ValueError(f"Date '{text}' does not exist.") from exc
+    return sheets.to_decimal(value, label)
 
 
 _WALLETS = {
@@ -234,6 +219,8 @@ _WALLETS = {
     "khalti": Wallet.KHALTI,
     "fonepay": Wallet.FONEPAY,
     "fone pay": Wallet.FONEPAY,
+    "ime": Wallet.OTHER_QR,
+    "prabhu": Wallet.OTHER_QR,
     "qr": Wallet.OTHER_QR,
     "wallet": Wallet.OTHER_QR,
 }
@@ -242,14 +229,14 @@ _WALLETS = {
 def parse_mode(value: Any) -> tuple[str, str]:
     """Map a free-text payment mode to (mode, wallet). Blank means cash."""
     text = _norm(value)
-    if not text or text in ("cash", "nagad"):
+    if not text or text in ("cash", "nagad", "nagat", "नगद"):
         return PaymentMode.CASH, ""
     for key, wallet in _WALLETS.items():
         if key in text:
             return PaymentMode.WALLET, wallet
-    if "cheque" in text or "check" in text or "chq" in text:
+    if "cheque" in text or "check" in text or "chq" in text or "चेक" in text:
         return PaymentMode.CHEQUE, ""
-    if "bank" in text or "transfer" in text or "online" in text or "mobile banking" in text:
+    if any(w in text for w in ("bank", "transfer", "online", "ips", "card", "pos", "बैंक")):
         return PaymentMode.BANK, ""
     raise ValueError(f"Payment mode '{value}' is not known. Use Cash, Bank, Cheque or a wallet.")
 
@@ -274,34 +261,35 @@ def _fingerprint(row: SheetRow, occurrence: int) -> str:
     return hashlib.sha1("|".join(parts).encode(), usedforsecurity=False).hexdigest()
 
 
-def read_sheet(content: bytes, name: str) -> ParsedSheet:
-    """Parse and check every row. Nothing is written to the database."""
-    raw = _raw_rows(content, name)
-    header_index, mapping = _find_header(raw)
-    sheet = ParsedSheet(header_row=header_index + 1)
-    headers = raw[header_index]
-    sheet.columns = {f: _cell_text(headers[c]) for c, f in mapping.items()}
-    existing_orders = set(Order.objects.values_list("order_no", flat=True))
+def read_sheet(content: bytes, name: str, columns: dict[str, str] | None = None) -> ParsedSheet:
+    """Parse and check every row. Nothing is written to the database.
 
-    last_date: dt.date | None = None
-    for offset, values in enumerate(raw[header_index + 1 :], start=header_index + 2):
-        cells = {f: values[c] if c < len(values) else None for c, f in mapping.items()}
-        if all(_cell_text(v) == "" for v in cells.values()):
-            continue
-        sheet.rows_read += 1
-        if _cell_text(cells.get("order_no")) in existing_orders:
-            sheet.already_in_system += 1
-            continue
-        try:
-            row = _parse_row(offset, cells, last_date, sheet.warnings)
-        except ValueError as exc:
-            sheet.errors.append(Message(offset, str(exc)))
-            continue
-        if row is None:
-            sheet.rows_read -= 1  # a totals or note line, not work
-            continue
-        last_date = row.date
-        sheet.rows.append(row)
+    ``columns`` maps header text to a field ("" to leave a column out) where the
+    automatic guess was wrong. Raises ``sheets.ColumnsNeeded`` when no header
+    can be found.
+    """
+    located = sheets.locate(sheets.read_tables(content, name), COLUMNS, columns)
+    sheet = ParsedSheet(info=sheets.describe(located))
+    existing_orders = set(Order.objects.values_list("order_no", flat=True))
+    several = len(located) > 1
+    for loc in located:
+        label = loc.table.name if several else ""
+        last: SheetRow | None = None
+        for number, cells in sheets.records(loc, COLUMNS):
+            sheet.rows_read += 1
+            if _cell_text(cells.get("order_no")) in existing_orders:
+                sheet.already_in_system += 1
+                continue
+            try:
+                row = _parse_row(number, cells, last, sheet.warnings, label)
+            except ValueError as exc:
+                sheet.errors.append(Message(number, str(exc), label))
+                continue
+            if row is None:
+                sheet.rows_read -= 1  # a totals or note line, not work
+                continue
+            last = row
+            sheet.rows.append(row)
 
     seen: Counter[str] = Counter()
     for row in sheet.rows:
@@ -311,43 +299,96 @@ def read_sheet(content: bytes, name: str) -> ParsedSheet:
     return sheet
 
 
+_SIZE = re.compile(r"(\d+(?:\.\d+)?)\s*['\"]?\s*(?:x|×|\*|by)\s*(\d+(?:\.\d+)?)", re.IGNORECASE)
+_LENGTH_UNITS = {
+    "ft": "ft",
+    "feet": "ft",
+    "foot": "ft",
+    "'": "ft",
+    "in": "in",
+    "inch": "in",
+    "inches": "in",
+    '"': "in",
+    "cm": "cm",
+}
+# A Unit column sometimes names the selling unit instead of the size unit.
+_SELLING_UNITS = {"sqft", "sq ft", "sft", "pcs", "pc", "piece", "pieces", "nos", "no", "set"}
+
+
+def _size(text: str) -> tuple[Decimal, Decimal, str] | None:
+    match = _SIZE.search(sheets.digits(text))
+    if not match:
+        return None
+    lowered = text.lower()
+    unit = "in" if ("inch" in lowered or '"' in text) else "cm" if "cm" in lowered else "ft"
+    return Decimal(match.group(1)), Decimal(match.group(2)), unit
+
+
 def _parse_row(
-    number: int, cells: dict[str, Any], last_date: dt.date | None, warnings: list[Message]
+    number: int,
+    cells: dict[str, Any],
+    last: SheetRow | None,
+    warnings: list[Message],
+    sheet: str = "",
 ) -> SheetRow | None:
+    def note(text: str) -> None:
+        warnings.append(Message(number, text, sheet))
+
     customer = _cell_text(cells.get("customer"))
     item = _cell_text(cells.get("item"))
+    details = _cell_text(cells.get("details"))
+    if _is_total_line(customer) or _is_total_line(_cell_text(cells.get("date"))):
+        return None
     amount = q2(_decimal(cells.get("amount"), "Amount"))
-    if not customer and not item:
-        return None  # e.g. a "Total" line at the bottom of the sheet
-    if not customer:
-        raise ValueError("Particular (customer name) is empty.")
-    if not item:
-        raise ValueError("Items is empty; write what was made (e.g. Banner).")
-    if len(customer) > 150:
-        raise ValueError("Particular is longer than 150 characters.")
+    if not customer and not item and not amount:
+        return None  # a note or blank line
 
     if _cell_text(cells.get("date")):
         date = parse_date(cells.get("date"))
-    elif last_date is not None:
-        date = last_date
-        warnings.append(Message(number, "No date; used the date from the row above."))
+    elif last is not None:
+        date = last.date
+        note("No date; used the date from the row above.")
     else:
         raise ValueError("Date is empty.")
     if date > local_today():
         raise ValueError(f"Date {bs_string(date)} BS is in the future.")
 
+    if not customer:
+        if last is None or last.date != date:
+            raise ValueError("Particular (customer name) is empty.")
+        customer = last.customer  # merged cells: one name over several rows
+        note(f"No customer; used {customer} from the row above.")
+    if len(customer) > 150:
+        raise ValueError("Particular is longer than 150 characters.")
+    if not item:
+        if details:
+            item = details
+            note(f"No item; used the details '{details[:40]}' as the item.")
+        elif amount:
+            item = "Printing work"
+            note("No item; recorded as 'Printing work'.")
+        else:
+            raise ValueError("Items is empty; write what was made (e.g. Banner).")
+
     height = _decimal(cells.get("height"), "Height")
     width = _decimal(cells.get("width"), "Width")
+    unit = _norm(cells.get("unit")).strip(".")
+    if not (height or width) and (size := _size(_cell_text(cells.get("size")))):
+        width, height, size_unit = size
+        unit = unit or size_unit
     if height < 0 or width < 0:
         raise ValueError("Height and width cannot be negative.")
     quantity_raw = _decimal(cells.get("quantity"), "Qty") or Decimal("1")
     if quantity_raw != quantity_raw.to_integral_value() or quantity_raw < 1:
         raise ValueError(f"Qty must be a whole number of pieces, not {fmt_qty(quantity_raw)}.")
     quantity = int(quantity_raw)
-    unit = _norm(cells.get("unit")) or "ft"
-    unit = {"feet": "ft", "foot": "ft", "inch": "in", "inches": "in"}.get(unit, unit)
-    if unit not in ("ft", "in", "cm"):
-        raise ValueError(f"Unit '{unit}' is not known. Use ft, in or cm.")
+    if not unit or unit in _SELLING_UNITS:
+        unit = "ft"
+    elif unit in _LENGTH_UNITS:
+        unit = _LENGTH_UNITS[unit]
+    else:
+        note(f"Unit '{unit}' is not known; the size is read as feet.")
+        unit = "ft"
     divisor = {"ft": Decimal("1"), "in": Decimal("144"), "cm": Decimal("929.0304")}[unit]
     sized = height > 0 and width > 0
     sqft_total = q2(_decimal(cells.get("sqft"), "SQFT"))
@@ -372,21 +413,15 @@ def _parse_row(
             amount = q2(rate * quantity)
         if sqft_total > 0 and not _close(rate * quantity, amount):
             pricing_unit = PricingUnit.SQFT
-            warnings.append(
-                Message(
-                    number,
-                    f"Amount {fmt_qty(amount)} is neither SQFT × Rate "
-                    f"({fmt_qty(q2(sqft_total * rate))}) nor Qty × Rate "
-                    f"({fmt_qty(q2(rate * quantity))}); the sheet's amount is kept.",
-                )
+            note(
+                f"Amount {fmt_qty(amount)} is neither SQFT × Rate "
+                f"({fmt_qty(q2(sqft_total * rate))}) nor Qty × Rate "
+                f"({fmt_qty(q2(rate * quantity))}); the sheet's amount is kept.",
             )
         elif not _close(rate * quantity, amount):
-            warnings.append(
-                Message(
-                    number,
-                    f"Amount {fmt_qty(amount)} is not Qty × Rate "
-                    f"({fmt_qty(q2(rate * quantity))}); the sheet's amount is kept.",
-                )
+            note(
+                f"Amount {fmt_qty(amount)} is not Qty × Rate "
+                f"({fmt_qty(q2(rate * quantity))}); the sheet's amount is kept.",
             )
 
     paid = q2(_decimal(cells.get("paid"), "Payment"))
@@ -396,17 +431,19 @@ def _parse_row(
         raise ValueError("Payment, discount and VAT cannot be negative.")
     if discount > amount:
         raise ValueError("Discount is more than the amount.")
-    mode, wallet = parse_mode(cells.get("mode")) if paid > 0 else (PaymentMode.CASH, "")
+    mode, wallet = PaymentMode.CASH, ""
+    if paid > 0:
+        try:
+            mode, wallet = parse_mode(cells.get("mode"))
+        except ValueError:
+            note(f"Payment mode '{_cell_text(cells.get('mode'))}' is not known; recorded as cash.")
     if _cell_text(cells.get("balance")):
         balance = q2(_decimal(cells.get("balance"), "Balance"))
         expected = q2(amount - discount + vat - paid)
         if not _close(balance, expected):
-            warnings.append(
-                Message(
-                    number,
-                    f"Balance {fmt_qty(balance)} does not match Amount − Discount − Payment "
-                    f"({fmt_qty(expected)}); the ledger uses {fmt_qty(expected)}.",
-                )
+            note(
+                f"Balance {fmt_qty(balance)} does not match Amount − Discount − Payment "
+                f"({fmt_qty(expected)}); the ledger uses {fmt_qty(expected)}.",
             )
 
     return SheetRow(
@@ -424,12 +461,13 @@ def _parse_row(
         sqft_per_piece=q2(sqft_total / quantity) if sqft_total else ZERO,
         rate=rate,
         amount=amount,
-        details=_cell_text(cells.get("details"))[:200],
+        details=details[:200],
         paid=paid,
         mode=mode,
         wallet=wallet,
         discount=discount,
         vat=vat,
+        sheet=sheet,
     )
 
 
@@ -443,6 +481,10 @@ class ImportResult:
     header_row: int
     columns: dict[str, str]
     rows_read: int
+    sheets: list[str] = field(default_factory=list)
+    headers: list[str] = field(default_factory=list)
+    needs_columns: bool = False
+    problem: str = ""
     rows_imported: int = 0
     rows_skipped_duplicate: int = 0
     rows_skipped_error: int = 0
@@ -474,21 +516,39 @@ def import_work_log(
     user: Any,
     dry_run: bool = True,
     skip_errors: bool = False,
+    columns: dict[str, str] | None = None,
     request: Any = None,
 ) -> ImportResult:
     """Import a work-log sheet. With ``dry_run`` everything is checked, then rolled back.
 
     Rows with errors stop the import unless ``skip_errors`` is set, in which
-    case only the valid rows are imported.
+    case only the valid rows are imported. ``columns`` corrects the column
+    guesses (header text -> field). When no header is recognised the result
+    has ``needs_columns`` set, with the sheet's headers to choose from.
     """
-    sheet = read_sheet(file.read(), name)
+    try:
+        sheet = read_sheet(file.read(), name, columns)
+    except sheets.ColumnsNeeded as exc:
+        return ImportResult(
+            dry_run=True,
+            file_name=name,
+            header_row=0,
+            columns={},
+            rows_read=0,
+            headers=exc.headers,
+            needs_columns=True,
+            problem=str(exc),
+            totals=dict.fromkeys(("amount", "discount", "vat", "paid", "balance"), ZERO),
+        )
     result = ImportResult(
         dry_run=dry_run,
         file_name=name,
-        header_row=sheet.header_row,
-        columns=sheet.columns,
+        header_row=sheet.info.header_row,
+        columns=sheet.info.columns,
         rows_read=sheet.rows_read,
-        rows_skipped_error=len({e.row for e in sheet.errors}),
+        sheets=sheet.info.sheets,
+        headers=sheet.info.headers,
+        rows_skipped_error=len({(e.sheet, e.row) for e in sheet.errors}),
         rows_already_in_system=sheet.already_in_system,
         errors=sheet.errors[:MAX_MESSAGES],
         warnings=sheet.warnings[:MAX_MESSAGES],
@@ -512,6 +572,12 @@ def import_work_log(
     if blocked and not dry_run:
         result.dry_run = True  # nothing was saved
     return result
+
+
+def _import_note(file_name: str, sheet: str, first: int, last: int) -> str:
+    where = f"{file_name}, sheet {sheet}" if sheet else file_name
+    rows = f"rows {first}–{last}" if first != last else f"row {first}"
+    return f"Imported from {where}, {rows}."
 
 
 def _customer_finder():
@@ -594,8 +660,7 @@ def _write(sheet: ParsedSheet, result: ImportResult, user: Any) -> None:
             status=OrderStatus.DELIVERED,
             order_date=date,
             source=OrderSource.IMPORT,
-            notes=f"Imported from {result.file_name}, row{'s' if first != last else ''} "
-            f"{first}{f'–{last}' if first != last else ''}.",
+            notes=_import_note(result.file_name, group[0].sheet, first, last),
             discount_type=DiscountType.AMOUNT if discount else DiscountType.NONE,
             discount_value=discount,
             subtotal=subtotal,
