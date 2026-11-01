@@ -1179,6 +1179,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/import/{kind}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Upload customers with opening balances, the rate card or opening stock.
+         *
+         *     The same check-first flow as the work log: a dry run shows what would be
+         *     added, updated or skipped, and the columns can be corrected.
+         */
+        post: operations["system_import_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/import/{kind}/template/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description A sample sheet for a go-live import, with the usual columns. */
+        get: operations["system_import_template_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/work-log/export/": {
         parameters: {
             query?: never;
@@ -2995,6 +3034,30 @@ export interface components {
             /** @default  */
             reason?: string;
         };
+        GoLiveUploadRequest: {
+            /**
+             * Format: binary
+             * @description The sheet as .xlsx, .xls or .csv
+             */
+            file: string;
+            /**
+             * @description Check the file and show what would be imported, without saving.
+             * @default true
+             */
+            dry_run?: boolean;
+            /**
+             * @description Import the valid rows and leave out rows with errors.
+             * @default false
+             */
+            skip_errors?: boolean;
+            /** @description JSON {"header text": "field"} correcting the column guesses; "" leaves a column out. */
+            columns?: string;
+            /**
+             * Format: date
+             * @description Date of the opening balances (customers only; default today)
+             */
+            as_of?: string | null;
+        };
         /**
          * @description * `day` - day
          *     * `month` - month
@@ -3006,6 +3069,29 @@ export interface components {
             database: string;
         };
         HealthRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        ImportField: {
+            field: string;
+            label: string;
+        };
+        ImportUploadRequest: {
+            /**
+             * Format: binary
+             * @description The sheet as .xlsx, .xls or .csv
+             */
+            file: string;
+            /**
+             * @description Check the file and show what would be imported, without saving.
+             * @default true
+             */
+            dry_run?: boolean;
+            /**
+             * @description Import the valid rows and leave out rows with errors.
+             * @default false
+             */
+            skip_errors?: boolean;
+            /** @description JSON {"header text": "field"} correcting the column guesses; "" leaves a column out. */
+            columns?: string;
+        };
         InsightSummary: {
             /**
              * Format: decimal
@@ -7779,6 +7865,8 @@ export interface components {
         RowMessage: {
             row: number;
             message: string;
+            /** @description Sheet name when the file has several */
+            sheet: string;
         };
         /**
          * @description * `server_error` - Server Error
@@ -9626,9 +9714,40 @@ export interface components {
         SystemBackupsRunCreateErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemBackupsStatusRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemExportRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        SystemImportCreateErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        SystemImportTemplateRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemWorkLogExportRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemWorkLogImportCreateErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemWorkLogTemplateRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        /** @description What the reader understood, so the person importing can correct it. */
+        TableImportResult: {
+            sheets: string[];
+            header_row: number;
+            /** @description field -> header */
+            columns: {
+                [key: string]: string;
+            };
+            headers: string[];
+            /** @description No header was recognised: choose the columns and check again */
+            needs_columns: boolean;
+            problem: string;
+            /** @description Every field this import understands, for correcting columns */
+            readonly field_choices: components["schemas"]["ImportField"][];
+            kind: string;
+            /** @description True when nothing was saved */
+            dry_run: boolean;
+            file_name: string;
+            rows_read: number;
+            created: number;
+            updated: number;
+            skipped: number;
+            rows_skipped_error: number;
+            summary: {
+                [key: string]: string;
+            };
+            errors: components["schemas"]["RowMessage"][];
+            warnings: components["schemas"]["RowMessage"][];
+        };
         TopCustomer: {
             customer_id: number;
             name: string;
@@ -10384,14 +10503,23 @@ export interface components {
          * @enum {string}
          */
         WalletEnum: "esewa" | "khalti" | "fonepay" | "other_qr";
+        /** @description What the reader understood, so the person importing can correct it. */
         WorkLogImportResult: {
-            /** @description True when nothing was saved */
-            dry_run: boolean;
-            file_name: string;
+            sheets: string[];
             header_row: number;
+            /** @description field -> header */
             columns: {
                 [key: string]: string;
             };
+            headers: string[];
+            /** @description No header was recognised: choose the columns and check again */
+            needs_columns: boolean;
+            problem: string;
+            /** @description Every field this import understands, for correcting columns */
+            readonly field_choices: components["schemas"]["ImportField"][];
+            /** @description True when nothing was saved */
+            dry_run: boolean;
+            file_name: string;
             rows_read: number;
             rows_imported: number;
             rows_skipped_duplicate: number;
@@ -10421,23 +10549,6 @@ export interface components {
             paid: string;
             /** Format: decimal */
             balance: string;
-        };
-        WorkLogUploadRequest: {
-            /**
-             * Format: binary
-             * @description The work log as .xlsx or .csv
-             */
-            file: string;
-            /**
-             * @description Check the file and show what would be imported, without saving.
-             * @default true
-             */
-            dry_run?: boolean;
-            /**
-             * @description Import the valid rows and leave out rows with errors.
-             * @default false
-             */
-            skip_errors?: boolean;
         };
     };
     responses: never;
@@ -18835,6 +18946,180 @@ export interface operations {
             };
         };
     };
+    system_import_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "customers" | "opening-stock" | "rate-card";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["GoLiveUploadRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TableImportResult"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemImportCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    system_import_template_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "customers" | "opening-stock" | "rate-card";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemImportTemplateRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
     system_work_log_export_retrieve: {
         parameters: {
             query?: {
@@ -18932,7 +19217,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "multipart/form-data": components["schemas"]["WorkLogUploadRequest"];
+                "multipart/form-data": components["schemas"]["ImportUploadRequest"];
             };
         };
         responses: {

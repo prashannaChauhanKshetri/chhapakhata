@@ -1,16 +1,13 @@
 import {
   Alert,
   Anchor,
-  Badge,
   Button,
   Card,
   FileInput,
   Group,
   List,
-  ScrollArea,
   SimpleGrid,
   Stack,
-  Table,
   Text,
   ThemeIcon,
 } from '@mantine/core';
@@ -26,9 +23,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-import { ensureCsrfCookie, fetchWithTimeout } from '@/api/client';
-import { ApiError } from '@/api/errors';
-import { FILE_TIMEOUT_MS, openFile } from '@/api/files';
+import { openFile } from '@/api/files';
 import { withQuery } from '@/api/http';
 import type { WorkLogImportResult } from '@/api/types';
 import { useAuth } from '@/auth/AuthContext';
@@ -43,46 +38,12 @@ import { notifyError, notifySuccess } from '@/lib/forms';
 import { formatAmount, formatDate, formatQty } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
 
-const FIELD_LABELS: Record<string, string> = {
-  date: 'Date',
-  customer: 'Customer',
-  address: 'Address',
-  phone: 'Phone',
-  item: 'Item',
-  height: 'Height',
-  width: 'Width',
-  quantity: 'Qty',
-  sqft: 'Sq ft',
-  unit: 'Unit',
-  rate: 'Rate',
-  amount: 'Amount',
-  details: 'Details',
-  paid: 'Payment',
-  mode: 'Payment mode',
-  discount: 'Discount',
-  vat: 'VAT',
-  balance: 'Balance',
-  order_no: 'Order no.',
-};
+import { ColumnFixer, ColumnsFound } from './imports/ColumnFixer';
+import { GoLiveImport } from './imports/GoLiveImport';
+import { MessageTable } from './imports/MessageTable';
+import { type ColumnChoices, SHEET_TYPES, uploadSheet } from './imports/upload';
 
-async function uploadWorkLog(file: File, dryRun: boolean, skipErrors: boolean) {
-  const body = new FormData();
-  body.append('file', file);
-  body.append('dry_run', String(dryRun));
-  body.append('skip_errors', String(skipErrors));
-  const response = await fetchWithTimeout(
-    '/api/v1/system/work-log/import/',
-    {
-      method: 'POST',
-      body,
-      credentials: 'same-origin',
-      headers: { 'X-CSRFToken': await ensureCsrfCookie() },
-    },
-    FILE_TIMEOUT_MS,
-  );
-  if (!response.ok) throw await ApiError.fromResponse(response);
-  return (await response.json()) as WorkLogImportResult;
-}
+const WORK_LOG_URL = '/api/v1/system/work-log/import/';
 
 function Figure({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -97,49 +58,43 @@ function Figure({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function MessageTable({
-  rows,
-  tone,
-}: {
-  rows: WorkLogImportResult['errors'];
-  tone: 'error' | 'warning';
-}) {
-  const { t } = useTranslation();
-  return (
-    <ScrollArea.Autosize mah={240}>
-      <Table verticalSpacing={4} fz="sm">
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th w={70}>{t('Row')}</Table.Th>
-            <Table.Th>{tone === 'error' ? t('Problem') : t('Note')}</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {rows.map((m, i) => (
-            <Table.Tr key={`${m.row}-${i}`}>
-              <Table.Td className="num">{m.row}</Table.Td>
-              <Table.Td>{m.message}</Table.Td>
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
-    </ScrollArea.Autosize>
-  );
-}
-
 function ImportResultCard({
   result,
   busy,
+  checking,
   onImport,
+  onColumns,
 }: {
   result: WorkLogImportResult;
   busy: boolean;
+  checking: boolean;
   onImport: (skipErrors: boolean) => void;
+  onColumns: (choices: ColumnChoices) => void;
 }) {
   const { t } = useTranslation();
+  const [fixing, setFixing] = useState(false);
   const hasErrors = result.errors.length > 0;
   const saved = !result.dry_run;
   const nothingNew = result.rows_imported === 0;
+
+  if (result.needs_columns) {
+    return (
+      <Card withBorder padding="md">
+        <Stack gap="md">
+          <Alert color="amber" variant="light" icon={<IconAlertTriangle size={18} />}>
+            {result.problem}
+          </Alert>
+          <ColumnFixer
+            headers={result.headers}
+            columns={result.columns}
+            fields={result.field_choices}
+            busy={checking}
+            onApply={onColumns}
+          />
+        </Stack>
+      </Card>
+    );
+  }
 
   return (
     <Card withBorder padding="md">
@@ -168,7 +123,10 @@ function ImportResultCard({
                     })}
             </Text>
             <Text size="sm" c="dimmed">
-              {result.file_name} · {t('header on row {{n}}', { n: result.header_row })}
+              {result.file_name}
+              {result.sheets.length > 1 && ` · ${t('sheets')}: ${result.sheets.join(', ')}`}
+              {' · '}
+              {t('header on row {{n}}', { n: result.header_row })}
               {result.date_from &&
                 ` · ${formatDate(result.date_from)} – ${formatDate(result.date_to)}`}
             </Text>
@@ -197,16 +155,30 @@ function ImportResultCard({
           </Text>
         )}
 
-        <Text size="sm">
-          <Text span fw={500}>
-            {t('Columns found')}:{' '}
-          </Text>
-          {Object.entries(result.columns).map(([field, header]) => (
-            <Badge key={field} variant="light" color="slate" mr={4} mb={4}>
-              {t(FIELD_LABELS[field] ?? field)} ← {header}
-            </Badge>
-          ))}
-        </Text>
+        {fixing ? (
+          <ColumnFixer
+            headers={result.headers}
+            columns={result.columns}
+            fields={result.field_choices}
+            busy={checking}
+            onApply={(choices) => {
+              setFixing(false);
+              onColumns(choices);
+            }}
+            onCancel={() => setFixing(false)}
+          />
+        ) : (
+          <Group gap="xs" align="flex-start" wrap="nowrap">
+            <div style={{ flex: 1 }}>
+              <ColumnsFound columns={result.columns} fields={result.field_choices} />
+            </div>
+            {!saved && (
+              <Button size="compact-sm" variant="subtle" onClick={() => setFixing(true)}>
+                {t('Change columns')}
+              </Button>
+            )}
+          </Group>
+        )}
 
         {(result.new_customers.length > 0 || result.matched_customers > 0) && (
           <Text size="sm">
@@ -313,16 +285,23 @@ function WorkLogImport() {
   const { t } = useTranslation();
   const client = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
+  const [columns, setColumns] = useState<ColumnChoices | null>(null);
   const [result, setResult] = useState<WorkLogImportResult | null>(null);
   const [busy, setBusy] = useState<'check' | 'import' | null>(null);
 
-  const check = async (chosen: File | null) => {
+  const check = async (chosen: File | null, choices: ColumnChoices | null) => {
     setFile(chosen);
-    setResult(null);
+    setColumns(choices);
+    if (!choices) setResult(null);
     if (!chosen) return;
     setBusy('check');
     try {
-      setResult(await uploadWorkLog(chosen, true, false));
+      setResult(
+        await uploadSheet<WorkLogImportResult>(WORK_LOG_URL, chosen, {
+          dryRun: true,
+          columns: choices,
+        }),
+      );
     } catch (error) {
       notifyError(error, t('Could not read the file'));
     } finally {
@@ -334,7 +313,11 @@ function WorkLogImport() {
     if (!file) return;
     setBusy('import');
     try {
-      const saved = await uploadWorkLog(file, false, skipErrors);
+      const saved = await uploadSheet<WorkLogImportResult>(WORK_LOG_URL, file, {
+        dryRun: false,
+        skipErrors,
+        columns,
+      });
       setResult(saved);
       if (!saved.dry_run) {
         await client.invalidateQueries();
@@ -358,11 +341,11 @@ function WorkLogImport() {
         <Group gap="sm" align="flex-end" wrap="wrap">
           <FileInput
             label={t('Work log file')}
-            placeholder={t('Choose .xlsx or .csv')}
-            accept=".xlsx,.xlsm,.csv"
+            placeholder={t('Choose an Excel or CSV file')}
+            accept={SHEET_TYPES}
             leftSection={<IconFileSpreadsheet size={16} />}
             value={file}
-            onChange={(f) => void check(f)}
+            onChange={(f) => void check(f, null)}
             clearable
             w={340}
           />
@@ -380,12 +363,18 @@ function WorkLogImport() {
         </Group>
         <Text size="xs" c="dimmed">
           {t(
-            'The file is checked first and nothing is saved until you press Import. Dates can be BS (2083.04.01) or AD. Uploading the same sheet again only adds new rows.',
+            'The file is checked first and nothing is saved until you press Import. Any Excel, LibreOffice or CSV file works, with one sheet or one per month; the columns can be in any order and named your own way, and you can correct them if a guess is wrong. Dates can be BS (2083.04.01) or AD. Uploading the same sheet again only adds new rows.',
           )}
         </Text>
         {busy === 'check' && <Text size="sm">{t('Checking the file…')}</Text>}
         {result && (
-          <ImportResultCard result={result} busy={busy === 'import'} onImport={runImport} />
+          <ImportResultCard
+            result={result}
+            busy={busy === 'import'}
+            checking={busy === 'check'}
+            onImport={runImport}
+            onColumns={(choices) => void check(file, choices)}
+          />
         )}
       </Stack>
     </SectionCard>
@@ -440,7 +429,14 @@ export function ImportTab() {
   const { can } = useAuth();
   return (
     <Stack gap="lg">
-      {can(Perm.SETTINGS_MANAGE) && <WorkLogImport />}
+      {can(Perm.SETTINGS_MANAGE) && (
+        <>
+          <WorkLogImport />
+          <GoLiveImport kind="customers" />
+          <GoLiveImport kind="rate-card" />
+          <GoLiveImport kind="opening-stock" />
+        </>
+      )}
       {can(Perm.REPORTS_ALL) && <WorkLogExport />}
       <Text size="xs" c="dimmed">
         {t('For a full copy of every table, use')}{' '}

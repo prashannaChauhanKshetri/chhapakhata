@@ -54,6 +54,9 @@ export type StockMovement = S['StockMovement'];
 export type BackupRun = S['BackupRun'];
 export type Insights = S['Insights'];
 export type WorkLogImportResult = S['WorkLogImportResult'];
+export type TableImportResult = S['TableImportResult'];
+export type ImportMessage = S['RowMessage'];
+export type ImportField = S['ImportField'];
 
 export interface Paginated<T> {
   count: number;

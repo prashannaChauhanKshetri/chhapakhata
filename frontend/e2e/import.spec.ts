@@ -25,7 +25,7 @@ test('owner imports the Excel work log once, and dues reach the ledger', async (
   await page.goto('/settings/import-export');
 
   // Preview first: nothing is saved yet.
-  await page.locator('input[type=file]').setInputFiles(file);
+  await page.locator('input[type=file]').first().setInputFiles(file);
   await expect(page.getByText('Ready to import 3 rows as 2 orders')).toBeVisible();
   await expect(page.getByText('Payment mode ← Payment M')).toBeVisible();
   await expect(page.getByText(new RegExp(`1 new \\(${customer}\\)`))).toBeVisible();
@@ -43,7 +43,7 @@ test('owner imports the Excel work log once, and dues reach the ledger', async (
 
   // Uploading the same sheet again adds nothing.
   await page.goto('/settings/import-export');
-  await page.locator('input[type=file]').setInputFiles(file);
+  await page.locator('input[type=file]').first().setInputFiles(file);
   await expect(page.getByText('Nothing new to import')).toBeVisible();
   await expect(page.getByText('3 rows were imported before and are skipped.')).toBeVisible();
 
