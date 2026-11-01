@@ -4,7 +4,7 @@ Columns are matched loosely (see apps/system/go_live.py): Name, Phone, Address,
 PAN, Type, Opening balance (positive = they owe, negative = advance), or
 separate Debit/Credit columns. The same import is in Settings → Import.
 
-    uv run python manage.py import_customers customers.xlsx --as-of 2026-11-09 --owner owner
+    uv run python manage.py import_customers customers.xlsx --as-of 2026-07-16 --owner owner
 """
 
 from __future__ import annotations
@@ -24,7 +24,10 @@ class Command(BusinessCommand):
     def add_arguments(self, parser):
         parser.add_argument("path")
         parser.add_argument("--owner", required=True, help="Username recorded as the importer")
-        parser.add_argument("--as-of", help="Date of the opening balances (YYYY-MM-DD)")
+        parser.add_argument(
+            "--as-of",
+            help="Date of the opening balances, YYYY-MM-DD (default: end of last fiscal year)",
+        )
         parser.add_argument("--dry-run", action="store_true", help="Check the file without saving")
 
     def handle(self, *args, **options):

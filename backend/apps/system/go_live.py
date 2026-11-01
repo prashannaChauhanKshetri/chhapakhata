@@ -24,7 +24,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 
 from apps.billing.models import LedgerEntry
-from apps.billing.services import post_opening_balance
+from apps.billing.services import opening_entries, previous_year_end, set_opening_balance
 from apps.catalog.models import AddOn, AddOnBasis, MediaType, PricingUnit
 from apps.core.activity import log_activity
 from apps.core.exceptions import BusinessError
@@ -115,7 +115,13 @@ def run_import(
     info = sheets.describe(located)
     result.sheets, result.header_row = info.sheets, info.header_row
     result.columns, result.headers = info.columns, info.headers
-    context: dict[str, Any] = {"user": user, "as_of": as_of, "seen": set(), "totals": {}}
+    context: dict[str, Any] = {
+        "user": user,
+        "as_of": as_of or previous_year_end(),  # balances carried in from last year
+        "file": name,
+        "seen": set(),
+        "totals": {},
+    }
     errors: list[Message] = []
     warnings: list[Message] = []
 
@@ -294,15 +300,31 @@ def _customer_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) ->
         existing = existing.filter(phone=phone)
     customer = existing.order_by("id").first()
     if customer is not None:
+        current = opening_entries(customer)
+        if current.exists():
+            # A corrected ledger sheet: bring the opening balance to the sheet's figure.
+            old = q2(sum((e.debit - e.credit for e in current), ZERO))
+            if old == opening:
+                return "skipped"
+            set_opening_balance(
+                customer=customer,
+                amount=opening,
+                user=context["user"],
+                reason=f"corrected by the import of {context['file']}",
+            )
+            note(f"{name}: opening balance changed from {fmt_qty(old)} to {fmt_qty(opening)}.")
+            _add(context, "opening_corrected", Decimal(1))
+            return "updated"
         if not opening:
             return "skipped"
         if LedgerEntry.objects.filter(customer=customer).exists():
             note(
-                f"{name} already has entries in the ledger, so the opening balance "
-                f"{fmt_qty(opening)} was not added. Use Adjust balance on the customer if needed."
+                f"{name} already has entries in the ledger (such as imported work), so the "
+                f"opening balance {fmt_qty(opening)} was not added; it would count twice. "
+                "Use Opening balance on the customer if it is really needed."
             )
             return "skipped"
-        post_opening_balance(
+        set_opening_balance(
             customer=customer, amount=opening, user=context["user"], as_of=context["as_of"]
         )
         _add(context, "opening_due" if opening > 0 else "opening_advance", abs(opening))
@@ -321,7 +343,7 @@ def _customer_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) ->
     customer.full_clean()
     customer.save()
     if opening:
-        post_opening_balance(
+        set_opening_balance(
             customer=customer, amount=opening, user=context["user"], as_of=context["as_of"]
         )
         _add(context, "opening_due" if opening > 0 else "opening_advance", abs(opening))

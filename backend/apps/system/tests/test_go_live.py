@@ -142,7 +142,7 @@ def test_api_check_import_and_templates(api, owner, desk):
             {
                 "file": SimpleUploadedFile("l.xlsx", _xlsx(LEDGER)),
                 "dry_run": "false",
-                "as_of": "2026-11-09",
+                "as_of": "2026-07-16",
             },
         )
         .json()

@@ -19,7 +19,7 @@ def test_import_all_templates(owner):
     call_command("import_opening_stock", str(TEMPLATES / "opening_stock.csv"), owner="owner")
     call_command("import_rate_card", str(TEMPLATES / "rate_card.csv"))
     call_command(
-        "import_customers", str(TEMPLATES / "customers.csv"), owner="owner", as_of="2026-11-09"
+        "import_customers", str(TEMPLATES / "customers.csv"), owner="owner", as_of="2026-07-16"
     )
 
     star = StockItem.objects.get(name="Star Flex")
