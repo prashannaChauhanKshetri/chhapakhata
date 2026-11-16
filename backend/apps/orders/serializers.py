@@ -13,7 +13,7 @@ from apps.customers.models import Customer
 from apps.customers.serializers import CustomerRefSerializer
 from apps.production.selectors import order_progress
 
-from .models import DiscountType, Order, OrderItem, OrderItemAddOn, OrderStatus
+from .models import DiscountType, Order, OrderItem, OrderItemAddOn, OrderSource, OrderStatus
 from .services import EDITABLE_STATUSES
 
 MONEY = {"max_digits": 12, "decimal_places": 2}
@@ -239,7 +239,11 @@ class OrderDetailSerializer(OrderListSerializer):
             "can_cancel": user.can(Perm.ORDERS_MANAGE)
             and obj.status not in (OrderStatus.CANCELLED, OrderStatus.DELIVERED)
             and not invoiced,
-            "can_invoice": user.can(Perm.DOCUMENTS_ISSUE) and live and not invoiced,
+            # Work-log orders were charged to the account when imported.
+            "can_invoice": user.can(Perm.DOCUMENTS_ISSUE)
+            and live
+            and not invoiced
+            and obj.source != OrderSource.IMPORT,
             "can_deliver": user.can(Perm.ORDERS_MANAGE) and obj.status == OrderStatus.READY,
             "can_receive_payment": user.can(Perm.PAYMENTS_RECEIVE)
             and live

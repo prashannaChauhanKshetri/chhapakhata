@@ -158,6 +158,9 @@ class PaymentCreateSerializer(serializers.Serializer):
     cheque_date = serializers.DateField(required=False, allow_null=True)
     payment_date = serializers.DateField(required=False, allow_null=True)
     notes = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    allow_repeat = serializers.BooleanField(
+        default=False, help_text="Save even if the same payment was saved a moment ago"
+    )
 
 
 class PaymentCorrectSerializer(serializers.Serializer):

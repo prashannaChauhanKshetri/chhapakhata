@@ -820,6 +820,7 @@ class Command(BusinessCommand):
             advance = (order.total * D(str(self.rng.choice([0.3, 0.5, 0.5, 1.0])))).quantize(D("1"))
             if advance > 0:
                 billing.receive_payment(
+                    allow_repeat=True,
                     user=self.desk(),
                     customer=person.customer,
                     order=order,
@@ -1017,6 +1018,7 @@ class Command(BusinessCommand):
             if amount <= 0:
                 continue
             payment = billing.receive_payment(
+                allow_repeat=True,
                 user=self.desk(),
                 customer=person.customer,
                 amount=amount,

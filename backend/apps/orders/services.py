@@ -530,7 +530,12 @@ def deliver_order(
     received = None
     if payment and payment.get("amount"):
         received = billing.receive_payment(
-            user=user, customer=order.customer, order=order, request=request, **payment
+            allow_repeat=True,  # a second delivery is already refused by the order's status
+            user=user,
+            customer=order.customer,
+            order=order,
+            request=request,
+            **payment,
         )
 
     for job in jobs:

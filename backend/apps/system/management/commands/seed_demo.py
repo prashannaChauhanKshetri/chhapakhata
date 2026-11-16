@@ -378,6 +378,7 @@ class Command(BusinessCommand):
                     )
                     if self.rng.random() < 0.5:
                         billing.receive_payment(
+                            allow_repeat=True,
                             user=self.desk,
                             customer=customer,
                             order=order,
@@ -435,6 +436,7 @@ class Command(BusinessCommand):
                 )
                 if kind != "quotation" and index % 2 == 0:
                     billing.receive_payment(
+                        allow_repeat=True,
                         user=self.desk,
                         customer=customer,
                         order=order,

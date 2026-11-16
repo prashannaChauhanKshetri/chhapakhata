@@ -100,6 +100,11 @@ def issue_invoice(*, order: Order, user: Any, notes: str = "", request: Any = No
         raise BusinessError(f"This order already has invoice {existing.invoice_no}.")
     if order.total <= 0:
         raise BusinessError("The order total is zero; there is nothing to invoice.")
+    if order.ledger_entries.filter(entry_type=LedgerEntryType.IMPORTED_WORK).exists():
+        raise BusinessError(
+            "This order came from the work log and is already charged to the customer's "
+            "account. A bill now would charge it twice."
+        )
 
     today = local_today()
     allocated = next_number(DocType.INVOICE, today)
@@ -230,6 +235,9 @@ def record_invoice_print(*, invoice: Invoice, user: Any, size: str, request: Any
     return invoice.print_count
 
 
+REPEAT_WINDOW = dt.timedelta(minutes=2)
+
+
 def _validate_mode(data: dict[str, Any]) -> None:
     mode = data.get("mode")
     errors: dict[str, list[str]] = {}
@@ -267,9 +275,15 @@ def receive_payment(
     cheque_date: dt.date | None = None,
     payment_date: dt.date | None = None,
     notes: str = "",
+    allow_repeat: bool = False,
     request: Any = None,
 ) -> Payment:
-    """Record money received, against an order (advance or settlement) or on account."""
+    """Record money received, against an order (advance or settlement) or on account.
+
+    The same payment saved again by the same person within two minutes (a
+    double click, or a retry on a slow connection) is refused unless
+    ``allow_repeat`` says it really is a second payment.
+    """
     value = q2(amount)
     if value <= 0:
         raise BusinessError({"amount": ["Amount must be above zero."]})
@@ -286,6 +300,31 @@ def receive_payment(
             "cheque_date": cheque_date,
         }
     )
+
+    if not allow_repeat:
+        just_saved = (
+            Payment.objects.filter(
+                customer=customer,
+                order=order,
+                amount=value,
+                mode=mode,
+                payment_date=payment_date,
+                received_by=user,
+                status=PaymentStatus.VALID,
+                created_at__gte=timezone.now() - REPEAT_WINDOW,
+            )
+            .order_by("-id")
+            .first()
+        )
+        if just_saved is not None:
+            raise BusinessError(
+                {
+                    "repeat": [
+                        f"This payment was saved a moment ago as {just_saved.receipt_no}. "
+                        "Save it again only if the customer paid twice."
+                    ]
+                }
+            )
 
     is_advance = False
     if order is not None:
@@ -629,6 +668,15 @@ def previous_year_end(today: dt.date | None = None) -> dt.date:
     return start - dt.timedelta(days=1)
 
 
+def opening_date(customer: Any) -> dt.date | None:
+    """The day the customer's opening balance is dated, if they have one.
+
+    Everything on or before that day is already inside the opening balance.
+    """
+    first = opening_entries(customer).first()
+    return first.entry_date if first is not None else None
+
+
 def opening_entries(customer: Any):
     return customer.ledger_entries.filter(entry_type=LedgerEntryType.OPENING).order_by(
         "entry_date", "id"
@@ -713,6 +761,17 @@ def post_adjustment(
     if value == 0:
         raise BusinessError({"amount": ["Enter a non-zero amount."]})
     narration = _require_reason(narration)
+    just_posted = LedgerEntry.objects.filter(
+        customer=customer,
+        entry_type=LedgerEntryType.ADJUSTMENT,
+        debit=value if value > 0 else Decimal("0"),
+        credit=-value if value < 0 else Decimal("0"),
+        narration=narration[:255],
+        created_by=user,
+        created_at__gte=timezone.now() - REPEAT_WINDOW,
+    ).exists()
+    if just_posted:
+        raise BusinessError("This adjustment was saved a moment ago; it was not posted twice.")
     entry = LedgerEntry.objects.create(
         customer=customer,
         entry_date=local_today(),
