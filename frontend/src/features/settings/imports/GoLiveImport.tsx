@@ -33,20 +33,22 @@ import { ColumnFixer, ColumnsFound } from './ColumnFixer';
 import { MessageTable } from './MessageTable';
 import { type ColumnChoices, SHEET_TYPES, uploadSheet } from './upload';
 
-export type GoLiveKind = 'customers' | 'rate-card' | 'opening-stock';
+export type GoLiveKind = 'customers' | 'payments' | 'rate-card' | 'opening-stock';
 
 interface KindText {
   title: string;
   description: string;
   links: { to: string; label: string }[];
   summary?: { key: string; label: string; money?: boolean }[];
+  /** A date sent with the upload, and which day it starts on. */
+  date?: { label: string; description: string; start: 'last_year_end' | 'today' };
 }
 
 const KINDS: Record<GoLiveKind, KindText> = {
   customers: {
     title: 'Import customers and opening balances',
     description:
-      'Bring in the customer list with what each one owes (or has paid in advance) on the day you start. Any layout works: a name column plus a balance, or separate Dr and Cr columns. Customers already in the system are not added twice, and anyone who already has entries keeps their balance as it is.',
+      'Bring in the customer list with what each one owed (or had paid in advance) when last fiscal year closed. Any layout works: a name column plus a balance, or separate Dr and Cr columns. Customers already in the system are not added twice; uploading a corrected sheet corrects their opening balance.',
     links: [
       { to: '/customers', label: 'Open customers' },
       { to: '/ledger/balances', label: 'Open customer balances' },
@@ -55,6 +57,32 @@ const KINDS: Record<GoLiveKind, KindText> = {
       { key: 'opening_due', label: 'Dues brought in', money: true },
       { key: 'opening_advance', label: 'Advances brought in', money: true },
     ],
+    date: {
+      label: 'Balances as on',
+      description: 'Last year’s closing day',
+      start: 'last_year_end',
+    },
+  },
+  payments: {
+    title: 'Import payments received',
+    description:
+      'Payments customers made, in bulk: a date, the customer, the amount and how it was paid (a Mode column, or words like eSewa, QR or cheque in the remark). Each becomes a receipt on the customer’s account. Names must match customers already in the system; uploading the same sheet again adds only new rows.',
+    links: [
+      { to: '/payments', label: 'Open payments' },
+      { to: '/ledger/balances', label: 'Open customer balances' },
+    ],
+    summary: [
+      { key: 'amount', label: 'Total received', money: true },
+      { key: 'by_cash', label: 'Cash', money: true },
+      { key: 'by_wallet', label: 'Wallet / QR', money: true },
+      { key: 'by_bank', label: 'Bank', money: true },
+      { key: 'by_cheque', label: 'Cheque', money: true },
+    ],
+    date: {
+      label: 'Date for undated rows',
+      description: 'Used when a row has no date',
+      start: 'today',
+    },
   },
   'rate-card': {
     title: 'Import the rate card',
@@ -268,11 +296,12 @@ export function GoLiveImport({ kind }: { kind: GoLiveKind }) {
   const url = `/api/v1/system/import/${kind}/`;
   const [file, setFile] = useState<File | null>(null);
   const [columns, setColumns] = useState<ColumnChoices | null>(null);
-  // Balances carried in from last year: default to the day last fiscal year closed.
+  // Opening balances start on last year's closing day; undated payments on today.
   const { data: periods } = usePeriods();
   const lastYearEnd = periods?.find((p) => p.key === 'last_fy')?.date_to ?? null;
   const [chosenAsOf, setAsOf] = useState<string | null>(null);
-  const asOf = chosenAsOf ?? lastYearEnd;
+  const startDate = text.date?.start === 'today' ? todayISO() : lastYearEnd;
+  const asOf = text.date ? (chosenAsOf ?? startDate) : null;
   const [result, setResult] = useState<TableImportResult | null>(null);
   const [busy, setBusy] = useState<'check' | 'import' | null>(null);
 
@@ -329,10 +358,10 @@ export function GoLiveImport({ kind }: { kind: GoLiveKind }) {
             clearable
             w={300}
           />
-          {kind === 'customers' && (
+          {text.date && (
             <DatePickerInput
-              label={t('Balances as on')}
-              description={t('Last year’s closing day')}
+              label={t(text.date.label)}
+              description={t(text.date.description)}
               valueFormat="D MMM YYYY"
               maxDate={todayISO()}
               value={asOf}

@@ -433,6 +433,7 @@ export function ImportTab() {
         <>
           <WorkLogImport />
           <GoLiveImport kind="customers" />
+          <GoLiveImport kind="payments" />
           <GoLiveImport kind="rate-card" />
           <GoLiveImport kind="opening-stock" />
         </>

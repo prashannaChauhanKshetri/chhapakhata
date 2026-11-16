@@ -19598,7 +19598,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kind: "customers" | "opening-stock" | "rate-card";
+                kind: "customers" | "opening-stock" | "payments" | "rate-card";
             };
             cookie?: never;
         };
@@ -19687,7 +19687,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                kind: "customers" | "opening-stock" | "rate-card";
+                kind: "customers" | "opening-stock" | "payments" | "rate-card";
             };
             cookie?: never;
         };
