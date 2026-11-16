@@ -8931,6 +8931,152 @@ paths:
               schema:
                 $ref: '#/components/schemas/Payment'
           description: ''
+  /api/v1/payments/{id}/correct/:
+    post:
+      operationId: payments_correct_create
+      description: 'Fix a mistaken payment (owner): the old receipt is voided, a corrected
+        one recorded.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this payment.
+        required: true
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentCorrectRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaymentCorrectRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaymentCorrectRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentsCorrectCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
   /api/v1/payments/{id}/receipt/:
     get:
       operationId: payments_receipt_retrieve
@@ -27412,6 +27558,51 @@ components:
       - void_reason
       - voided_at
       - wallet
+    PaymentCorrectRequest:
+      type: object
+      description: What to change on a mistaken payment; fields left out keep their
+        value.
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 200
+        customer:
+          type: integer
+        order:
+          type: integer
+          nullable: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        mode:
+          $ref: '#/components/schemas/ModeEnum'
+        wallet:
+          oneOf:
+          - $ref: '#/components/schemas/WalletEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        bank_name:
+          type: string
+          maxLength: 80
+        reference_no:
+          type: string
+          maxLength: 60
+        cheque_no:
+          type: string
+          maxLength: 30
+        cheque_date:
+          type: string
+          format: date
+          nullable: true
+        payment_date:
+          type: string
+          format: date
+        notes:
+          type: string
+          maxLength: 255
+      required:
+      - reason
     PaymentCreateRequest:
       type: object
       properties:
@@ -27509,6 +27700,392 @@ components:
       description: |-
         * `valid` - Valid
         * `void` - Void
+    PaymentsCorrectCreateAmountErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - amount
+          type: string
+          description: '* `amount` - amount'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - min_value
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `min_value` - min_value
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateBankNameErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - bank_name
+          type: string
+          description: '* `bank_name` - bank_name'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateChequeDateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - cheque_date
+          type: string
+          description: '* `cheque_date` - cheque_date'
+        code:
+          enum:
+          - datetime
+          - invalid
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateChequeNoErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - cheque_no
+          type: string
+          description: '* `cheque_no` - cheque_no'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateCustomerErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - customer
+          type: string
+          description: '* `customer` - customer'
+        code:
+          enum:
+          - does_not_exist
+          - incorrect_type
+          - 'null'
+          type: string
+          description: |-
+            * `does_not_exist` - does_not_exist
+            * `incorrect_type` - incorrect_type
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateError:
+      oneOf:
+      - $ref: '#/components/schemas/PaymentsCorrectCreateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateReasonErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateCustomerErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateOrderErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateAmountErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateModeErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateWalletErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateBankNameErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateReferenceNoErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateChequeNoErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateChequeDateErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreatePaymentDateErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCorrectCreateNotesErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/PaymentsCorrectCreateNonFieldErrorsErrorComponent'
+          reason: '#/components/schemas/PaymentsCorrectCreateReasonErrorComponent'
+          customer: '#/components/schemas/PaymentsCorrectCreateCustomerErrorComponent'
+          order: '#/components/schemas/PaymentsCorrectCreateOrderErrorComponent'
+          amount: '#/components/schemas/PaymentsCorrectCreateAmountErrorComponent'
+          mode: '#/components/schemas/PaymentsCorrectCreateModeErrorComponent'
+          wallet: '#/components/schemas/PaymentsCorrectCreateWalletErrorComponent'
+          bank_name: '#/components/schemas/PaymentsCorrectCreateBankNameErrorComponent'
+          reference_no: '#/components/schemas/PaymentsCorrectCreateReferenceNoErrorComponent'
+          cheque_no: '#/components/schemas/PaymentsCorrectCreateChequeNoErrorComponent'
+          cheque_date: '#/components/schemas/PaymentsCorrectCreateChequeDateErrorComponent'
+          payment_date: '#/components/schemas/PaymentsCorrectCreatePaymentDateErrorComponent'
+          notes: '#/components/schemas/PaymentsCorrectCreateNotesErrorComponent'
+    PaymentsCorrectCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/PaymentsCorrectCreateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/PaymentsCorrectCreateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    PaymentsCorrectCreateModeErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - mode
+          type: string
+          description: '* `mode` - mode'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateNotesErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - notes
+          type: string
+          description: '* `notes` - notes'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateOrderErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - order
+          type: string
+          description: '* `order` - order'
+        code:
+          enum:
+          - does_not_exist
+          - incorrect_type
+          type: string
+          description: |-
+            * `does_not_exist` - does_not_exist
+            * `incorrect_type` - incorrect_type
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreatePaymentDateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - payment_date
+          type: string
+          description: '* `payment_date` - payment_date'
+        code:
+          enum:
+          - datetime
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateReasonErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - reason
+          type: string
+          description: '* `reason` - reason'
+        code:
+          enum:
+          - blank
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - required
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `blank` - blank
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `required` - required
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateReferenceNoErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - reference_no
+          type: string
+          description: '* `reference_no` - reference_no'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    PaymentsCorrectCreateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentsCorrectCreateError'
+      required:
+      - errors
+      - type
+    PaymentsCorrectCreateWalletErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - wallet
+          type: string
+          description: '* `wallet` - wallet'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     PaymentsCreateAmountErrorComponent:
       type: object
       properties:

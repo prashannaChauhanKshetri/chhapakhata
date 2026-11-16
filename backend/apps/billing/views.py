@@ -32,6 +32,7 @@ from .serializers import (
     InvoiceListSerializer,
     LedgerEntrySerializer,
     LedgerSummarySerializer,
+    PaymentCorrectSerializer,
     PaymentCreateSerializer,
     PaymentSerializer,
 )
@@ -166,6 +167,7 @@ class PaymentViewSet(
         "retrieve": Perm.PAYMENTS_VIEW,
         "create": Perm.PAYMENTS_RECEIVE,
         "void": Perm.PAYMENTS_VOID,
+        "correct": Perm.PAYMENTS_VOID,
         "receipt": Perm.PAYMENTS_VIEW,
     }
 
@@ -197,6 +199,20 @@ class PaymentViewSet(
             user=request.user,
             reason=serializer.validated_data["reason"],
             request=request,
+        )
+        return Response(PaymentSerializer(payment).data)
+
+    @extend_schema(request=PaymentCorrectSerializer, responses=PaymentSerializer)
+    @action(detail=True, methods=["post"])
+    def correct(self, request, pk=None):
+        """Fix a mistaken payment (owner): the old receipt is voided, a corrected one recorded."""
+        serializer = PaymentCorrectSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payment = services.correct_payment(
+            payment=self.get_object(),
+            user=request.user,
+            request=request,
+            **serializer.validated_data,
         )
         return Response(PaymentSerializer(payment).data)
 

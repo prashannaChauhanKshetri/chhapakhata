@@ -160,6 +160,25 @@ class PaymentCreateSerializer(serializers.Serializer):
     notes = serializers.CharField(max_length=255, required=False, allow_blank=True)
 
 
+class PaymentCorrectSerializer(serializers.Serializer):
+    """What to change on a mistaken payment; fields left out keep their value."""
+
+    reason = serializers.CharField(max_length=200)
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), required=False)
+    order = serializers.PrimaryKeyRelatedField(
+        queryset=Order.objects.all(), required=False, allow_null=True
+    )
+    amount = serializers.DecimalField(**MONEY, min_value=Decimal("0.01"), required=False)
+    mode = serializers.ChoiceField(choices=PaymentMode.choices, required=False)
+    wallet = serializers.ChoiceField(choices=Wallet.choices, required=False, allow_blank=True)
+    bank_name = serializers.CharField(max_length=80, required=False, allow_blank=True)
+    reference_no = serializers.CharField(max_length=60, required=False, allow_blank=True)
+    cheque_no = serializers.CharField(max_length=30, required=False, allow_blank=True)
+    cheque_date = serializers.DateField(required=False, allow_null=True)
+    payment_date = serializers.DateField(required=False)
+    notes = serializers.CharField(max_length=255, required=False, allow_blank=True)
+
+
 class CustomerNameSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     name = serializers.CharField()

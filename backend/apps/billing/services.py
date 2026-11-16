@@ -412,6 +412,135 @@ def void_payment(*, payment: Payment, user: Any, reason: str, request: Any = Non
     return payment
 
 
+_KEEP: Any = object()  # "not given": keep the payment's current value
+
+
+@transaction.atomic
+def correct_payment(
+    *,
+    payment: Payment,
+    user: Any,
+    reason: str,
+    customer: Any = _KEEP,
+    order: Any = _KEEP,
+    amount: Any = _KEEP,
+    mode: Any = _KEEP,
+    wallet: Any = _KEEP,
+    bank_name: Any = _KEEP,
+    reference_no: Any = _KEEP,
+    cheque_no: Any = _KEEP,
+    cheque_date: Any = _KEEP,
+    payment_date: Any = _KEEP,
+    notes: Any = _KEEP,
+    request: Any = None,
+) -> Payment:
+    """Fix a payment entered wrongly: void it and record the corrected one, together.
+
+    Nothing is overwritten. The wrong receipt stays on record as void ("Corrected
+    by RCT-…"), reversed on its own date so that period's statement is right, and
+    the corrected receipt gets a new number. Cheque and bank details are not
+    required, since imported old payments rarely had them.
+    """
+    reason = _require_reason(reason)
+    old = Payment.objects.select_for_update().get(pk=payment.pk)
+    if old.status == PaymentStatus.VOID:
+        raise BusinessError("This payment is void; it cannot be corrected.")
+
+    def pick(value: Any, current: Any) -> Any:
+        return current if value is _KEEP else value
+
+    new_customer = pick(customer, old.customer)
+    new_order = pick(order, old.order if new_customer.pk == old.customer_id else None)
+    new = {
+        "amount": q2(pick(amount, old.amount)),
+        "mode": pick(mode, old.mode),
+        "wallet": pick(wallet, old.wallet) or "",
+        "bank_name": pick(bank_name, old.bank_name) or "",
+        "reference_no": pick(reference_no, old.reference_no) or "",
+        "cheque_no": pick(cheque_no, old.cheque_no) or "",
+        "cheque_date": pick(cheque_date, old.cheque_date),
+        "payment_date": pick(payment_date, old.payment_date) or old.payment_date,
+        "notes": pick(notes, old.notes) or "",
+    }
+    unchanged = (
+        new_customer.pk == old.customer_id
+        and getattr(new_order, "pk", None) == old.order_id
+        and all(new[k] == (getattr(old, k) or ("" if k != "cheque_date" else None)) for k in new)
+    )
+    if unchanged:
+        raise BusinessError("Nothing was changed.")
+    if new["amount"] <= 0:
+        raise BusinessError({"amount": ["Amount must be above zero."]})
+    if new["payment_date"] > local_today():
+        raise BusinessError({"payment_date": ["A payment cannot be dated in the future."]})
+    if new["mode"] not in PaymentMode.values:
+        raise BusinessError({"mode": ["Choose a payment mode."]})
+    if new["mode"] == PaymentMode.WALLET and not new["wallet"]:
+        raise BusinessError({"wallet": ["Choose the wallet or QR app."]})
+    is_advance = False
+    if new_order is not None:
+        new_order = Order.objects.select_for_update().get(pk=new_order.pk)
+        if new_order.customer_id != new_customer.pk:
+            raise BusinessError({"order": ["This order belongs to a different customer."]})
+        is_advance = not new_order.invoices.filter(status=InvoiceStatus.ISSUED).exists()
+
+    allocated = next_number(DocType.RECEIPT, new["payment_date"])
+    mode_ = new["mode"]
+    corrected = Payment.objects.create(
+        receipt_no=allocated.number,
+        fiscal_year=allocated.fiscal_year,
+        sequence=allocated.sequence,
+        customer=new_customer,
+        order=new_order,
+        amount=new["amount"],
+        mode=mode_,
+        wallet=new["wallet"] if mode_ == PaymentMode.WALLET else "",
+        bank_name=new["bank_name"] if mode_ in (PaymentMode.BANK, PaymentMode.CHEQUE) else "",
+        reference_no=new["reference_no"][:60],
+        cheque_no=new["cheque_no"] if mode_ == PaymentMode.CHEQUE else "",
+        cheque_date=new["cheque_date"] if mode_ == PaymentMode.CHEQUE else None,
+        payment_date=new["payment_date"],
+        is_advance=is_advance,
+        notes=new["notes"][:255],
+        received_by=old.received_by,  # who took the money; the corrector is in the log
+    )
+    target = f" for order {new_order.order_no}" if new_order is not None else " on account"
+    LedgerEntry.objects.create(
+        customer=new_customer,
+        entry_date=corrected.payment_date,
+        entry_type=LedgerEntryType.PAYMENT,
+        credit=corrected.amount,
+        payment=corrected,
+        narration=f"Payment {corrected.receipt_no} ({corrected.mode_label}){target}, "
+        f"corrects {old.receipt_no}"[:255],
+        created_by=user,
+    )
+
+    old.status = PaymentStatus.VOID
+    old.void_reason = f"Corrected by {corrected.receipt_no}: {reason}"[:255]
+    old.voided_at = timezone.now()
+    old.voided_by = user
+    old.save(update_fields=["status", "void_reason", "voided_at", "voided_by"])
+    LedgerEntry.objects.create(
+        customer_id=old.customer_id,
+        entry_date=old.payment_date,  # undo it where it was, so that period is right
+        entry_type=LedgerEntryType.PAYMENT_VOID,
+        debit=old.amount,
+        payment=old,
+        narration=f"Payment {old.receipt_no} corrected by {corrected.receipt_no}: {reason}"[:255],
+        created_by=user,
+    )
+    log_activity(
+        user,
+        "payment.corrected",
+        corrected,
+        message=f"{old.receipt_no} → {corrected.receipt_no}: {reason}"[:255],
+        metadata={"from": old.pk, "to": corrected.pk},
+        request=request,
+    )
+    return corrected
+
+
 @transaction.atomic
 def post_opening_balance(
     *, customer: Any, amount: Decimal | str, user: Any, as_of: dt.date | None = None
