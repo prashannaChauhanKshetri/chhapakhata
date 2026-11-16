@@ -192,6 +192,9 @@ class WorkLogImportResultSerializer(SheetFieldsMixin):
     rows_skipped_duplicate = serializers.IntegerField()
     rows_skipped_error = serializers.IntegerField()
     rows_already_in_system = serializers.IntegerField()
+    rows_before_opening = serializers.IntegerField(
+        help_text="Rows dated on or before the customer's opening balance (already in it)"
+    )
     orders = serializers.IntegerField()
     payments = serializers.IntegerField()
     new_customers = serializers.ListField(child=serializers.CharField())

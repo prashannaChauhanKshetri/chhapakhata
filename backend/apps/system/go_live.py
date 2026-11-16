@@ -25,9 +25,10 @@ from django.db import transaction
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 
-from apps.billing.models import LedgerEntry, Payment
+from apps.billing.models import LedgerEntry, Payment, PaymentStatus
 from apps.billing.services import (
     find_recorded_payment,
+    opening_date,
     opening_entries,
     previous_year_end,
     record_imported_payment,
@@ -308,10 +309,16 @@ def _customer_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) ->
         return "skipped"
     context["seen"].add(key)
 
-    existing = Customer.objects.filter(name__iexact=name)
+    # Same name: the same customer, unless both have phone numbers that differ.
+    # (A customer made by the work log has no phone yet; it is filled in here.)
+    same_name = Customer.objects.filter(name__iexact=name).order_by("id")
     if phone:
-        existing = existing.filter(phone=phone)
-    customer = existing.order_by("id").first()
+        customer = same_name.filter(phone=phone).first() or same_name.filter(phone="").first()
+        if customer is not None and not customer.phone:
+            customer.phone = phone
+            customer.save(update_fields=["phone", "updated_at"])
+    else:
+        customer = same_name.first()
     if customer is not None:
         current = opening_entries(customer)
         if current.exists():
@@ -330,11 +337,19 @@ def _customer_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) ->
             return "updated"
         if not opening:
             return "skipped"
-        if LedgerEntry.objects.filter(customer=customer).exists():
+        # Entries after the opening date (this year's work) are separate from it;
+        # entries on or before it would overlap the balance carried in.
+        overlap = (
+            LedgerEntry.objects.filter(customer=customer, entry_date__lte=context["as_of"])
+            .order_by("entry_date")
+            .first()
+        )
+        if overlap is not None:
             note(
-                f"{name} already has entries in the ledger (such as imported work), so the "
-                f"opening balance {fmt_qty(opening)} was not added; it would count twice. "
-                "Use Opening balance on the customer if it is really needed."
+                f"{name} already has entries on or before {bs_string(context['as_of'])} BS "
+                f"(the first on {bs_string(overlap.entry_date)} BS), so the opening balance "
+                f"{fmt_qty(opening)} was not added; it would count twice. Use Opening balance "
+                "on the customer if it is really needed."
             )
             return "skipped"
         set_opening_balance(
@@ -781,6 +796,18 @@ def _payment_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) -> 
     ).hexdigest()
     if Payment.objects.filter(import_ref=fingerprint).exists():
         return "skipped"
+    opened_on: dict[int, dt.date | None] = context.setdefault("opened_on", {})
+    if customer.pk not in opened_on:
+        opened_on[customer.pk] = opening_date(customer)
+    opened = opened_on[customer.pk]
+    if opened is not None and date <= opened:
+        note(
+            f"{customer.name} {fmt_qty(amount)} on {bs_string(date)} BS is on or before their "
+            f"opening balance ({bs_string(opened)} BS), so it is already counted in it; "
+            "not added. Check the date if it was paid later."
+        )
+        _add(context, "before_opening", Decimal(1))
+        return "skipped"
     # Recorded another way already (order slip, work log, typed in)? Not twice.
     matched: set[int] = context.setdefault("matched", set())
     earlier = find_recorded_payment(
@@ -795,7 +822,22 @@ def _payment_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) -> 
         _add(context, "already_recorded", Decimal(1))
         return "skipped"
 
-    record_imported_payment(
+    # The same customer and day with a different amount from an earlier upload:
+    # perhaps the sheet was corrected. Say so; Correct payment fixes the old one.
+    created_now: set[int] = context.setdefault("created_now", set())
+    other = (
+        Payment.objects.filter(customer=customer, payment_date=date, status=PaymentStatus.VALID)
+        .exclude(import_ref="")
+        .exclude(pk__in=created_now)
+        .exclude(amount=amount)
+        .first()
+    )
+    if other is not None:
+        note(
+            f"{customer.name} also has {other.receipt_no} (Rs {fmt_qty(other.amount)}) on this "
+            "day from an earlier upload. If the sheet was corrected, use Correct payment on it."
+        )
+    payment = record_imported_payment(
         user=context["user"],
         customer=customer,
         amount=amount,
@@ -806,6 +848,7 @@ def _payment_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) -> 
         notes=remark or f"Imported from {context['file']}",
         import_ref=fingerprint,
     )
+    created_now.add(payment.pk)
     _add(context, "amount", amount)
     _add(context, f"by_{mode}", amount)
     return "created"

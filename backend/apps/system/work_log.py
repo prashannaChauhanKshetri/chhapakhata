@@ -47,7 +47,7 @@ from apps.billing.models import (
     PaymentStatus,
     Wallet,
 )
-from apps.billing.services import find_recorded_payment
+from apps.billing.services import find_recorded_payment, opening_date
 from apps.catalog.models import MediaType, PricingUnit
 from apps.core.activity import log_activity
 from apps.core.dates import bs_string, local_today
@@ -260,6 +260,60 @@ def _fingerprint(row: SheetRow, occurrence: int) -> str:
         str(occurrence),
     ]
     return hashlib.sha1("|".join(parts).encode(), usedforsecurity=False).hexdigest()
+
+
+def _job_key(date: dt.date, customer: str, item: str, width: Any, height: Any, qty: int) -> tuple:
+    return (date, _norm(customer), _norm(item), fmt_qty(width), fmt_qty(height), qty)
+
+
+def _flag_edited_rows(sheet: ParsedSheet) -> None:
+    """A row changed in Excel after it was imported must not become a second order.
+
+    Its fingerprint is new, so it looks like new work. When an item imported
+    earlier has the same date, customer, item, size and quantity but is no longer
+    in the sheet, this row is that item edited: it becomes a problem that points
+    at the order already imported, instead of charging the customer twice.
+    """
+    current = {r.fingerprint for r in sheet.rows}
+    gone: dict[tuple, list[OrderItem]] = defaultdict(list)
+    earlier = (
+        OrderItem.objects.filter(order__source=OrderSource.IMPORT)
+        .exclude(import_ref="")
+        .exclude(import_ref__in=current)
+        .select_related("order", "order__customer")
+        .order_by("id")
+    )
+    for item in earlier:
+        key = _job_key(
+            item.order.order_date,
+            item.order.customer.name,
+            item.media_name,
+            item.width,
+            item.height,
+            item.quantity,
+        )
+        gone[key].append(item)
+    if not gone:
+        return
+    kept: list[SheetRow] = []
+    for row in sheet.rows:
+        match = gone.get(
+            _job_key(row.date, row.customer, row.item, row.width, row.height, row.quantity)
+        )
+        if not match:
+            kept.append(row)
+            continue
+        old = match.pop(0)
+        sheet.errors.append(
+            Message(
+                row.row,
+                f"This row was changed after it was imported as {old.order.order_no} "
+                f"(Rs {fmt_qty(old.line_total)}). Importing it again would charge it twice. "
+                "Put the row back as it was, or correct the balance with Adjust balance.",
+                row.sheet,
+            )
+        )
+    sheet.rows = kept
 
 
 def read_sheet(content: bytes, name: str, columns: dict[str, str] | None = None) -> ParsedSheet:
@@ -491,6 +545,7 @@ class ImportResult:
     rows_skipped_duplicate: int = 0
     rows_skipped_error: int = 0
     rows_already_in_system: int = 0
+    rows_before_opening: int = 0
     orders: int = 0
     payments: int = 0
     new_customers: list[str] = field(default_factory=list)
@@ -530,6 +585,7 @@ def import_work_log(
     """
     try:
         sheet = read_sheet(file.read(), name, columns)
+        _flag_edited_rows(sheet)
     except sheets.ColumnsNeeded as exc:
         return ImportResult(
             dry_run=True,
@@ -648,8 +704,25 @@ def _write(sheet: ParsedSheet, result: ImportResult, user: Any) -> None:
     ledger: list[LedgerEntry] = []
     totals = dict.fromkeys(("amount", "discount", "vat", "paid", "balance"), ZERO)
     matched_payments: set[int] = set()
+    opened_on: dict[int, dt.date | None] = {}
     for (date, _), group in sorted(groups.items(), key=lambda g: (g[0][0], g[1][0].row)):
         customer = customer_for(group[0])
+        if customer.pk not in opened_on:
+            opened_on[customer.pk] = opening_date(customer)
+        opened = opened_on[customer.pk]
+        if opened is not None and date <= opened:
+            # The opening balance already holds everything up to its date.
+            result.rows_before_opening += len(group)
+            result.warnings.append(
+                Message(
+                    group[0].row,
+                    f"{customer.name}: work on {bs_string(date)} BS is on or before their "
+                    f"opening balance ({bs_string(opened)} BS), so it is already in that "
+                    "balance; not added.",
+                    group[0].sheet,
+                )
+            )
+            continue
         subtotal = q2(sum((r.amount for r in group), ZERO))
         discount = q2(sum((r.discount for r in group), ZERO))
         vat = q2(sum((r.vat for r in group), ZERO))
@@ -772,7 +845,7 @@ def _write(sheet: ParsedSheet, result: ImportResult, user: Any) -> None:
         totals["balance"] += total - paid
 
     LedgerEntry.objects.bulk_create(ledger)
-    result.rows_imported = len(rows)
+    result.rows_imported = len(rows) - result.rows_before_opening
     result.totals = {k: q2(v) for k, v in totals.items()}
     result.date_from = min(r.date for r in rows)
     result.date_to = max(r.date for r in rows)

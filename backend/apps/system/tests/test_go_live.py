@@ -1,6 +1,7 @@
 """Uploading customers with opening balances, the rate card and opening stock,
 in the loose layouts shops actually use."""
 
+import datetime as dt
 import io
 from decimal import Decimal as D
 
@@ -58,13 +59,27 @@ def test_customer_ledger_in_a_loose_layout(owner):
     assert again.created == 0 and Customer.objects.count() == 2
 
 
-def test_an_existing_customer_with_transactions_is_not_charged_twice(owner):
+def test_entries_from_before_the_opening_date_block_a_second_opening(owner, desk):
     customer = Customer.objects.create(name="Hotel Kalpana", phone="9858020005")
-    billing.post_adjustment(customer=customer, amount=D("100"), narration="Earlier", user=owner)
+    billing.receive_payment(
+        user=desk,
+        customer=customer,
+        amount="100",
+        mode="cash",
+        payment_date=billing.previous_year_end() - dt.timedelta(days=30),
+    )
     result = _run(owner, "customers", LEDGER[:3], dry_run=False)
     assert result.skipped == 1
-    assert "already has entries in the ledger" in result.warnings[0].message
-    assert customer_balance(customer) == D("100.00")
+    assert "it would count twice" in result.warnings[0].message
+    assert customer_balance(customer) == D("-100.00")
+
+
+def test_this_years_entries_do_not_stop_the_opening_balance(owner):
+    customer = Customer.objects.create(name="Hotel Kalpana", phone="9858020005")
+    billing.post_adjustment(customer=customer, amount=D("100"), narration="This year", user=owner)
+    result = _run(owner, "customers", LEDGER[:3], dry_run=False)
+    assert result.updated == 1
+    assert customer_balance(customer) == D("4600.00")  # 4,500 carried in + 100 this year
 
 
 def test_a_dr_cr_column_and_signed_balances(owner):

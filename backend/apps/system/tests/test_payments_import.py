@@ -21,7 +21,7 @@ from conftest import make_user
 pytestmark = pytest.mark.django_db
 
 SHRAWAN_1 = dt.date(2026, 7, 17)  # 2083.04.01 BS
-UNDATED_ON = dt.date(2026, 7, 16)  # chosen in the form for rows without a date
+UNDATED_ON = dt.date(2026, 7, 20)  # chosen in the form for rows without a date
 
 # OM Traders' payment sheet (screenshot, 16 Nov 2026): undated rows on top,
 # Mode empty, the way of payment written in the remark.
@@ -149,10 +149,23 @@ def test_api_and_sample_sheet(api, owner, desk, om_customers):
     checked = (
         api(owner)
         .post(
-            url, {"file": SimpleUploadedFile("p.xlsx", _xlsx(OM_PAYMENTS)), "as_of": "2026-07-16"}
+            url, {"file": SimpleUploadedFile("p.xlsx", _xlsx(OM_PAYMENTS)), "as_of": "2026-07-20"}
         )
         .json()
     )
     assert checked["dry_run"] is True and checked["created"] == 9
     assert Payment.objects.count() == 0
     assert api(owner).get(f"{url}template/").status_code == 200
+
+
+def test_payments_dated_inside_the_opening_balance_are_not_added(owner, om_customers):
+    """Opening balances (fixture) are dated 16 Jul 2026, the end of last fiscal year."""
+    rows = [
+        ["Date", "Customer", "Amount", "Remark"],
+        ["2083.03.20", "Aayan Digital", 820, "Paid last year"],
+        ["2083.04.05", "Aayan Digital", 500, "Paid this year"],
+    ]
+    result = _run(owner, rows, dry_run=False)
+    assert (result.created, result.skipped) == (1, 1)
+    assert "already counted in it" in result.warnings[0].message
+    assert customer_balance(Customer.objects.get(name="Aayan Digital")) == D("199500.00")

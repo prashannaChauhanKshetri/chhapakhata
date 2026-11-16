@@ -27964,6 +27964,10 @@ components:
         notes:
           type: string
           maxLength: 255
+        allow_repeat:
+          type: boolean
+          default: false
+          description: Save even if the same payment was saved a moment ago
       required:
       - amount
       - customer
@@ -28409,6 +28413,28 @@ components:
       - attr
       - code
       - detail
+    PaymentsCreateAllowRepeatErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - allow_repeat
+          type: string
+          description: '* `allow_repeat` - allow_repeat'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     PaymentsCreateAmountErrorComponent:
       type: object
       properties:
@@ -28561,6 +28587,7 @@ components:
       - $ref: '#/components/schemas/PaymentsCreateChequeDateErrorComponent'
       - $ref: '#/components/schemas/PaymentsCreatePaymentDateErrorComponent'
       - $ref: '#/components/schemas/PaymentsCreateNotesErrorComponent'
+      - $ref: '#/components/schemas/PaymentsCreateAllowRepeatErrorComponent'
       discriminator:
         propertyName: attr
         mapping:
@@ -28576,6 +28603,7 @@ components:
           cheque_date: '#/components/schemas/PaymentsCreateChequeDateErrorComponent'
           payment_date: '#/components/schemas/PaymentsCreatePaymentDateErrorComponent'
           notes: '#/components/schemas/PaymentsCreateNotesErrorComponent'
+          allow_repeat: '#/components/schemas/PaymentsCreateAllowRepeatErrorComponent'
     PaymentsCreateErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/PaymentsCreateValidationError'
@@ -35570,6 +35598,10 @@ components:
           type: integer
         rows_already_in_system:
           type: integer
+        rows_before_opening:
+          type: integer
+          description: Rows dated on or before the customer's opening balance (already
+            in it)
         orders:
           type: integer
         payments:
@@ -35620,6 +35652,7 @@ components:
       - payments
       - problem
       - rows_already_in_system
+      - rows_before_opening
       - rows_imported
       - rows_read
       - rows_skipped_duplicate
