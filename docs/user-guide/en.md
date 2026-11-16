@@ -304,10 +304,18 @@ Settings → **Backups & export**:
 - **Back up now** makes one immediately. Do it before anything big.
 - **Download Excel export:** every table as one Excel file. The data always belongs to you.
 
-### 8.5 Cancelling and voiding
+### 8.5 Correcting, cancelling and voiding
 
+- **Correct a payment entered wrongly** (wrong amount, customer, date, mode, reference or note):
+  1. Payments → **⋮** → **Correct payment…**. The form opens filled in from that payment.
+  2. Change what was wrong and write **What was wrong?** (for example "typed 1,500, it was 1,000").
+  3. Press **Save correction**.
+
+  The wrong receipt is kept on record as **Void** ("Corrected by RCT-…"), and a corrected receipt with a new number is saved. The change is applied on the original date, so that month's statement is right too. Balances update straight away.
+- **Void a payment** that should not exist at all (a bounced cheque, a double entry): Payments → **⋮** → **Void payment**, with a reason. It stays on record, and the customer's balance goes back up.
 - **Cancel a bill:** Invoice → **Cancel invoice**, with a reason. It stays on record, marked cancelled.
-- **Void a payment:** Payments → **⋮** → **Void**, with a reason. It stays on record, and the customer's balance is corrected.
+
+Only the owner can correct, void or cancel. Nothing is ever deleted, so the activity log and statements always show what happened.
 
 ### 8.6 Starting again with an empty shop
 
@@ -455,7 +463,7 @@ Single-key shortcuts work when you are not typing in a box.
 | Price looks wrong | Check the size units (inches or feet), the media chosen and the rate card. |
 | "Roll has only … sq ft left" | Choose another roll; the owner adjusts the stock after counting. |
 | Cannot edit an order | It has a bill. The owner must cancel the bill first. |
-| A payment went to the wrong customer | Owner: void it (with a reason) and enter it again for the right customer. |
+| A payment was entered wrongly (amount, customer, date, mode) | Owner: Payments → ⋮ → **Correct payment…**, change it and write what was wrong. |
 | Opening balance is wrong | Owner: customer → Opening balance → enter the right figure with a reason. |
 | An import shows problems | Read the row numbers listed, fix those rows in Excel and upload again. Rows already imported are not added twice. |
 | A column is read wrongly in an import | Press **Change columns** and choose what each column holds. |
