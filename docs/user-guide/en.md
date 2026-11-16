@@ -76,6 +76,7 @@ Open a customer to see the **balance** and the **Statement** tab. Pick a **Perio
 | Staff accounts, roles, discount limits, password resets | Settings → Users |
 | Import the old Excel work log, customers with their opening balances, the rate card or opening stock; export orders in the work-log layout | Settings → Import & export (or Orders → Excel import / export) |
 | Backups, online copy status, Excel export of all data | Settings → Backups & export |
+| Delete all data to start entering again (owner only) | Settings → Backups & export → Delete all data |
 | Who did what | Settings → Activity log |
 | Record a purchase from a supplier | Purchases → Record purchase |
 | Correct stock after a physical count | Inventory → item → Adjust after count |
@@ -92,6 +93,12 @@ What a customer owed the shop (or had paid in advance) when the last fiscal year
 If the figure was wrong, press **Opening balance** again and enter the right amount with a reason, for example "the old khata showed 4,200". The ledger is never edited: a correction is added on the same date and listed under **Changes** with your name, so the earlier figure is still visible. Uploading a corrected customer sheet in Settings → Import & export fixes opening balances the same way.
 
 Use **Adjust balance** only for something that happened this year, such as a write-off or a missed charge.
+
+### Starting again with an empty shop
+
+If the records were only test entries, or the data has to be entered again from the start, the owner can clear the shop. Open Settings → **Backups & export** → **Delete all data…**. The window lists what will be deleted: customers, orders, jobs, bills, payments, the ledger, purchases, suppliers and stock, and the rate card unless you tick **Keep the rate card and the stock item list**. Bill and receipt numbers start again from 1.
+
+Staff logins, shop settings (name, PAN, logo) and the activity log stay. Type **Confirm** in the box, then press **Delete all data**. A full backup is taken first; if it fails, nothing is deleted. Only the owner sees this option.
 
 ### Importing your own sheets
 

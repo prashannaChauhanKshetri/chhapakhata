@@ -39,4 +39,5 @@ One site can host several businesses (print shops). Each account belongs to one 
 - **Per business:** settings, rate card, customers, orders, stock, invoice and receipt numbering, reports, exports, the activity log and the active-account limit (`MAX_ACTIVE_USERS` applies to each business).
 - **New business:** the site operator runs `manage.py create_business --name "<Shop>" --owner-username <name>` on the server. The owner then adds staff in Settings → Users.
 - **Pausing a business:** set it inactive in the Django admin (Businesses). Its staff can no longer sign in.
+- **Starting again:** the owner can delete their own business's data (Settings → Backups & export → Delete all data, typing "Confirm"). Logins, settings and the activity log stay, a backup is taken first, and no other business is touched.
 - **Backups** cover the whole site. Any owner's "Backup now" backs up every business, and a restore replaces every business together.
