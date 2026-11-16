@@ -9,6 +9,7 @@ router.register("system/backups", views.BackupRunViewSet, basename="backup")
 
 urlpatterns = [
     path("system/export/", views.DataExportView.as_view(), name="data-export"),
+    path("system/erase/", views.EraseDataView.as_view(), name="erase-data"),
     path("system/work-log/import/", views.WorkLogImportView.as_view(), name="work-log-import"),
     path("system/work-log/export/", views.WorkLogExportView.as_view(), name="work-log-export"),
     path(

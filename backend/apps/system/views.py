@@ -20,7 +20,7 @@ from apps.core.params import parse_range
 from apps.core.permissions import Perm
 from apps.core.serializers import UserRefSerializer
 
-from . import go_live, services, sheets, work_log
+from . import erase, go_live, services, sheets, work_log
 from .models import BackupRun, BackupTrigger
 from .selectors import backup_status
 
@@ -346,3 +346,45 @@ class WorkLogTemplateView(APIView):
     @extend_schema(responses={(200, XLSX): bytes})
     def get(self, request):
         return xlsx_response(work_log.work_log_template(), "work-log-template")
+
+
+class EraseCountSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    count = serializers.IntegerField()
+    catalog = serializers.BooleanField(help_text="Rate card or stock item list (can be kept)")
+
+
+class EraseRequestSerializer(serializers.Serializer):
+    confirm = serializers.CharField(help_text='Must be "Confirm"')
+    keep_catalog = serializers.BooleanField(
+        default=False, help_text="Keep the rate card and the stock item list (quantities go to 0)"
+    )
+
+
+class EraseResultSerializer(serializers.Serializer):
+    erased = serializers.DictField(child=serializers.IntegerField())
+    keep_catalog = serializers.BooleanField()
+    backup_file = serializers.CharField()
+
+
+class EraseDataView(APIView):
+    """Erase the shop's data to start again (owner only, after a backup).
+
+    GET shows what would be erased; POST with ``confirm: "Confirm"`` erases it.
+    Staff accounts, shop settings and the activity log are kept.
+    """
+
+    required_perms = Perm.SETTINGS_MANAGE
+
+    @extend_schema(responses=EraseCountSerializer(many=True))
+    def get(self, request):
+        return Response(EraseCountSerializer(erase.erase_preview(), many=True).data)
+
+    @extend_schema(request=EraseRequestSerializer, responses=EraseResultSerializer)
+    def post(self, request):
+        serializer = EraseRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        result = erase.erase_business_data(
+            user=request.user, request=request, **serializer.validated_data
+        )
+        return Response(EraseResultSerializer(result).data)
