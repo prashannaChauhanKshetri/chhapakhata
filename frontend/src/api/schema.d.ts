@@ -7286,6 +7286,11 @@ export interface components {
             /** Format: date */
             payment_date?: string | null;
             notes?: string;
+            /**
+             * @description Save even if the same payment was saved a moment ago
+             * @default false
+             */
+            allow_repeat?: boolean;
         };
         PaymentInputRequest: {
             /** Format: decimal */
@@ -7527,6 +7532,20 @@ export interface components {
             code: "invalid_choice" | "null";
             detail: string;
         };
+        PaymentsCreateAllowRepeatErrorComponent: {
+            /**
+             * @description * `allow_repeat` - allow_repeat (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "allow_repeat";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
         PaymentsCreateAmountErrorComponent: {
             /**
              * @description * `amount` - amount (enum property replaced by openapi-typescript)
@@ -7611,7 +7630,7 @@ export interface components {
             code: "does_not_exist" | "incorrect_type" | "null" | "required";
             detail: string;
         };
-        PaymentsCreateError: components["schemas"]["PaymentsCreateNonFieldErrorsErrorComponent"] | components["schemas"]["PaymentsCreateCustomerErrorComponent"] | components["schemas"]["PaymentsCreateOrderErrorComponent"] | components["schemas"]["PaymentsCreateAmountErrorComponent"] | components["schemas"]["PaymentsCreateModeErrorComponent"] | components["schemas"]["PaymentsCreateWalletErrorComponent"] | components["schemas"]["PaymentsCreateBankNameErrorComponent"] | components["schemas"]["PaymentsCreateReferenceNoErrorComponent"] | components["schemas"]["PaymentsCreateChequeNoErrorComponent"] | components["schemas"]["PaymentsCreateChequeDateErrorComponent"] | components["schemas"]["PaymentsCreatePaymentDateErrorComponent"] | components["schemas"]["PaymentsCreateNotesErrorComponent"];
+        PaymentsCreateError: components["schemas"]["PaymentsCreateNonFieldErrorsErrorComponent"] | components["schemas"]["PaymentsCreateCustomerErrorComponent"] | components["schemas"]["PaymentsCreateOrderErrorComponent"] | components["schemas"]["PaymentsCreateAmountErrorComponent"] | components["schemas"]["PaymentsCreateModeErrorComponent"] | components["schemas"]["PaymentsCreateWalletErrorComponent"] | components["schemas"]["PaymentsCreateBankNameErrorComponent"] | components["schemas"]["PaymentsCreateReferenceNoErrorComponent"] | components["schemas"]["PaymentsCreateChequeNoErrorComponent"] | components["schemas"]["PaymentsCreateChequeDateErrorComponent"] | components["schemas"]["PaymentsCreatePaymentDateErrorComponent"] | components["schemas"]["PaymentsCreateNotesErrorComponent"] | components["schemas"]["PaymentsCreateAllowRepeatErrorComponent"];
         PaymentsCreateErrorResponse400: components["schemas"]["PaymentsCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         PaymentsCreateModeErrorComponent: {
             /**
@@ -11177,6 +11196,8 @@ export interface components {
             rows_skipped_duplicate: number;
             rows_skipped_error: number;
             rows_already_in_system: number;
+            /** @description Rows dated on or before the customer's opening balance (already in it) */
+            rows_before_opening: number;
             orders: number;
             payments: number;
             new_customers: string[];

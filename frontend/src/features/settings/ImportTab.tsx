@@ -143,12 +143,19 @@ function ImportResultCard({
           <Figure label={t('Receipts')} value={result.payments} />
         </SimpleGrid>
 
-        {(result.rows_skipped_duplicate > 0 || result.rows_already_in_system > 0) && (
+        {(result.rows_skipped_duplicate > 0 ||
+          result.rows_already_in_system > 0 ||
+          result.rows_before_opening > 0) && (
           <Text size="sm" c="dimmed">
             {result.rows_skipped_duplicate > 0 &&
               t('{{n}} rows were imported before and are skipped. ', {
                 n: result.rows_skipped_duplicate,
               })}
+            {result.rows_before_opening > 0 &&
+              t(
+                '{{n}} rows are dated on or before the customers’ opening balance, which already includes them, so they were left out. ',
+                { n: result.rows_before_opening },
+              )}
             {result.rows_already_in_system > 0 &&
               t('{{n}} rows came from ChhapaKhata (they have an order number) and are skipped.', {
                 n: result.rows_already_in_system,

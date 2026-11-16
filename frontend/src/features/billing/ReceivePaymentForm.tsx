@@ -20,6 +20,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { api, unwrap } from '@/api/client';
+import { ApiError } from '@/api/errors';
 import { openFile } from '@/api/files';
 import { apiGet } from '@/api/http';
 import type { Customer, OrderList, Paginated, Payment } from '@/api/types';
@@ -114,7 +115,7 @@ export function ReceivePaymentForm({
     enabled: !!customer,
   });
 
-  const submit = form.onSubmit(async (values) => {
+  const save = async (values: typeof form.values, allowRepeat = false) => {
     if (!customer) {
       notifyError(new Error(t('Choose the customer first.')));
       return;
@@ -141,7 +142,9 @@ export function ReceivePaymentForm({
               body: { ...body, reason: values.reason },
             }),
           )
-        : await unwrap(api.POST('/api/v1/payments/', { body }));
+        : await unwrap(
+            api.POST('/api/v1/payments/', { body: { ...body, allow_repeat: allowRepeat } }),
+          );
       await Promise.all([
         client.invalidateQueries({ queryKey: ['payments'] }),
         client.invalidateQueries({ queryKey: ['orders'] }),
@@ -152,11 +155,23 @@ export function ReceivePaymentForm({
       ]);
       setSaved(payment);
     } catch (error) {
-      handleFormError(error, form, t('Payment not saved'));
+      // The same payment was saved a moment ago (double click or a slow connection).
+      const repeat = error instanceof ApiError ? error.fieldErrors.repeat : undefined;
+      if (repeat) {
+        modals.openConfirmModal({
+          title: t('Save a second payment?'),
+          children: <Text size="sm">{repeat}</Text>,
+          labels: { confirm: t('Yes, it is a second payment'), cancel: t('No, keep one') },
+          onConfirm: () => void save(values, true),
+        });
+      } else {
+        handleFormError(error, form, t('Payment not saved'));
+      }
     } finally {
       setBusy(false);
     }
-  });
+  };
+  const submit = form.onSubmit((values) => void save(values));
 
   const print = (size: 'a5' | '80mm') =>
     openFile(`/api/v1/payments/${saved!.id}/receipt/?size=${size}`).catch((e) =>
