@@ -1180,6 +1180,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/erase/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Erase the shop's data to start again (owner only, after a backup).
+         *
+         *     GET shows what would be erased; POST with ``confirm: "Confirm"`` erases it.
+         *     Staff accounts, shop settings and the activity log are kept.
+         */
+        get: operations["system_erase_list"];
+        put?: never;
+        /**
+         * @description Erase the shop's data to start again (owner only, after a backup).
+         *
+         *     GET shows what would be erased; POST with ``confirm: "Confirm"`` erases it.
+         *     Staff accounts, shop settings and the activity log are kept.
+         */
+        post: operations["system_erase_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/export/": {
         parameters: {
             query?: never;
@@ -3057,6 +3085,28 @@ export interface components {
          * @enum {string}
          */
         DiscountTypeEnum: "none" | "percent" | "amount";
+        EraseCount: {
+            title: string;
+            count: number;
+            /** @description Rate card or stock item list (can be kept) */
+            catalog: boolean;
+        };
+        EraseRequestRequest: {
+            /** @description Must be "Confirm" */
+            confirm: string;
+            /**
+             * @description Keep the rate card and the stock item list (quantities go to 0)
+             * @default false
+             */
+            keep_catalog?: boolean;
+        };
+        EraseResult: {
+            erased: {
+                [key: string]: number;
+            };
+            keep_catalog: boolean;
+            backup_file: string;
+        };
         Error401: {
             code: components["schemas"]["ErrorCode401Enum"];
             detail: string;
@@ -9903,6 +9953,63 @@ export interface components {
         SystemBackupsListErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemBackupsRunCreateErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemBackupsStatusRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        SystemEraseCreateConfirmErrorComponent: {
+            /**
+             * @description * `confirm` - confirm (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "confirm";
+            /**
+             * @description * `blank` - blank
+             *     * `invalid` - invalid
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `required` - required
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "blank" | "invalid" | "null" | "null_characters_not_allowed" | "required" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        SystemEraseCreateError: components["schemas"]["SystemEraseCreateNonFieldErrorsErrorComponent"] | components["schemas"]["SystemEraseCreateConfirmErrorComponent"] | components["schemas"]["SystemEraseCreateKeepCatalogErrorComponent"];
+        SystemEraseCreateErrorResponse400: components["schemas"]["SystemEraseCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        SystemEraseCreateKeepCatalogErrorComponent: {
+            /**
+             * @description * `keep_catalog` - keep_catalog (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "keep_catalog";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        SystemEraseCreateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        SystemEraseCreateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["SystemEraseCreateError"][];
+        };
+        SystemEraseListErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemExportRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemImportCreateErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemImportTemplateRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
@@ -19171,6 +19278,178 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SystemBackupsStatusRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    system_erase_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EraseCount"][];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemEraseListErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    system_erase_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EraseRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EraseRequestRequest"];
+                "multipart/form-data": components["schemas"]["EraseRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EraseResult"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemEraseCreateErrorResponse400"];
                 };
             };
             401: {

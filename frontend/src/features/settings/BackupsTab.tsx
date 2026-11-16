@@ -17,9 +17,11 @@ import { formatBytes, formatDateTime } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
 import { BACKUP_STATUS } from '@/lib/status';
 
+import { EraseDataCard } from './EraseData';
+
 export function BackupsTab() {
   const { t } = useTranslation();
-  const { can } = useAuth();
+  const { can, user } = useAuth();
   const client = useQueryClient();
   const [running, setRunning] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -168,6 +170,8 @@ export function BackupsTab() {
           />
         </SectionCard>
       )}
+
+      {user?.role === 'owner' && <EraseDataCard />}
     </Stack>
   );
 }
