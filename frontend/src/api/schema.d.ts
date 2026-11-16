@@ -1197,6 +1197,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/system/duplicate-payments/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Payments-sheet receipts that repeat a payment already recorded with its order.
+         *
+         *     GET counts them; POST with ``confirm: "Confirm"`` voids them after a backup.
+         */
+        get: operations["system_duplicate_payments_retrieve"];
+        put?: never;
+        /**
+         * @description Payments-sheet receipts that repeat a payment already recorded with its order.
+         *
+         *     GET counts them; POST with ``confirm: "Confirm"`` voids them after a backup.
+         */
+        post: operations["system_duplicate_payments_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/erase/": {
         parameters: {
             query?: never;
@@ -3102,6 +3128,27 @@ export interface components {
          * @enum {string}
          */
         DiscountTypeEnum: "none" | "percent" | "amount";
+        DuplicatePayment: {
+            receipt_no: string;
+            original_receipt_no: string;
+            customer: string;
+            /** Format: date */
+            payment_date: string;
+            /** Format: decimal */
+            amount: string;
+        };
+        DuplicatePayments: {
+            count: number;
+            /** Format: decimal */
+            total: string;
+            sample: components["schemas"]["DuplicatePayment"][];
+        };
+        DuplicatesVoided: {
+            voided: number;
+            /** Format: decimal */
+            total: string;
+            backup_file: string;
+        };
         EraseCount: {
             title: string;
             count: number;
@@ -10204,6 +10251,63 @@ export interface components {
         SystemBackupsListErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemBackupsRunCreateErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemBackupsStatusRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        SystemDuplicatePaymentsCreateConfirmErrorComponent: {
+            /**
+             * @description * `confirm` - confirm (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "confirm";
+            /**
+             * @description * `blank` - blank
+             *     * `invalid` - invalid
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `required` - required
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "blank" | "invalid" | "null" | "null_characters_not_allowed" | "required" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        SystemDuplicatePaymentsCreateError: components["schemas"]["SystemDuplicatePaymentsCreateNonFieldErrorsErrorComponent"] | components["schemas"]["SystemDuplicatePaymentsCreateConfirmErrorComponent"] | components["schemas"]["SystemDuplicatePaymentsCreateKeepCatalogErrorComponent"];
+        SystemDuplicatePaymentsCreateErrorResponse400: components["schemas"]["SystemDuplicatePaymentsCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        SystemDuplicatePaymentsCreateKeepCatalogErrorComponent: {
+            /**
+             * @description * `keep_catalog` - keep_catalog (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "keep_catalog";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        SystemDuplicatePaymentsCreateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        SystemDuplicatePaymentsCreateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["SystemDuplicatePaymentsCreateError"][];
+        };
+        SystemDuplicatePaymentsRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SystemEraseCreateConfirmErrorComponent: {
             /**
              * @description * `confirm` - confirm (enum property replaced by openapi-typescript)
@@ -19621,6 +19725,178 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SystemBackupsStatusRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    system_duplicate_payments_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuplicatePayments"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemDuplicatePaymentsRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    system_duplicate_payments_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EraseRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EraseRequestRequest"];
+                "multipart/form-data": components["schemas"]["EraseRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DuplicatesVoided"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemDuplicatePaymentsCreateErrorResponse400"];
                 };
             };
             401: {

@@ -39,6 +39,7 @@ import { formatAmount, formatDate, formatQty } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
 
 import { ColumnFixer, ColumnsFound } from './imports/ColumnFixer';
+import { DuplicatePayments } from './imports/DuplicatePayments';
 import { GoLiveImport } from './imports/GoLiveImport';
 import { MessageTable } from './imports/MessageTable';
 import { type ColumnChoices, SHEET_TYPES, uploadSheet } from './imports/upload';
@@ -431,6 +432,7 @@ export function ImportTab() {
     <Stack gap="lg">
       {can(Perm.SETTINGS_MANAGE) && (
         <>
+          <DuplicatePayments />
           <WorkLogImport />
           <GoLiveImport kind="customers" />
           <GoLiveImport kind="payments" />
