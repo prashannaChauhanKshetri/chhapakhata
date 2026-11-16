@@ -161,6 +161,12 @@ class Payment(BusinessOwned):
     payment_date = models.DateField(default=local_today, db_index=True)
     is_advance = models.BooleanField(default=False)
     notes = models.CharField(max_length=255, blank=True)
+    import_ref = models.CharField(
+        max_length=40,
+        blank=True,
+        default="",
+        help_text="Fingerprint of the sheet row this payment was imported from.",
+    )
 
     status = models.CharField(
         max_length=10, choices=PaymentStatus.choices, default=PaymentStatus.VALID, db_index=True
@@ -180,6 +186,11 @@ class Payment(BusinessOwned):
         ordering = ["-payment_date", "-id"]
         constraints = [
             models.UniqueConstraint(fields=["business", "receipt_no"], name="uniq_receipt_no"),
+            models.UniqueConstraint(
+                fields=["business", "import_ref"],
+                condition=~models.Q(import_ref=""),
+                name="uniq_payment_import_ref",
+            ),
             models.UniqueConstraint(
                 fields=["business", "fiscal_year", "sequence"], name="uniq_receipt_fy_seq"
             ),

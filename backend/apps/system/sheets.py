@@ -276,7 +276,13 @@ _NUMBER_NOISE = re.compile(
     r"(?i)\b(?:rs|npr|nrs)\b\.?|रु\.?|/-|"
     r"\b(?:sq\.?\s*ft|sqft|sft|ft|feet|pcs|pc|nos|piece|pieces|ltr|litre|box)\b\.?|['\"]"
 )
-_BLANK_NUMBERS = {"", "-", "--", "nil", "na", "n/a", "none"}
+_BLANK_NUMBERS = {"", "-", "--", "—", "–", "nil", "na", "n/a", "none"}
+_FILLER = re.compile(r"[\s\-–—_./]*|n/?a|none|nil|null", re.IGNORECASE)
+
+
+def is_filler(text: str) -> bool:
+    """A cell that only says "nothing here": blank, a dash (- – —), N/A, nil."""
+    return bool(_FILLER.fullmatch(text.strip()))
 
 
 def to_decimal(value: Any, label: str) -> Decimal:

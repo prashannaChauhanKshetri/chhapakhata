@@ -11,6 +11,8 @@ opening stock, are skipped with a note instead.
 from __future__ import annotations
 
 import datetime as dt
+import difflib
+import hashlib
 import io
 import re
 from collections.abc import Callable
@@ -23,10 +25,16 @@ from django.db import transaction
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill
 
-from apps.billing.models import LedgerEntry
-from apps.billing.services import opening_entries, previous_year_end, set_opening_balance
+from apps.billing.models import LedgerEntry, Payment
+from apps.billing.services import (
+    opening_entries,
+    previous_year_end,
+    record_imported_payment,
+    set_opening_balance,
+)
 from apps.catalog.models import AddOn, AddOnBasis, MediaType, PricingUnit
 from apps.core.activity import log_activity
+from apps.core.dates import bs_string, local_today
 from apps.core.exceptions import BusinessError
 from apps.core.money import ZERO, fmt_qty, q2
 from apps.customers.models import Customer, CustomerType
@@ -35,6 +43,7 @@ from apps.inventory.services import RollSpec, add_opening_stock
 
 from . import sheets
 from .sheets import Column, Columns, Message, cell_text, norm, to_decimal
+from .work_log import parse_mode
 
 MAX_MESSAGES = 300
 
@@ -73,6 +82,8 @@ class Kind:
     columns: Columns
     handle: Callable[[dict[str, Any], Note, dict[str, Any]], str | None]
     template: list[list[Any]]
+    # The "as on" date when none is given: last year's closing for balances.
+    default_as_of: Callable[[], dt.date] = previous_year_end
 
 
 class _Rollback(Exception):
@@ -117,7 +128,7 @@ def run_import(
     result.columns, result.headers = info.columns, info.headers
     context: dict[str, Any] = {
         "user": user,
-        "as_of": as_of or previous_year_end(),  # balances carried in from last year
+        "as_of": as_of or spec.default_as_of(),
         "file": name,
         "seen": set(),
         "totals": {},
@@ -130,6 +141,7 @@ def run_import(
             several = len(located) > 1
             for loc in located:
                 label = loc.table.name if several else ""
+                context["sheet"] = loc.table.name
                 for number, cells in sheets.records(loc, spec.columns):
 
                     def note(text: str, number: int = number, label: str = label) -> None:
@@ -643,6 +655,148 @@ def _stock_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) -> st
     return "created" if created else "updated"
 
 
+# ---------- payments received ----------
+
+PAYMENT_COLUMNS = Columns(
+    fields=[
+        Column(
+            "reference",
+            "Reference / cheque no.",
+            ("reference", "ref", "ref no", "transaction no", "transaction id", "cheque no"),
+            ("reference", "transaction", "txn", "cheque no", "voucher"),
+        ),
+        Column("date", "Date", ("date", "miti", "date bs", "bs date"), ("date", "miti", "मिति")),
+        Column("mode", "Mode", ("mode", "payment mode", "method", "via"), ("mode", "method")),
+        Column(
+            "remark",
+            "Remark",
+            ("remark", "remarks", "note", "notes", "narration", "details", "description"),
+            ("remark", "note", "narration", "detail", "description", "कैफियत"),
+        ),
+        Column(
+            "phone",
+            "Phone",
+            ("phone", "mobile", "contact"),
+            ("phone", "mobile", "contact", "mob", "फोन"),
+        ),
+        Column(
+            "amount",
+            "Amount",
+            ("amount", "received", "paid", "credit", "cr", "payment", "rs"),
+            ("amount", "received", "paid", "credit", "payment", "रकम"),
+        ),
+        Column(
+            "customer",
+            "Customer",
+            ("customer", "customer name", "party", "party name", "name", "particular"),
+            ("customer", "party", "client", "name", "particular", "account", "नाम", "ग्राहक"),
+        ),
+    ],
+    required=("customer", "amount"),
+)
+
+
+def _customer_index(context: dict[str, Any]) -> dict[str, list[Customer]]:
+    if "customers" not in context:
+        index: dict[str, list[Customer]] = {}
+        for customer in Customer.objects.order_by("id"):
+            index.setdefault(norm(customer.name), []).append(customer)
+        context["customers"] = index
+    return context["customers"]
+
+
+def _find_customer(name: str, phone: str, context: dict[str, Any]) -> Customer:
+    index = _customer_index(context)
+    matches = index.get(norm(name), [])
+    if phone and len(matches) > 1:
+        by_phone = [c for c in matches if c.phone == phone]
+        if len(by_phone) == 1:
+            return by_phone[0]
+    if len(matches) == 1:
+        return matches[0]
+    if len(matches) > 1:
+        raise ValueError(
+            f"{len(matches)} customers are named '{name}'; add a Phone column to tell them apart."
+        )
+    close = difflib.get_close_matches(norm(name), list(index), n=3, cutoff=0.75)
+    names = [index[c][0].name for c in close]
+    hint = f" Did you mean {' or '.join(repr(n) for n in names)}?" if names else ""
+    raise ValueError(
+        f"Customer '{name}' is not in the system.{hint} "
+        "Fix the name in the sheet, or add the customer first."
+    )
+
+
+def _payment_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) -> str | None:
+    name = " ".join(cell_text(cells.get("customer")).split())
+    if _is_total_line(name) or _is_total_line(cell_text(cells.get("date"))):
+        return None
+    amount_text = cell_text(cells.get("amount"))
+    if not name and not amount_text:
+        return None
+    if not name:
+        raise ValueError("Customer is empty.")
+    amount = q2(to_decimal(cells.get("amount"), "Amount"))
+    if amount < 0:
+        raise ValueError("Amount is negative; refunds are not imported.")
+    if amount == 0:
+        return None
+
+    # Dates: the cell, else the row above (merged cells), else the form's date.
+    last_dates: dict[str, dt.date] = context.setdefault("last_dates", {})
+    sheet = context.get("sheet", "")
+    if cell_text(cells.get("date")):
+        date = sheets.parse_date(cells.get("date"))
+    elif sheet in last_dates:
+        date = last_dates[sheet]
+        note("No date; used the date from the row above.")
+    else:
+        date = context["as_of"]
+        note(f"No date; recorded on {bs_string(date)} BS (the date chosen for undated rows).")
+    if date > local_today():
+        raise ValueError(f"Date {bs_string(date)} BS is in the future.")
+    last_dates[sheet] = date
+
+    phone = (re.findall(r"\d{7,}", sheets.digits(cell_text(cells.get("phone")))) or [""])[0]
+    customer = _find_customer(name, phone, context)
+
+    remark = cell_text(cells.get("remark"))
+    mode_text = cell_text(cells.get("mode"))
+    if sheets.is_filler(mode_text):
+        mode_text = ""  # "—" or "N/A": the remark says how it was paid
+    mode, wallet = "cash", ""
+    try:
+        mode, wallet = parse_mode(mode_text or remark)
+    except ValueError:
+        if mode_text:
+            note(f"Payment mode '{mode_text}' is not known; recorded as cash.")
+
+    # The same row uploaded again (or in a longer sheet) is recognised by its fingerprint.
+    key = "|".join([date.isoformat(), norm(customer.name), str(amount), norm(remark)])
+    occurrences = context.setdefault("occurrences", {})
+    occurrences[key] = occurrences.get(key, 0) + 1
+    fingerprint = hashlib.sha1(
+        f"{key}|{occurrences[key]}".encode(), usedforsecurity=False
+    ).hexdigest()
+    if Payment.objects.filter(import_ref=fingerprint).exists():
+        return "skipped"
+
+    record_imported_payment(
+        user=context["user"],
+        customer=customer,
+        amount=amount,
+        mode=mode,
+        wallet=wallet,
+        payment_date=date,
+        reference_no=cell_text(cells.get("reference")),
+        notes=remark or f"Imported from {context['file']}",
+        import_ref=fingerprint,
+    )
+    _add(context, "amount", amount)
+    _add(context, f"by_{mode}", amount)
+    return "created"
+
+
 # ---------- kinds and templates ----------
 
 KINDS: dict[str, Kind] = {
@@ -694,6 +848,19 @@ KINDS: dict[str, Kind] = {
             ["Media", "Photo print A4", 60, "piece", "", "", "", "", "Yes"],
             ["Add-on", "Eyelets", 5, "", "", "", "Per piece", 8, "Yes"],
         ],
+    ),
+    "payments": Kind(
+        "payments",
+        "Payments received",
+        PAYMENT_COLUMNS,
+        _payment_row,
+        [
+            ["Date", "Customer", "Amount", "Mode", "Remark"],
+            ["2083.04.01", "Aayan Digital", 820, "", "Bill payment"],
+            ["2083.04.02", "Rara IT Hub", 5300, "QR", "QR: Om Trade"],
+            ["", "Digital Nepal", "36,000", "Cash", "Undated: uses the date chosen when uploading"],
+        ],
+        default_as_of=local_today,
     ),
     "opening-stock": Kind(
         "opening-stock",

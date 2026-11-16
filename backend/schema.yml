@@ -13918,6 +13918,7 @@ paths:
           enum:
           - customers
           - opening-stock
+          - payments
           - rate-card
         required: true
       tags:
@@ -14060,6 +14061,7 @@ paths:
           enum:
           - customers
           - opening-stock
+          - payments
           - rate-card
         required: true
       tags:

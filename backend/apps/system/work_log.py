@@ -434,7 +434,8 @@ def _parse_row(
     mode, wallet = PaymentMode.CASH, ""
     if paid > 0:
         try:
-            mode, wallet = parse_mode(cells.get("mode"))
+            mode_text = _cell_text(cells.get("mode"))
+            mode, wallet = parse_mode("" if sheets.is_filler(mode_text) else mode_text)
         except ValueError:
             note(f"Payment mode '{_cell_text(cells.get('mode'))}' is not known; recorded as cash.")
     if _cell_text(cells.get("balance")):

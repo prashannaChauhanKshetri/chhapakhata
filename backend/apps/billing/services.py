@@ -337,6 +337,56 @@ def receive_payment(
     return payment
 
 
+def record_imported_payment(
+    *,
+    user: Any,
+    customer: Any,
+    amount: Decimal,
+    mode: str,
+    payment_date: dt.date,
+    wallet: str = "",
+    reference_no: str = "",
+    notes: str = "",
+    import_ref: str = "",
+) -> Payment:
+    """A payment received earlier and recorded from a sheet, on account.
+
+    Like ``receive_payment`` (receipt number in the payment's fiscal year,
+    ledger credit), but old records rarely kept cheque numbers or bank
+    names, so those are not required.
+    """
+    value = q2(amount)
+    if value <= 0:
+        raise BusinessError({"amount": ["Amount must be above zero."]})
+    if payment_date > local_today():
+        raise BusinessError({"payment_date": ["A payment cannot be dated in the future."]})
+    allocated = next_number(DocType.RECEIPT, payment_date)
+    payment = Payment.objects.create(
+        receipt_no=allocated.number,
+        fiscal_year=allocated.fiscal_year,
+        sequence=allocated.sequence,
+        customer=customer,
+        amount=value,
+        mode=mode,
+        wallet=wallet if mode == PaymentMode.WALLET else "",
+        reference_no=reference_no[:60],
+        payment_date=payment_date,
+        notes=notes[:255],
+        received_by=user,
+        import_ref=import_ref,
+    )
+    LedgerEntry.objects.create(
+        customer=customer,
+        entry_date=payment_date,
+        entry_type=LedgerEntryType.PAYMENT,
+        credit=value,
+        payment=payment,
+        narration=f"Payment {payment.receipt_no} ({payment.mode_label}) on account"[:255],
+        created_by=user,
+    )
+    return payment
+
+
 @transaction.atomic
 def void_payment(*, payment: Payment, user: Any, reason: str, request: Any = None) -> Payment:
     """Void a payment entered by mistake or a bounced cheque. The ledger is reversed."""
