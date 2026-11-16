@@ -20,7 +20,7 @@ from apps.core.params import parse_range
 from apps.core.permissions import Perm
 from apps.core.serializers import UserRefSerializer
 
-from . import erase, go_live, services, sheets, work_log
+from . import duplicates, erase, go_live, services, sheets, work_log
 from .models import BackupRun, BackupTrigger
 from .selectors import backup_status
 
@@ -388,3 +388,42 @@ class EraseDataView(APIView):
             user=request.user, request=request, **serializer.validated_data
         )
         return Response(EraseResultSerializer(result).data)
+
+
+class DuplicatePaymentSerializer(serializers.Serializer):
+    receipt_no = serializers.CharField()
+    original_receipt_no = serializers.CharField()
+    customer = serializers.CharField()
+    payment_date = serializers.DateField()
+    amount = serializers.DecimalField(max_digits=14, decimal_places=2)
+
+
+class DuplicatePaymentsSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+    total = serializers.DecimalField(max_digits=14, decimal_places=2)
+    sample = DuplicatePaymentSerializer(many=True)
+
+
+class DuplicatesVoidedSerializer(serializers.Serializer):
+    voided = serializers.IntegerField()
+    total = serializers.DecimalField(max_digits=14, decimal_places=2)
+    backup_file = serializers.CharField()
+
+
+class DuplicatePaymentsView(APIView):
+    """Payments-sheet receipts that repeat a payment already recorded with its order.
+
+    GET counts them; POST with ``confirm: "Confirm"`` voids them after a backup.
+    """
+
+    required_perms = Perm.SETTINGS_MANAGE
+
+    @extend_schema(responses=DuplicatePaymentsSerializer)
+    def get(self, request):
+        return Response(DuplicatePaymentsSerializer(duplicates.duplicates_preview()).data)
+
+    @extend_schema(request=EraseRequestSerializer, responses=DuplicatesVoidedSerializer)
+    def post(self, request):
+        confirm = str(request.data.get("confirm", ""))
+        result = duplicates.void_duplicates(user=request.user, confirm=confirm, request=request)
+        return Response(DuplicatesVoidedSerializer(result).data)

@@ -13648,6 +13648,275 @@ paths:
                 type: object
                 additionalProperties: {}
           description: ''
+  /api/v1/system/duplicate-payments/:
+    get:
+      operationId: system_duplicate_payments_retrieve
+      description: |-
+        Payments-sheet receipts that repeat a payment already recorded with its order.
+
+        GET counts them; POST with ``confirm: "Confirm"`` voids them after a backup.
+      tags:
+      - system
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemDuplicatePaymentsRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DuplicatePayments'
+          description: ''
+    post:
+      operationId: system_duplicate_payments_create
+      description: |-
+        Payments-sheet receipts that repeat a payment already recorded with its order.
+
+        GET counts them; POST with ``confirm: "Confirm"`` voids them after a backup.
+      tags:
+      - system
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EraseRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EraseRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EraseRequestRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemDuplicatePaymentsCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DuplicatesVoided'
+          description: ''
   /api/v1/system/erase/:
     get:
       operationId: system_erase_list
@@ -19317,6 +19586,60 @@ components:
         * `none` - No discount
         * `percent` - Percent
         * `amount` - Fixed amount
+    DuplicatePayment:
+      type: object
+      properties:
+        receipt_no:
+          type: string
+        original_receipt_no:
+          type: string
+        customer:
+          type: string
+        payment_date:
+          type: string
+          format: date
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+      required:
+      - amount
+      - customer
+      - original_receipt_no
+      - payment_date
+      - receipt_no
+    DuplicatePayments:
+      type: object
+      properties:
+        count:
+          type: integer
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        sample:
+          type: array
+          items:
+            $ref: '#/components/schemas/DuplicatePayment'
+      required:
+      - count
+      - sample
+      - total
+    DuplicatesVoided:
+      type: object
+      properties:
+        voided:
+          type: integer
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,12}(?:\.\d{0,2})?$
+        backup_file:
+          type: string
+      required:
+      - backup_file
+      - total
+      - voided
     EraseCount:
       type: object
       properties:
@@ -33393,6 +33716,119 @@ components:
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
     SystemBackupsStatusRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    SystemDuplicatePaymentsCreateConfirmErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - confirm
+          type: string
+          description: '* `confirm` - confirm'
+        code:
+          enum:
+          - blank
+          - invalid
+          - 'null'
+          - null_characters_not_allowed
+          - required
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `blank` - blank
+            * `invalid` - invalid
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `required` - required
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SystemDuplicatePaymentsCreateError:
+      oneOf:
+      - $ref: '#/components/schemas/SystemDuplicatePaymentsCreateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/SystemDuplicatePaymentsCreateConfirmErrorComponent'
+      - $ref: '#/components/schemas/SystemDuplicatePaymentsCreateKeepCatalogErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/SystemDuplicatePaymentsCreateNonFieldErrorsErrorComponent'
+          confirm: '#/components/schemas/SystemDuplicatePaymentsCreateConfirmErrorComponent'
+          keep_catalog: '#/components/schemas/SystemDuplicatePaymentsCreateKeepCatalogErrorComponent'
+    SystemDuplicatePaymentsCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/SystemDuplicatePaymentsCreateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/SystemDuplicatePaymentsCreateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    SystemDuplicatePaymentsCreateKeepCatalogErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - keep_catalog
+          type: string
+          description: '* `keep_catalog` - keep_catalog'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SystemDuplicatePaymentsCreateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SystemDuplicatePaymentsCreateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SystemDuplicatePaymentsCreateError'
+      required:
+      - errors
+      - type
+    SystemDuplicatePaymentsRetrieveErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/ParseErrorResponse'
       discriminator:
