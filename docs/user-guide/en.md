@@ -405,6 +405,8 @@ Payments customers made after the opening balances, all at once:
 - **Dates:** rows **without a date at the top** use **Date for undated rows** from the form (today, unless you change it). A blank date further down takes the date of the row above.
 - **What it records:** each payment becomes a receipt on the customer's account and lowers their balance. The remark is kept with the payment.
 - **Names must match customers already in the system.** A misspelled name is shown as a problem with the closest names ("Did you mean …?"), and no extra customer is created. If two customers share a name, add a Phone column.
+- **Never counted twice:** a payment already recorded with its order (on the order slip, or in the work log's Payment column) for the same customer, day and amount is skipped, with the note "already recorded as RCT-…". The work log import does the same for payments that came from a payments sheet.
+- **Duplicates from before:** if payments were recorded twice by an earlier import, Import & export shows a red box "N payments are recorded twice", with examples. Press **Void the duplicates…** and type **Confirm**. The copies from the sheet are voided (kept on record as "Duplicate of RCT-…"), balances are corrected, and a backup is taken first.
 
 ### 9.6 Rate card
 
@@ -467,6 +469,7 @@ Single-key shortcuts work when you are not typing in a box.
 | Cannot edit an order | It has a bill. The owner must cancel the bill first. |
 | A payment was entered wrongly (amount, customer, date, mode) | Owner: Payments → ⋮ → **Correct payment…**, change it and write what was wrong. |
 | Opening balance is wrong | Owner: customer → Opening balance → enter the right figure with a reason. |
+| A payment shows twice on a statement (with the order and "on account") | Owner: Settings → Import & export → **Void the duplicates…**, type **Confirm**. |
 | An import shows problems | Read the row numbers listed, fix those rows in Excel and upload again. Rows already imported are not added twice. |
 | A column is read wrongly in an import | Press **Change columns** and choose what each column holds. |
 | Backup warning on the dashboard | Owner: Settings → Backups & export → **Back up now**. If it fails, call the developer. |
