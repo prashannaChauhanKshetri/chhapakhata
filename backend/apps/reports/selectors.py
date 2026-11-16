@@ -14,6 +14,8 @@ from apps.billing.models import (
     Invoice,
     InvoiceLine,
     InvoiceStatus,
+    LedgerEntry,
+    LedgerEntryType,
     Payment,
     PaymentMode,
     PaymentStatus,
@@ -151,6 +153,22 @@ def daily_sales(day: dt.date, **_: Any) -> Report:
 # --- 2. Monthly sales -----------------------------------------------------------
 
 
+def _imported_work_metric(date_from: dt.date, date_to: dt.date) -> list[Metric]:
+    """Work brought in from the old work log: charged to accounts, but never billed.
+
+    Kept apart from Total sales, which follows the bills (the IRD sales register).
+    """
+    imported = _sum(
+        LedgerEntry.objects.filter(
+            entry_type=LedgerEntryType.IMPORTED_WORK,
+            entry_date__gte=date_from,
+            entry_date__lte=date_to,
+        ),
+        "debit",
+    )
+    return [Metric("Work imported from the work log (not billed)", imported)] if imported else []
+
+
 def sales_summary(date_from: dt.date, date_to: dt.date, **_: Any) -> Report:
     issued = Invoice.objects.filter(
         status=InvoiceStatus.ISSUED, invoice_date__gte=date_from, invoice_date__lte=date_to
@@ -209,6 +227,7 @@ def sales_summary(date_from: dt.date, date_to: dt.date, **_: Any) -> Report:
             Metric(
                 "Average per selling day", q2(total / days_with_sales) if days_with_sales else ZERO
             ),
+            *_imported_work_metric(date_from, date_to),
         ],
         tables=[
             Table(
