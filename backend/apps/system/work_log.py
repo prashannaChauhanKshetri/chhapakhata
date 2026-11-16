@@ -793,6 +793,24 @@ def _write(sheet: ParsedSheet, result: ImportResult, user: Any) -> None:
         for row in group:
             if row.paid > 0:
                 by_mode[(row.mode, row.wallet)] += row.paid
+        # The day's payments already recorded another way, split differently?
+        day_paid = q2(sum(by_mode.values(), ZERO))
+        recorded = list(
+            Payment.objects.filter(
+                customer=customer, payment_date=date, status=PaymentStatus.VALID
+            ).exclude(pk__in=matched_payments)
+        )
+        if day_paid and recorded and q2(sum((p.amount for p in recorded), ZERO)) == day_paid:
+            matched_payments.update(p.pk for p in recorded)
+            result.warnings.append(
+                Message(
+                    group[0].row,
+                    f"Payments of {fmt_qty(day_paid)} on this day are already recorded as "
+                    f"{' + '.join(p.receipt_no for p in recorded)}; not added again.",
+                    group[0].sheet,
+                )
+            )
+            by_mode = {}
         for (mode, wallet), amount in by_mode.items():
             # Already recorded another way (payments sheet, typed in)? Not twice.
             earlier = find_recorded_payment(

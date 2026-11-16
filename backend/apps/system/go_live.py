@@ -86,6 +86,8 @@ class Kind:
     template: list[list[Any]]
     # The "as on" date when none is given: last year's closing for balances.
     default_as_of: Callable[[], dt.date] = previous_year_end
+    # Looks over every row before any is saved (e.g. to total a customer's day).
+    prepare: Callable[[list[sheets.Located], dict[str, Any]], None] | None = None
 
 
 class _Rollback(Exception):
@@ -141,6 +143,8 @@ def run_import(
     try:
         with transaction.atomic():
             several = len(located) > 1
+            if spec.prepare is not None:
+                spec.prepare(located, context)
             for loc in located:
                 label = loc.table.name if several else ""
                 context["sheet"] = loc.table.name
@@ -743,6 +747,48 @@ def _find_customer(name: str, phone: str, context: dict[str, Any]) -> Customer:
     )
 
 
+def _payment_date(
+    cells: dict[str, Any], context: dict[str, Any], last_dates: dict[str, dt.date]
+) -> tuple[dt.date, str]:
+    """The cell's date, else the row above's (merged cells), else the form's date."""
+    sheet = context.get("sheet", "")
+    if cell_text(cells.get("date")):
+        date, how = sheets.parse_date(cells.get("date")), ""
+    elif sheet in last_dates:
+        date, how = last_dates[sheet], "No date; used the date from the row above."
+    else:
+        date = context["as_of"]
+        how = f"No date; recorded on {bs_string(date)} BS (the date chosen for undated rows)."
+    last_dates[sheet] = date
+    return date, how
+
+
+def _payments_prepare(located: list[sheets.Located], context: dict[str, Any]) -> None:
+    """Total each customer's sheet payments per day, before any row is saved.
+
+    A day's payments are sometimes split differently in two records (500 + 450
+    with the order, one 950 in the payments sheet); equal day totals show it.
+    """
+    totals: dict[tuple[int, dt.date], Decimal] = {}
+    for loc in located:
+        context["sheet"] = loc.table.name
+        last_dates: dict[str, dt.date] = {}
+        for _, cells in sheets.records(loc, PAYMENT_COLUMNS):
+            name = " ".join(cell_text(cells.get("customer")).split())
+            try:
+                amount = q2(to_decimal(cells.get("amount"), "Amount"))
+                date, _ = _payment_date(cells, context, last_dates)
+                phone_text = sheets.digits(cell_text(cells.get("phone")))
+                phone = (re.findall(r"\d{7,}", phone_text) or [""])[0]
+                customer = _find_customer(name, phone, context) if name else None
+            except ValueError:
+                continue  # the row itself reports the problem later
+            if customer is not None and amount > 0:
+                key = (customer.pk, date)
+                totals[key] = totals.get(key, Decimal("0")) + amount
+    context["day_totals"] = totals
+
+
 def _payment_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) -> str | None:
     name = " ".join(cell_text(cells.get("customer")).split())
     if _is_total_line(name) or _is_total_line(cell_text(cells.get("date"))):
@@ -758,20 +804,11 @@ def _payment_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) -> 
     if amount == 0:
         return None
 
-    # Dates: the cell, else the row above (merged cells), else the form's date.
-    last_dates: dict[str, dt.date] = context.setdefault("last_dates", {})
-    sheet = context.get("sheet", "")
-    if cell_text(cells.get("date")):
-        date = sheets.parse_date(cells.get("date"))
-    elif sheet in last_dates:
-        date = last_dates[sheet]
-        note("No date; used the date from the row above.")
-    else:
-        date = context["as_of"]
-        note(f"No date; recorded on {bs_string(date)} BS (the date chosen for undated rows).")
+    date, how = _payment_date(cells, context, context.setdefault("last_dates", {}))
+    if how:
+        note(how)
     if date > local_today():
         raise ValueError(f"Date {bs_string(date)} BS is in the future.")
-    last_dates[sheet] = date
 
     phone = (re.findall(r"\d{7,}", sheets.digits(cell_text(cells.get("phone")))) or [""])[0]
     customer = _find_customer(name, phone, context)
@@ -807,6 +844,21 @@ def _payment_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) -> 
             "not added. Check the date if it was paid later."
         )
         _add(context, "before_opening", Decimal(1))
+        return "skipped"
+    # The customer's whole day already recorded another way, split differently?
+    day_total = context.get("day_totals", {}).get((customer.pk, date))
+    entered = list(
+        Payment.objects.filter(
+            customer=customer, payment_date=date, status=PaymentStatus.VALID, import_ref=""
+        )
+    )
+    if entered and day_total and sum(p.amount for p in entered) == day_total:
+        receipts = " + ".join(p.receipt_no for p in entered)
+        note(
+            f"{customer.name} paid Rs {fmt_qty(day_total)} on {bs_string(date)} BS in total, "
+            f"already recorded as {receipts} (split differently); not added again."
+        )
+        _add(context, "already_recorded", Decimal(1))
         return "skipped"
     # Recorded another way already (order slip, work log, typed in)? Not twice.
     matched: set[int] = context.setdefault("matched", set())
@@ -918,6 +970,7 @@ KINDS: dict[str, Kind] = {
             ["", "Digital Nepal", "36,000", "Cash", "Undated: uses the date chosen when uploading"],
         ],
         default_as_of=local_today,
+        prepare=_payments_prepare,
     ),
     "opening-stock": Kind(
         "opening-stock",

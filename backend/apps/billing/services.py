@@ -408,6 +408,7 @@ def duplicate_sheet_payments() -> list[tuple[Payment, Payment]]:
     pairs: list[tuple[Payment, Payment]] = []
     used: set[int] = set()
     sheet = Payment.objects.filter(status=PaymentStatus.VALID).exclude(import_ref="")
+    left: list[Payment] = []
     for payment in sheet.select_related("customer").order_by("payment_date", "id"):
         original = find_recorded_payment(
             customer=payment.customer,
@@ -419,6 +420,27 @@ def duplicate_sheet_payments() -> list[tuple[Payment, Payment]]:
         if original is not None:
             used.add(original.pk)
             pairs.append((payment, original))
+        else:
+            left.append(payment)
+
+    # The same day's total split differently (500 + 450 recorded, 950 in the sheet).
+    by_day: dict[tuple[int, dt.date], list[Payment]] = {}
+    for payment in left:
+        by_day.setdefault((payment.customer_id, payment.payment_date), []).append(payment)
+    for (customer_id, day), copies in by_day.items():
+        entered = list(
+            Payment.objects.filter(
+                customer_id=customer_id,
+                payment_date=day,
+                status=PaymentStatus.VALID,
+                import_ref="",
+            )
+            .exclude(pk__in=used)
+            .order_by("id")
+        )
+        if entered and sum(p.amount for p in entered) == sum(p.amount for p in copies):
+            used.update(p.pk for p in entered)
+            pairs.extend((copy, entered[0]) for copy in copies)
     return pairs
 
 

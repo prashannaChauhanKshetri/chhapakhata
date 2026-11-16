@@ -170,3 +170,68 @@ def test_one_order_paid_in_two_ways_with_equal_amounts_keeps_both(owner):
     result = import_work_log(_xlsx([header, *rows]), name="work.xlsx", user=owner, dry_run=False)
     assert result.payments == 2 and result.warnings == []
     assert customer_balance(Customer.objects.get()) == D("0.00")
+
+
+def _pay_sheet(owner, rows, **kwargs):
+    sheet = [["Date", "Customer", "Amount", "Remark"], *rows]
+    return run_import(
+        "payments", _xlsx(sheet).getvalue(), name="p.xlsx", user=owner, dry_run=False, **kwargs
+    )
+
+
+def test_a_days_payments_split_differently_are_not_counted_twice(owner):
+    """OM Traders: the work log had 500 + 450 (two ways), the sheet one 950."""
+    header = ["Date", "Particular", "Items", "Qty", "Rate", "Amount", "Payment", "Payment Mode"]
+    rows = [
+        ["2083.05.25", "Aayan Digital", "Banner", 1, 500, 500, 500, "Cash"],
+        ["2083.05.25", "Aayan Digital", "Photo", 1, 450, 450, 450, "eSewa"],
+        ["2083.06.25", "Best Design", "Banner", 1, 4810, 4810, 4810, "Cash"],
+    ]
+    import_work_log(_xlsx([header, *rows]), name="w.xlsx", user=owner, dry_run=False)
+    result = _pay_sheet(
+        owner,
+        [
+            ["2083.05.25", "Aayan Digital", 950, "Bill payment"],
+            ["2083.06.25", "Best Design", 3170, "Bill payment"],  # 4810 split the other way
+            ["2083.06.25", "Best Design", 1640, "Bill payment"],
+            ["2083.06.26", "Best Design", 1000, "A new payment"],
+        ],
+    )
+    assert (result.created, result.skipped) == (1, 3)
+    assert "split differently" in result.warnings[0].message
+    assert customer_balance(Customer.objects.get(name="Aayan Digital")) == D("0.00")
+    assert customer_balance(Customer.objects.get(name="Best Design")) == D("-1000.00")
+
+
+def test_work_log_after_a_sheet_with_the_day_split_differently(owner):
+    Customer.objects.create(name="Aayan Digital")
+    _pay_sheet(owner, [["2083.05.25", "Aayan Digital", 950, "Bill payment"]])
+    header = ["Date", "Particular", "Items", "Qty", "Rate", "Amount", "Payment", "Payment Mode"]
+    rows = [
+        ["2083.05.25", "Aayan Digital", "Banner", 1, 500, 500, 500, "Cash"],
+        ["2083.05.25", "Aayan Digital", "Photo", 1, 450, 450, 450, "eSewa"],
+    ]
+    result = import_work_log(_xlsx([header, *rows]), name="w.xlsx", user=owner, dry_run=False)
+    assert result.payments == 0 and "already recorded" in result.warnings[0].message
+    assert customer_balance(Customer.objects.get()) == D("0.00")
+
+
+def test_the_duplicate_checker_finds_days_split_differently(owner):
+    from apps.billing.services import duplicate_sheet_payments
+
+    header = ["Date", "Particular", "Items", "Qty", "Rate", "Amount", "Payment", "Payment Mode"]
+    rows = [
+        ["2083.05.25", "Aayan Digital", "Banner", 1, 500, 500, 500, "Cash"],
+        ["2083.05.25", "Aayan Digital", "Photo", 1, 450, 450, 450, "eSewa"],
+    ]
+    import_work_log(_xlsx([header, *rows]), name="w.xlsx", user=owner, dry_run=False)
+    customer = Customer.objects.get()
+    billing.record_imported_payment(  # what an older import made
+        user=owner,
+        customer=customer,
+        amount=D("950"),
+        mode="cash",
+        payment_date=dt.date(2026, 9, 10),
+        import_ref="old-sheet-row",
+    )
+    assert [copy.amount for copy, _ in duplicate_sheet_payments()] == [D("950.00")]
