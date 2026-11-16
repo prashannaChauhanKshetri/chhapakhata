@@ -782,6 +782,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/payments/{id}/correct/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Fix a mistaken payment (owner): the old receipt is voided, a corrected one recorded. */
+        post: operations["payments_correct_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payments/{id}/receipt/": {
         parameters: {
             query?: never;
@@ -7189,6 +7206,24 @@ export interface components {
             /** Format: date-time */
             readonly created_at: string;
         };
+        /** @description What to change on a mistaken payment; fields left out keep their value. */
+        PaymentCorrectRequest: {
+            reason: string;
+            customer?: number;
+            order?: number | null;
+            /** Format: decimal */
+            amount?: string;
+            mode?: components["schemas"]["ModeEnum"];
+            wallet?: components["schemas"]["WalletEnum"] | components["schemas"]["BlankEnum"];
+            bank_name?: string;
+            reference_no?: string;
+            cheque_no?: string;
+            /** Format: date */
+            cheque_date?: string | null;
+            /** Format: date */
+            payment_date?: string;
+            notes?: string;
+        };
         PaymentCreateRequest: {
             customer: number;
             order?: number | null;
@@ -7229,6 +7264,222 @@ export interface components {
          * @enum {string}
          */
         PaymentStatusEnum: "valid" | "void";
+        PaymentsCorrectCreateAmountErrorComponent: {
+            /**
+             * @description * `amount` - amount (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "amount";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
+            detail: string;
+        };
+        PaymentsCorrectCreateBankNameErrorComponent: {
+            /**
+             * @description * `bank_name` - bank_name (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "bank_name";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        PaymentsCorrectCreateChequeDateErrorComponent: {
+            /**
+             * @description * `cheque_date` - cheque_date (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "cheque_date";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "datetime" | "invalid";
+            detail: string;
+        };
+        PaymentsCorrectCreateChequeNoErrorComponent: {
+            /**
+             * @description * `cheque_no` - cheque_no (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "cheque_no";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        PaymentsCorrectCreateCustomerErrorComponent: {
+            /**
+             * @description * `customer` - customer (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "customer";
+            /**
+             * @description * `does_not_exist` - does_not_exist
+             *     * `incorrect_type` - incorrect_type
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "does_not_exist" | "incorrect_type" | "null";
+            detail: string;
+        };
+        PaymentsCorrectCreateError: components["schemas"]["PaymentsCorrectCreateNonFieldErrorsErrorComponent"] | components["schemas"]["PaymentsCorrectCreateReasonErrorComponent"] | components["schemas"]["PaymentsCorrectCreateCustomerErrorComponent"] | components["schemas"]["PaymentsCorrectCreateOrderErrorComponent"] | components["schemas"]["PaymentsCorrectCreateAmountErrorComponent"] | components["schemas"]["PaymentsCorrectCreateModeErrorComponent"] | components["schemas"]["PaymentsCorrectCreateWalletErrorComponent"] | components["schemas"]["PaymentsCorrectCreateBankNameErrorComponent"] | components["schemas"]["PaymentsCorrectCreateReferenceNoErrorComponent"] | components["schemas"]["PaymentsCorrectCreateChequeNoErrorComponent"] | components["schemas"]["PaymentsCorrectCreateChequeDateErrorComponent"] | components["schemas"]["PaymentsCorrectCreatePaymentDateErrorComponent"] | components["schemas"]["PaymentsCorrectCreateNotesErrorComponent"];
+        PaymentsCorrectCreateErrorResponse400: components["schemas"]["PaymentsCorrectCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        PaymentsCorrectCreateModeErrorComponent: {
+            /**
+             * @description * `mode` - mode (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "mode";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null";
+            detail: string;
+        };
+        PaymentsCorrectCreateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        PaymentsCorrectCreateNotesErrorComponent: {
+            /**
+             * @description * `notes` - notes (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "notes";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        PaymentsCorrectCreateOrderErrorComponent: {
+            /**
+             * @description * `order` - order (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "order";
+            /**
+             * @description * `does_not_exist` - does_not_exist
+             *     * `incorrect_type` - incorrect_type
+             * @enum {string}
+             */
+            code: "does_not_exist" | "incorrect_type";
+            detail: string;
+        };
+        PaymentsCorrectCreatePaymentDateErrorComponent: {
+            /**
+             * @description * `payment_date` - payment_date (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "payment_date";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "datetime" | "invalid" | "null";
+            detail: string;
+        };
+        PaymentsCorrectCreateReasonErrorComponent: {
+            /**
+             * @description * `reason` - reason (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "reason";
+            /**
+             * @description * `blank` - blank
+             *     * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `required` - required
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "blank" | "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "required" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        PaymentsCorrectCreateReferenceNoErrorComponent: {
+            /**
+             * @description * `reference_no` - reference_no (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "reference_no";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        PaymentsCorrectCreateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["PaymentsCorrectCreateError"][];
+        };
+        PaymentsCorrectCreateWalletErrorComponent: {
+            /**
+             * @description * `wallet` - wallet (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "wallet";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null";
+            detail: string;
+        };
         PaymentsCreateAmountErrorComponent: {
             /**
              * @description * `amount` - amount (enum property replaced by openapi-typescript)
@@ -16390,6 +16641,98 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaymentsRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    payments_correct_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this payment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentCorrectRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PaymentCorrectRequest"];
+                "multipart/form-data": components["schemas"]["PaymentCorrectRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payment"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentsCorrectCreateErrorResponse400"];
                 };
             };
             401: {

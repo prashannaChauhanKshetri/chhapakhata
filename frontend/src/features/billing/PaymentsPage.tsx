@@ -14,6 +14,7 @@ import { DatePickerInput } from '@mantine/dates';
 import {
   IconBan,
   IconDotsVertical,
+  IconPencil,
   IconPrinter,
   IconReceipt2,
   IconSearch,
@@ -41,7 +42,7 @@ import { Perm } from '@/lib/permissions';
 import { PAYMENT_MODES, PAYMENT_STATUS } from '@/lib/status';
 import { PAGE_SIZE, useListState } from '@/lib/useListState';
 
-import { openReceivePayment } from './ReceivePaymentForm';
+import { openCorrectPayment, openReceivePayment } from './ReceivePaymentForm';
 
 export default function PaymentsPage() {
   const { t } = useTranslation();
@@ -261,6 +262,14 @@ export default function PaymentsPage() {
                       >
                         {t('A5 receipt')}
                       </Menu.Item>
+                      {can(Perm.PAYMENTS_VOID) && p.status === 'valid' && (
+                        <Menu.Item
+                          leftSection={<IconPencil size={16} />}
+                          onClick={() => openCorrectPayment(p)}
+                        >
+                          {t('Correct payment…')}
+                        </Menu.Item>
+                      )}
                       {can(Perm.PAYMENTS_VOID) && p.status === 'valid' && (
                         <Menu.Item
                           color="red"
