@@ -47,3 +47,6 @@ Thumbs.db
 *.ppk
 id_rsa*
 id_ed25519*
+
+# Client data files (private; never committed)
+datasOFom/

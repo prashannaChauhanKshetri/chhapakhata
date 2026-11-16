@@ -836,6 +836,8 @@ def _write(sheet: ParsedSheet, result: ImportResult, user: Any) -> None:
                     created_by=user,
                 )
             )
+            # Made by this import: never "already recorded" for a later row or mode.
+            matched_payments.add(payment.pk)
             result.payments += 1
         result.orders += 1
         totals["amount"] += subtotal

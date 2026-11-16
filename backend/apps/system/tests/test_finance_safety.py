@@ -159,3 +159,14 @@ def test_the_same_adjustment_twice_in_a_moment_is_refused(customer, owner):
             customer=customer, amount=D("100"), narration="Missed charge", user=owner
         )
     assert customer_balance(customer) == D("100.00")
+
+
+def test_one_order_paid_in_two_ways_with_equal_amounts_keeps_both(owner):
+    header = ["Date", "Particular", "Items", "Qty", "Rate", "Amount", "Payment", "Payment Mode"]
+    rows = [
+        ["2083.04.10", "Rapti Stores", "Banner", 1, 375, 375, 375, "Cash"],
+        ["2083.04.10", "Rapti Stores", "Sticker", 1, 375, 375, 375, "eSewa"],
+    ]
+    result = import_work_log(_xlsx([header, *rows]), name="work.xlsx", user=owner, dry_run=False)
+    assert result.payments == 2 and result.warnings == []
+    assert customer_balance(Customer.objects.get()) == D("0.00")
