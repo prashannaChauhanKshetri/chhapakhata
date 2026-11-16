@@ -357,6 +357,7 @@ The imports and the app check for these mistakes for you:
 |---|---|
 | The same sheet (or a longer version) is uploaded again | Rows already imported are skipped |
 | A payment is in the work log **and** in the payments sheet | Recorded once; the note says "already recorded as RCT-…" |
+| A customer's payments on one day are **split differently** in the two files (500 + 450 in one, 950 in the other) | The day's totals match, so it is recorded once; the note says "split differently" |
 | Work or a payment dated **on or before a customer's opening balance** (end of last year) | Left out, because the opening balance already includes it; the note says so |
 | A work-log row was **changed in Excel** after it was imported | Shown as a problem, not added as a second order |
 | A payments-sheet row was changed after it was imported | A note points to **Correct payment** on the old receipt |
@@ -365,7 +366,7 @@ The imports and the app check for these mistakes for you:
 | The same adjustment saved twice in a moment | Refused |
 | A customer made by the work log appears in the customers sheet with a phone | Matched as the same customer, and the phone is filled in |
 
-**What still needs your eye:** a payment is "the same" only when the customer, date and amount all match. A payment entered with a different date, split into two rows, or under a misspelled name cannot be matched automatically. After importing, read the notes and look at the statements of your biggest customers. Fix any odd one with **Correct payment** or **Void payment**.
+**What still needs your eye:** a payment is "the same" only when the customer and date match, and the amount (or that day's total) matches. A payment entered with a different date, split into two rows, or under a misspelled name cannot be matched automatically. After importing, read the notes and look at the statements of your biggest customers. Fix any odd one with **Correct payment** or **Void payment**.
 
 ### 9.3 What your sheet can look like
 
