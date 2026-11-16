@@ -210,7 +210,7 @@ What a customer owed the shop (or had paid in advance) when the last fiscal year
 
 **Correcting it:** press **Opening balance** again, enter the right amount and write the reason (for example "the old khata showed 4,200"). The old figure is never erased: a correction is added on the same date and listed under **Changes** with your name.
 
-You can also enter it when adding a customer ("Balance from last year"), or import it for many customers at once (section 9.4).
+You can also enter it when adding a customer ("Balance from last year"), or import it for many customers at once (section 9.5).
 
 ### 5.3 Adjust balance (owner)
 
@@ -349,7 +349,25 @@ Settings → **Import & export**. There are five imports, and they all work the 
 
 **Sample sheet** downloads an example layout for each import.
 
-### 9.2 What your sheet can look like
+### 9.2 Money is never counted twice
+
+The imports and the app check for these mistakes for you:
+
+| Situation | What happens |
+|---|---|
+| The same sheet (or a longer version) is uploaded again | Rows already imported are skipped |
+| A payment is in the work log **and** in the payments sheet | Recorded once; the note says "already recorded as RCT-…" |
+| Work or a payment dated **on or before a customer's opening balance** (end of last year) | Left out, because the opening balance already includes it; the note says so |
+| A work-log row was **changed in Excel** after it was imported | Shown as a problem, not added as a second order |
+| A payments-sheet row was changed after it was imported | A note points to **Correct payment** on the old receipt |
+| An order from the work log | Cannot be billed again (it is already on the customer's account) |
+| **Save payment** pressed twice, or saved again on a slow connection | Asks "Save a second payment?" before saving it |
+| The same adjustment saved twice in a moment | Refused |
+| A customer made by the work log appears in the customers sheet with a phone | Matched as the same customer, and the phone is filled in |
+
+**What still needs your eye:** a payment is "the same" only when the customer, date and amount all match. A payment entered with a different date, split into two rows, or under a misspelled name cannot be matched automatically. After importing, read the notes and look at the statements of your biggest customers. Fix any odd one with **Correct payment** or **Void payment**.
+
+### 9.3 What your sheet can look like
 
 You do not need a special layout:
 
@@ -363,7 +381,7 @@ You do not need a special layout:
 - **Dates in BS or AD:** 2083.04.01, 01/04/2083, 1 Shrawan 2083, 17/07/2026, 17 Jul 2026, Nepali digits, and Excel date cells. A BS date that Excel turned into a date is also read correctly.
 - **Gaps from merged cells:** a missing date or customer is taken from the row above. "Total" and "Grand Total" lines are skipped.
 
-### 9.3 The work log (past orders)
+### 9.4 The work log (past orders)
 
 The sheet the shop kept before, one row per job: Date, Particular (customer), Address, Items, Height, Width, Qty, SQFT, Rate, Amount, Details, Payment, Payment mode, Discount, Balance. A **Size** column like "12x4" also works.
 
@@ -373,7 +391,7 @@ The sheet the shop kept before, one row per job: Date, Particular (customer), Ad
 - Each customer's **last rates** are remembered for their next order.
 - **Export** does the reverse: orders for any period in the same Excel layout.
 
-### 9.4 Customers and opening balances
+### 9.5 Customers and opening balances
 
 A list of customers with what each owed (or had paid in advance) when last fiscal year closed:
 
@@ -390,7 +408,7 @@ A list of customers with what each owed (or had paid in advance) when last fisca
 - **Duplicates:** a customer already in the system is not added twice.
 - **Corrections:** uploading a corrected sheet changes their opening balance to the new figure, with the file name as the reason.
 
-### 9.5 Payments received
+### 9.6 Payments received
 
 Payments customers made after the opening balances, all at once:
 
@@ -408,7 +426,7 @@ Payments customers made after the opening balances, all at once:
 - **Never counted twice:** a payment already recorded with its order (on the order slip, or in the work log's Payment column) for the same customer, day and amount is skipped, with the note "already recorded as RCT-…". The work log import does the same for payments that came from a payments sheet.
 - **Duplicates from before:** if payments were recorded twice by an earlier import, Import & export shows a red box "N payments are recorded twice", with examples. Press **Void the duplicates…** and type **Confirm**. The copies from the sheet are voided (kept on record as "Duplicate of RCT-…"), balances are corrected, and a backup is taken first.
 
-### 9.6 Rate card
+### 9.7 Rate card
 
 Name, rate and unit, for media and add-ons:
 
@@ -416,7 +434,7 @@ Name, rate and unit, for media and add-ons:
 - **Media or add-on:** a "Kind" column, or an add-on **basis** (per piece, per sq ft, running ft, %, fixed), marks a row as an add-on.
 - **Updates:** items with the same name are updated, so you can upload the sheet again when prices change.
 
-### 9.7 Opening stock
+### 9.8 Opening stock
 
 Stock on hand on the day you start:
 
