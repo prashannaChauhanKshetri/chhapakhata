@@ -27,6 +27,7 @@ from openpyxl.styles import Font, PatternFill
 
 from apps.billing.models import LedgerEntry, Payment
 from apps.billing.services import (
+    find_recorded_payment,
     opening_entries,
     previous_year_end,
     record_imported_payment,
@@ -779,6 +780,19 @@ def _payment_row(cells: dict[str, Any], note: Note, context: dict[str, Any]) -> 
         f"{key}|{occurrences[key]}".encode(), usedforsecurity=False
     ).hexdigest()
     if Payment.objects.filter(import_ref=fingerprint).exists():
+        return "skipped"
+    # Recorded another way already (order slip, work log, typed in)? Not twice.
+    matched: set[int] = context.setdefault("matched", set())
+    earlier = find_recorded_payment(
+        customer=customer, payment_date=date, amount=amount, exclude=matched, only_entered=True
+    )
+    if earlier is not None:
+        matched.add(earlier.pk)
+        note(
+            f"{customer.name} {fmt_qty(amount)} on {bs_string(date)} BS is already recorded as "
+            f"{earlier.receipt_no}; not added again."
+        )
+        _add(context, "already_recorded", Decimal(1))
         return "skipped"
 
     record_imported_payment(

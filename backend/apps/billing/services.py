@@ -337,6 +337,52 @@ def receive_payment(
     return payment
 
 
+def find_recorded_payment(
+    *,
+    customer: Any,
+    payment_date: dt.date,
+    amount: Decimal,
+    exclude: Any = (),
+    only_entered: bool = False,
+) -> Payment | None:
+    """A valid payment already on record for this customer, day and amount.
+
+    Imports use it so a payment that arrived another way (an order slip, the
+    work log, typed in) is not recorded a second time. ``exclude`` holds
+    payments already matched to another row; ``only_entered`` leaves out
+    payments that came from a payments sheet.
+    """
+    found = Payment.objects.filter(
+        customer=customer, payment_date=payment_date, amount=q2(amount), status=PaymentStatus.VALID
+    ).exclude(pk__in=list(exclude))
+    if only_entered:
+        found = found.filter(import_ref="")
+    return found.order_by("id").first()
+
+
+def duplicate_sheet_payments() -> list[tuple[Payment, Payment]]:
+    """Payments-sheet receipts that repeat a payment recorded another way.
+
+    Each earlier payment matches at most one sheet receipt, so two real payments
+    of the same amount on the same day are never both called duplicates.
+    """
+    pairs: list[tuple[Payment, Payment]] = []
+    used: set[int] = set()
+    sheet = Payment.objects.filter(status=PaymentStatus.VALID).exclude(import_ref="")
+    for payment in sheet.select_related("customer").order_by("payment_date", "id"):
+        original = find_recorded_payment(
+            customer=payment.customer,
+            payment_date=payment.payment_date,
+            amount=payment.amount,
+            exclude=used,
+            only_entered=True,
+        )
+        if original is not None:
+            used.add(original.pk)
+            pairs.append((payment, original))
+    return pairs
+
+
 def record_imported_payment(
     *,
     user: Any,
@@ -388,8 +434,19 @@ def record_imported_payment(
 
 
 @transaction.atomic
-def void_payment(*, payment: Payment, user: Any, reason: str, request: Any = None) -> Payment:
-    """Void a payment entered by mistake or a bounced cheque. The ledger is reversed."""
+def void_payment(
+    *,
+    payment: Payment,
+    user: Any,
+    reason: str,
+    request: Any = None,
+    reverse_on: dt.date | None = None,
+) -> Payment:
+    """Void a payment entered by mistake or a bounced cheque. The ledger is reversed.
+
+    The reversal is dated today (a cheque bounces later) unless ``reverse_on``
+    says otherwise, e.g. the payment's own date for a payment that never happened.
+    """
     reason = _require_reason(reason)
     payment = Payment.objects.select_for_update().get(pk=payment.pk)
     if payment.status == PaymentStatus.VOID:
@@ -401,7 +458,7 @@ def void_payment(*, payment: Payment, user: Any, reason: str, request: Any = Non
     payment.save(update_fields=["status", "void_reason", "voided_at", "voided_by"])
     LedgerEntry.objects.create(
         customer_id=payment.customer_id,
-        entry_date=local_today(),
+        entry_date=reverse_on or local_today(),
         entry_type=LedgerEntryType.PAYMENT_VOID,
         debit=payment.amount,
         payment=payment,

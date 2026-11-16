@@ -47,6 +47,7 @@ from apps.billing.models import (
     PaymentStatus,
     Wallet,
 )
+from apps.billing.services import find_recorded_payment
 from apps.catalog.models import MediaType, PricingUnit
 from apps.core.activity import log_activity
 from apps.core.dates import bs_string, local_today
@@ -646,6 +647,7 @@ def _write(sheet: ParsedSheet, result: ImportResult, user: Any) -> None:
 
     ledger: list[LedgerEntry] = []
     totals = dict.fromkeys(("amount", "discount", "vat", "paid", "balance"), ZERO)
+    matched_payments: set[int] = set()
     for (date, _), group in sorted(groups.items(), key=lambda g: (g[0][0], g[1][0].row)):
         customer = customer_for(group[0])
         subtotal = q2(sum((r.amount for r in group), ZERO))
@@ -719,6 +721,21 @@ def _write(sheet: ParsedSheet, result: ImportResult, user: Any) -> None:
             if row.paid > 0:
                 by_mode[(row.mode, row.wallet)] += row.paid
         for (mode, wallet), amount in by_mode.items():
+            # Already recorded another way (payments sheet, typed in)? Not twice.
+            earlier = find_recorded_payment(
+                customer=customer, payment_date=date, amount=amount, exclude=matched_payments
+            )
+            if earlier is not None:
+                matched_payments.add(earlier.pk)
+                result.warnings.append(
+                    Message(
+                        group[0].row,
+                        f"Payment {fmt_qty(amount)} is already recorded as {earlier.receipt_no}; "
+                        "not added again.",
+                        group[0].sheet,
+                    )
+                )
+                continue
             allocated = next_number(DocType.RECEIPT, date)
             payment = Payment.objects.create(
                 receipt_no=allocated.number,
