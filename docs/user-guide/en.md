@@ -233,6 +233,7 @@ For something that happened **this year** and is not a bill or payment, such as 
    - Ready for collection
 
    A **red** edge means overdue and **amber** means due today. On a phone, tap a stage name at the top.
+
 2. **Move a job** by dragging its card to another column (on a touch screen, press and hold first), or use the buttons on the card. Columns you may move it to get a dashed outline. Moved it by mistake? Click **Undo** in the message that appears.
 3. **My jobs** shows only the jobs given to you.
 4. Click **Printing** when you start a job.
@@ -312,6 +313,7 @@ Settings → **Backups & export**:
   3. Press **Save correction**.
 
   The wrong receipt is kept on record as **Void** ("Corrected by RCT-…"), and a corrected receipt with a new number is saved. The change is applied on the original date, so that month's statement is right too. Balances update straight away.
+
 - **Void a payment** that should not exist at all (a bounced cheque, a double entry): Payments → **⋮** → **Void payment**, with a reason. It stays on record, and the customer's balance goes back up.
 - **Cancel a bill:** Invoice → **Cancel invoice**, with a reason. It stays on record, marked cancelled.
 

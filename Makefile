@@ -1,5 +1,5 @@
 # Common development tasks. Run `make help` for the list.
-.PHONY: help setup db seed history backend-history backend frontend lan-backend lan-frontend lan-app lan-cert lan-cert-check lan-ca test test-backend test-frontend e2e lint schema build
+.PHONY: user-guide help setup db seed history backend-history backend frontend lan-backend lan-frontend lan-app lan-cert lan-cert-check lan-ca test test-backend test-frontend e2e lint schema build
 
 help:
 	@grep -E '^[a-z-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-15s %s\n", $$1, $$2}'
@@ -94,6 +94,9 @@ e2e: ## Browser tests (needs `make backend`, `make frontend` and demo data)
 lint: ## Lint and type-check everything
 	cd backend && uv run ruff check . && uv run ruff format --check .
 	cd frontend && npm run lint && npm run typecheck
+
+user-guide: ## Rebuild the PDF user guide from docs/user-guide/en.md
+	cd backend && uv run --with markdown python ../scripts/build-user-guide.py
 
 schema: ## Regenerate the OpenAPI schema and frontend API types after API changes
 	cd backend && uv run python manage.py spectacular --file schema.yml --validate
