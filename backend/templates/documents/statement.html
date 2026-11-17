@@ -60,6 +60,12 @@
   {% endfor %}
   </tbody>
 </table>
+<div class="totals-wrap">
+  <div class="words">{% include "documents/_payment_info.html" %}</div>
+  <table class="totals">
+    <tr class="due"><td>{% if statement.closing_balance < 0 %}Advance with us{% else %}Balance due{% endif %}</td><td>Rs. {{ statement.closing_balance|amount }}</td></tr>
+  </table>
+</div>
 {% include "documents/_signatures.html" %}
 <div class="footer-note">Positive balance is the amount due to {{ shop.name }}. Generated {{ generated_at|date:"d M Y, H:i" }} ({{ generated_at_bs }} BS).</div>
 {% endblock %}

@@ -10,7 +10,7 @@
 {% if size == "80mm" %}
   <div class="t-center">
     <div class="t-shop">{{ shop.name }}</div>
-    <div class="t-meta">{{ shop.address }}{% if shop.phone %}<br>Tel {{ shop.phone }}{% endif %}</div>
+    <div class="t-meta">{{ shop.address }}{% if shop.phone %}<br>Tel {{ shop.phone }}{% endif %}{% if shop.email %}<br>{{ shop.email }}{% endif %}</div>
     <div class="t-title">Payment Receipt</div>
     {% if payment.status == "void" %}<div class="t-copy">VOID</div>{% endif %}
   </div>

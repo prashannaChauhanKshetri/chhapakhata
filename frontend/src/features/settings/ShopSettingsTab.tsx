@@ -2,11 +2,13 @@ import {
   Alert,
   Button,
   Card,
+  ColorInput,
   FileInput,
   Grid,
   Group,
   Image,
   NumberInput,
+  SegmentedControl,
   Stack,
   Switch,
   Text,
@@ -14,18 +16,18 @@ import {
   TextInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { IconInfoCircle, IconUpload } from '@tabler/icons-react';
+import { IconEye, IconInfoCircle, IconUpload } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ensureCsrfCookie, fetchWithTimeout } from '@/api/client';
 import { ApiError } from '@/api/errors';
-import { FILE_TIMEOUT_MS } from '@/api/files';
+import { FILE_TIMEOUT_MS, openFile } from '@/api/files';
 import type { ShopSettings } from '@/api/types';
 import { FormSkeleton } from '@/components/Skeletons';
 import { SectionCard } from '@/components/SectionCard';
-import { handleFormError, notifySuccess } from '@/lib/forms';
+import { handleFormError, notifyError, notifySuccess } from '@/lib/forms';
 import { toNumber } from '@/lib/format';
 
 import { useShopSettings } from '../orders/useCatalog';
@@ -44,6 +46,9 @@ const IMAGE_FIELDS: { key: ImageField; label: string; hint: string }[] = [
   },
   { key: 'signature_image', label: 'Signature', hint: 'Authorised signature for invoices.' },
 ];
+
+/** Print colours that stay clear on paper and with white text on them. */
+const PRINT_COLOURS = ['#1D4E89', '#0F766E', '#166534', '#7A1F1F', '#9A3412', '#5B21B6', '#0B1220'];
 
 function ShopForm({ shop }: { shop: ShopSettings }) {
   const { t } = useTranslation();
@@ -67,6 +72,10 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
         | number
         | string,
       invoice_footer_note: shop.invoice_footer_note ?? '',
+      payment_info: shop.payment_info ?? '',
+      print_color: shop.print_color ?? '#1D4E89',
+      print_text_size: (shop.print_text_size ?? 'normal') as string,
+      print_header: (shop.print_header ?? 'left') as string,
       quotation_validity_days: shop.quotation_validity_days ?? 7,
       quotation_terms: shop.quotation_terms ?? '',
       order_number_pattern: shop.order_number_pattern ?? '',
@@ -77,6 +86,11 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
     },
     validate: { name: (v) => (v.trim() ? null : t('Enter the shop name')) },
   });
+
+  const preview = (size: 'a4' | 'a5') =>
+    openFile(`/api/v1/settings/shop/preview/?size=${size}`).catch((e) =>
+      notifyError(e, t('Could not create the preview')),
+    );
 
   const submit = form.onSubmit(async (values) => {
     setBusy(true);
@@ -125,7 +139,13 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
               <TextInput label={t('Address')} {...form.getInputProps('address')} />
             </Grid.Col>
             <Grid.Col span={{ base: 6, md: 3 }}>
-              <TextInput label={t('Phone')} {...form.getInputProps('phone')} />
+              <TextInput
+                label={t('Phone')}
+                description={t(
+                  'Several numbers? Separate them with | (e.g. 9848029918 | 9867362776)',
+                )}
+                {...form.getInputProps('phone')}
+              />
             </Grid.Col>
             <Grid.Col span={{ base: 6, md: 3 }}>
               <TextInput label={t('Email')} {...form.getInputProps('email')} />
@@ -258,6 +278,89 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
             </Grid.Col>
             <Grid.Col span={12}>
               <Textarea label={t('Quotation terms')} {...form.getInputProps('quotation_terms')} />
+            </Grid.Col>
+          </Grid>
+        </SectionCard>
+
+        <SectionCard title={t('Print layout')}>
+          <Text size="sm" c="dimmed" mb="sm">
+            {t(
+              'How bills, quotations and statements look. The shop name, address, phone and email above print at the top of every page.',
+            )}
+          </Text>
+          <Grid gap="md">
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <ColorInput
+                label={t('Colour')}
+                description={t('Headings, table headers and the balance-due bar')}
+                format="hex"
+                withPicker={false}
+                swatches={PRINT_COLOURS}
+                swatchesPerRow={6}
+                {...form.getInputProps('print_color')}
+              />
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Stack gap={4}>
+                <Text size="sm" fw={500}>
+                  {t('Text size')}
+                </Text>
+                <SegmentedControl
+                  data={[
+                    { value: 'normal', label: t('Normal') },
+                    { value: 'large', label: t('Large') },
+                  ]}
+                  {...form.getInputProps('print_text_size')}
+                />
+              </Stack>
+            </Grid.Col>
+            <Grid.Col span={{ base: 12, md: 4 }}>
+              <Stack gap={4}>
+                <Text size="sm" fw={500}>
+                  {t('Header')}
+                </Text>
+                <SegmentedControl
+                  data={[
+                    { value: 'left', label: t('Shop on the left') },
+                    { value: 'center', label: t('Centred letterhead') },
+                  ]}
+                  {...form.getInputProps('print_header')}
+                />
+              </Stack>
+            </Grid.Col>
+            <Grid.Col span={12}>
+              <Textarea
+                label={t('Payment information')}
+                description={t(
+                  'Bank account, eSewa / Khalti number and so on. Printed on bills, quotations and statements.',
+                )}
+                placeholder={
+                  'NIC Asia Bank · A/C 0123456789 · OM Traders\neSewa / Khalti: 98XXXXXXXX'
+                }
+                autosize
+                minRows={2}
+                {...form.getInputProps('payment_info')}
+              />
+            </Grid.Col>
+            <Grid.Col span={12}>
+              <Group gap="xs">
+                <Button
+                  variant="default"
+                  leftSection={<IconEye size={16} />}
+                  disabled={form.isDirty()}
+                  onClick={() => preview('a4')}
+                >
+                  {t('Preview a sample bill (A4)')}
+                </Button>
+                <Button variant="default" disabled={form.isDirty()} onClick={() => preview('a5')}>
+                  {t('A5')}
+                </Button>
+                {form.isDirty() && (
+                  <Text size="xs" c="dimmed">
+                    {t('Save the settings first to preview them.')}
+                  </Text>
+                )}
+              </Group>
             </Grid.Col>
           </Grid>
         </SectionCard>

@@ -11,9 +11,12 @@
   body.size-a5 table.lines th, body.size-a5 table.lines td { padding: 3pt 4pt; }
   body.size-a5 .signatures { margin-top: 22pt; }
   body.size-a5 table.totals { width: 54%; }
+  body.size-a5 table.lines .detail, body.size-a5 table.lines td.details { font-size: 6.8pt; }
+  body.size-a5 table.lines th { font-size: 7.2pt; }
 {% endblock %}
 {% block content %}
 {% if invoice.is_cancelled %}<div class="watermark">CANCELLED</div>{% endif %}
+{% if sample %}<div class="watermark">SAMPLE</div>{% endif %}
 
 <div class="doc-header">
   {% include "documents/_shop_header.html" %}
@@ -47,23 +50,37 @@
 <table class="lines">
   <thead>
     <tr>
-      <th style="width: 6%">S.N.</th>
-      <th>Particulars</th>
-      <th class="num" style="width: 12%">Qty</th>
-      <th style="width: 8%">Unit</th>
-      <th class="num" style="width: 13%">Rate</th>
-      <th class="num" style="width: 16%">Amount</th>
+      <th style="width: 4%">S.N.</th>
+      <th style="width: 17%">Particular</th>
+      <th class="num" style="width: 6%">W</th>
+      <th class="num" style="width: 6%">H</th>
+      <th class="num" style="width: 7%">Sq ft</th>
+      <th class="num" style="width: 6%">Qty</th>
+      <th class="num" style="width: 9%">Rate</th>
+      <th class="num" style="width: 12%">Amount</th>
+      <th class="details">Details</th>
     </tr>
   </thead>
   <tbody>
   {% for line in lines %}
     <tr>
       <td>{{ forloop.counter }}</td>
-      <td>{{ line.description }}{% if line.details %}<div class="detail">{{ line.details }}</div>{% endif %}</td>
-      <td class="num">{{ line.quantity|qty }}</td>
-      <td>{{ line.unit }}</td>
+      <td>{{ line.description }}</td>
+    {% if line.pieces %}
+      <td class="num">{{ line.width|size:line.size_unit }}</td>
+      <td class="num">{{ line.height|size:line.size_unit }}</td>
+      <td class="num">{% if line.per_piece %}<span class="detail">per piece</span>{% else %}{{ line.billable_sqft|qty }}{% endif %}</td>
+      <td class="num">{{ line.pieces }}</td>
+    {% else %}
+      {# Add-ons, and bills issued before size and pieces were kept #}
+      <td></td>
+      <td></td>
+      <td class="num">{% if line.unit == "sq ft" %}{{ line.quantity|qty }}{% endif %}</td>
+      <td class="num">{% if line.unit != "sq ft" %}{{ line.quantity|qty }}{% if line.unit and line.unit != "pcs" and line.unit != "nos" %} {{ line.unit }}{% endif %}{% endif %}</td>
+    {% endif %}
       <td class="num">{{ line.rate|amount }}</td>
       <td class="num">{{ line.amount|amount }}</td>
+      <td class="details">{{ line.details }}</td>
     </tr>
   {% endfor %}
   </tbody>
@@ -77,6 +94,7 @@
     {% if invoice.is_cancelled %}
       <div style="margin-top: 6pt; color: #B91C1C"><strong>Cancelled</strong> on {{ invoice.cancelled_at|date:"d M Y" }}: {{ invoice.cancel_reason }}</div>
     {% endif %}
+    {% include "documents/_payment_info.html" %}
   </div>
   <table class="totals">
     <tr><td>Sub-total</td><td>{{ invoice.subtotal|amount }}</td></tr>
@@ -89,7 +107,8 @@
     <tr class="grand"><td>Grand total</td><td>Rs. {{ invoice.total|amount }}</td></tr>
     {% if not invoice.is_cancelled %}
       <tr class="soft"><td>Paid</td><td>{{ paid|amount }}</td></tr>
-      <tr><td><strong>Balance due</strong></td><td><strong>{{ balance|amount }}</strong></td></tr>
+      <tr class="gap"><td></td><td></td></tr>
+      <tr class="due"><td>Balance due</td><td>Rs. {{ balance|amount }}</td></tr>
     {% endif %}
   </table>
 </div>

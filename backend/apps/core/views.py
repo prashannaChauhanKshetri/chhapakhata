@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import datetime as dt
 import mimetypes
+from decimal import Decimal
+from types import SimpleNamespace
+from typing import Any
 
 import django_filters
 from django.http import FileResponse
@@ -23,8 +26,10 @@ from .dates import (
     local_today,
     named_periods,
 )
+from .documents import PAGE_SIZES, pdf_response, render_pdf
 from .health import health_status
 from .models import ActivityLog, ShopSettings
+from .money import amount_in_words, q2
 from .permissions import AUTHENTICATED, Perm
 from .serializers import (
     IMAGE_FIELDS,
@@ -63,6 +68,85 @@ class ShopSettingsView(APIView):
             request=request,
         )
         return Response(serializer.data)
+
+
+def _sample_bill(user: Any, size: str) -> dict[str, Any]:
+    """A made-up bill, to see the print layout without issuing a real one."""
+    shop = ShopSettings.load()
+    today = local_today()
+    lines = [
+        SimpleNamespace(
+            description="Star Flex – shop front banner",
+            details="10 × 4 ft × 2 pcs",
+            quantity=Decimal("80"),
+            unit="sq ft",
+            rate=Decimal("35"),
+            amount=Decimal("2800"),
+        ),
+        SimpleNamespace(
+            description="3D Letters",
+            details="1 × 1 ft",
+            quantity=Decimal("6"),
+            unit="pcs",
+            rate=Decimal("1200"),
+            amount=Decimal("7200"),
+        ),
+    ]
+    subtotal = Decimal("10000.00")
+    vat_rate = shop.vat_rate if shop.is_vat_registered else Decimal("0")
+    vat = q2(subtotal * vat_rate / 100)
+    total = subtotal + vat
+    invoice = SimpleNamespace(
+        invoice_no="INV-SAMPLE",
+        customer_name="Sample Customer",
+        customer_address="Nepalgunj",
+        customer_phone="9800000000",
+        customer_pan="",
+        invoice_date=today,
+        invoice_date_bs=bs_string(today),
+        fiscal_year=fiscal_year_for(today),
+        order=SimpleNamespace(order_no="ORD-SAMPLE"),
+        is_vat_invoice=vat > 0,
+        is_cancelled=False,
+        subtotal=subtotal,
+        discount_amount=Decimal("0"),
+        taxable_amount=subtotal,
+        vat_rate=vat_rate,
+        vat_amount=vat,
+        round_off=Decimal("0"),
+        total=total,
+        amount_in_words=amount_in_words(total),
+        notes="",
+        issued_by=user,
+    )
+    paid = Decimal("5000.00")
+    return {
+        "invoice": invoice,
+        "lines": lines,
+        "size": size,
+        "page_size": PAGE_SIZES[size],
+        "copy_number": 0,
+        "paid": paid,
+        "balance": total - paid,
+        "sample": True,
+    }
+
+
+class PrintPreviewView(APIView):
+    """A sample bill printed with the saved settings (Settings → Print layout)."""
+
+    required_perms = Perm.SETTINGS_MANAGE
+
+    @extend_schema(
+        parameters=[OpenApiParameter("size", str, enum=["a4", "a5"])],
+        responses={(200, "application/pdf"): bytes},
+    )
+    def get(self, request):
+        size = request.query_params.get("size", "a4")
+        if size not in ("a4", "a5"):
+            size = "a4"
+        pdf = render_pdf("documents/invoice.html", _sample_bill(request.user, size))
+        return pdf_response(pdf, "sample-bill")
 
 
 class ShopImageView(APIView):

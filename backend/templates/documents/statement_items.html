@@ -4,11 +4,11 @@
 {% block page_size %}A4 landscape{% endblock %}
 {% block page_margin %}12mm 10mm 14mm 10mm{% endblock %}
 {% block extra_style %}
-  table.items { font-size: 8pt; }
+  table.items { font-size: 9pt; }
   table.items th, table.items td { padding: 3pt 4pt; }
   table.items tbody tr.first td { border-top: 0.75pt solid #CBD5E1; }
-  table.items td.details { color: #475569; font-size: 7.5pt; }
-  table.items tr.charge td.particular { padding-left: 12pt; color: #475569; }
+  table.items td.details, table.items span.details { color: #1E293B; font-size: 8.5pt; }
+  table.items tr.charge td.particular { padding-left: 12pt; color: #1E293B; font-weight: 600; }
   table.items tr.addon td.particular { padding-left: 12pt; }
   table.items tr.total td { border-top: 1pt solid #0F172A; font-weight: 700; }
   .balance-due { font-weight: 700; }
@@ -34,7 +34,8 @@
     <div class="label">From</div>
     <div class="strong">{{ shop.name }}</div>
     {% if shop.address %}<div>{{ shop.address }}</div>{% endif %}
-    {% if shop.phone %}<div class="muted">Tel {{ shop.phone }}</div>{% endif %}
+    {% if shop.phone %}<div>Phone: {{ shop.phone }}</div>{% endif %}
+    {% if shop.email %}<div>Email: {{ shop.email }}</div>{% endif %}
     {% if shop.pan_vat_number %}<div>PAN/VAT {{ shop.pan_vat_number }}</div>{% endif %}
   </div>
   <div class="block">
@@ -78,7 +79,7 @@
         <td class="particular">{{ line.particular }}</td>
         <td class="num">{{ line.width }}</td>
         <td class="num">{{ line.height }}</td>
-        <td class="num">{% if line.sqft %}{{ line.sqft|qty }}{% endif %}</td>
+        <td class="num">{% if line.unit == "Piece" %}<span class="details">per piece</span>{% elif line.sqft %}{{ line.sqft|qty }}{% endif %}</td>
         <td class="num">{% if line.quantity %}{{ line.quantity }}{% endif %}</td>
         <td class="num">{% if line.rate %}{{ line.rate|amount }}{% endif %}</td>
         <td class="num">{{ line.amount|amount }}</td>
@@ -110,6 +111,12 @@
     </tr>
   </tbody>
 </table>
+<div class="totals-wrap">
+  <div class="words">{% include "documents/_payment_info.html" %}</div>
+  <table class="totals">
+    <tr class="due"><td>{% if statement.closing_balance < 0 %}Advance with us{% else %}Balance due{% endif %}</td><td>Rs. {{ statement.closing_balance|amount }}</td></tr>
+  </table>
+</div>
 {% include "documents/_signatures.html" %}
 <div class="footer-note">Positive balance is the amount due to {{ shop.name }}. Generated {{ generated_at|date:"d M Y, H:i" }} ({{ generated_at_bs }} BS).</div>
 {% endblock %}

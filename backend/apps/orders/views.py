@@ -10,7 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.billing.models import Invoice, InvoiceStatus
-from apps.billing.selectors import paid_subquery
+from apps.billing.selectors import order_paid_amount, paid_subquery
 from apps.billing.serializers import InvoiceDetailSerializer, PaymentSerializer
 from apps.catalog.pricing import discount_percent
 from apps.core.dates import local_today
@@ -314,9 +314,17 @@ class OrderViewSet(
         order = self.get_object()
         items = order.items.prefetch_related("addons").order_by("line_no")
         valid_until = order.order_date + dt.timedelta(days=_shop_validity_days())
+        paid = order_paid_amount(order)
         pdf = render_pdf(
             "documents/quotation.html",
-            {"order": order, "items": items, "valid_until": valid_until, "today": local_today()},
+            {
+                "order": order,
+                "items": items,
+                "valid_until": valid_until,
+                "today": local_today(),
+                "paid": paid,
+                "balance": order.total - paid,
+            },
         )
         return pdf_response(pdf, f"quotation-{order.order_no}")
 

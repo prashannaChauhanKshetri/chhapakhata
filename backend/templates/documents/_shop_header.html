@@ -2,11 +2,12 @@
   {% if logo_uri %}<img src="{{ logo_uri }}" alt="">{% endif %}
   <div>
     <div class="shop-name">{{ shop.name }}</div>
+    {% if shop.tagline %}<div class="shop-tagline">{{ shop.tagline }}</div>{% endif %}
     <div class="shop-meta">
-      {% if shop.tagline %}{{ shop.tagline }}<br>{% endif %}
-      {{ shop.address }}{% if shop.phone %} · Tel {{ shop.phone }}{% endif %}
-      {% if shop.email %}<br>{{ shop.email }}{% endif %}
-      {% if shop.pan_vat_number %}<br><strong>{% if shop.is_vat_registered %}VAT{% else %}PAN{% endif %} No. {{ shop.pan_vat_number }}</strong>{% endif %}
+      {% if shop.address %}<div>{{ shop.address }}</div>{% endif %}
+      {% if shop.phone %}<div class="contact"><b>Phone:</b> {{ shop.phone }}</div>{% endif %}
+      {% if shop.email %}<div class="contact"><b>Email:</b> {{ shop.email }}</div>{% endif %}
+      {% if shop.pan_vat_number %}<div class="contact"><b>{% if shop.is_vat_registered %}VAT{% else %}PAN{% endif %} No.:</b> {{ shop.pan_vat_number }}</div>{% endif %}
     </div>
   </div>
 </div>

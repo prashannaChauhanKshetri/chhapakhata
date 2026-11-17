@@ -359,6 +359,7 @@ def add_item_lines(statement: dict[str, Any]) -> dict[str, Any]:
                             else None
                         ),
                         "quantity": item.quantity,
+                        "unit": "Piece" if item.is_per_piece else "Sq ft",
                         "rate": item.rate,
                         "amount": item.base_amount,
                         "details": " · ".join(d for d in details if d),

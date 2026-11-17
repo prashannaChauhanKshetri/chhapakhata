@@ -60,3 +60,12 @@ def qty(value) -> str:
         return str(value)
     text = f"{number:,.2f}"
     return text.rstrip("0").rstrip(".") if "." in text else text
+
+
+@register.filter
+def size(value, unit: str = "ft") -> str:
+    """A width or height for the W / H columns: ``6`` in feet, ``36 in`` otherwise."""
+    if value in (None, ""):
+        return ""
+    text = qty(value)
+    return text if unit in ("", "ft") else f"{text} {unit}"

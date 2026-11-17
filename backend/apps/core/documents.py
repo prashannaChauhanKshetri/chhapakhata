@@ -14,7 +14,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from .dates import bs_string
-from .models import ShopSettings
+from .models import HEX_COLOUR, ShopSettings
 
 PAGE_SIZES = {"a4": "A4", "a5": "A5", "80mm": "80mm 297mm"}
 PX_TO_MM = 25.4 / 96
@@ -36,6 +36,7 @@ def base_context() -> dict[str, Any]:
     now = timezone.localtime()
     return {
         "shop": shop,
+        "accent": shop.print_color if HEX_COLOUR.match(shop.print_color or "") else "#1D4E89",
         "logo_uri": _file_uri(shop.logo),
         "stamp_uri": _file_uri(shop.stamp_image),
         "signature_uri": _file_uri(shop.signature_image),

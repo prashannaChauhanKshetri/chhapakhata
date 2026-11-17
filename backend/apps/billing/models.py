@@ -114,6 +114,13 @@ class InvoiceLine(BusinessOwned):
     )
     sqft = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"))
     billable_sqft = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0"))
+    # Printed columns (W, H, pieces). Empty on add-on lines and on bills issued before
+    # these were kept; those print from quantity and unit instead.
+    width = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    height = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    size_unit = models.CharField(max_length=2, blank=True)
+    pieces = models.PositiveIntegerField(null=True, blank=True)
+    per_piece = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["invoice", "line_no"]

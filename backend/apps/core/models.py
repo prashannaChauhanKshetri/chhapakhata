@@ -40,6 +40,24 @@ def validate_number_pattern(value: str) -> None:
             )
 
 
+HEX_COLOUR = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
+
+def validate_hex_colour(value: str) -> None:
+    if not HEX_COLOUR.match(value or ""):
+        raise ValidationError("Use a colour like #1D4E89.")
+
+
+class PrintTextSize(models.TextChoices):
+    NORMAL = "normal", "Normal"
+    LARGE = "large", "Large"
+
+
+class PrintHeader(models.TextChoices):
+    LEFT = "left", "Shop on the left, title on the right"
+    CENTER = "center", "Letterhead: shop in the centre"
+
+
 def branding_path(instance: ShopSettings, filename: str) -> str:
     return f"branding/{instance.business_id}/{filename}"
 
@@ -99,6 +117,25 @@ class ShopSettings(models.Model):
     )
     invoice_footer_note = models.CharField(
         max_length=255, blank=True, default="Thank you for your business."
+    )
+    payment_info = models.TextField(
+        "Payment information",
+        blank=True,
+        help_text="Bank account, eSewa / Khalti number and so on. Printed on bills, "
+        "quotations and statements.",
+    )
+    print_color = models.CharField(
+        "Print colour",
+        max_length=7,
+        default="#1D4E89",
+        validators=[validate_hex_colour],
+        help_text="Headings, table headers and the balance-due bar.",
+    )
+    print_text_size = models.CharField(
+        max_length=10, choices=PrintTextSize.choices, default=PrintTextSize.NORMAL
+    )
+    print_header = models.CharField(
+        "Header layout", max_length=10, choices=PrintHeader.choices, default=PrintHeader.LEFT
     )
     quotation_validity_days = models.PositiveSmallIntegerField(default=7)
     quotation_terms = models.TextField(

@@ -12,7 +12,7 @@
 
 <div class="info">
   <div class="block">
-    <div class="label">Prepared for</div>
+    <div class="label">Bill to</div>
     <div class="strong">{{ order.customer.name }}</div>
     {% if order.customer.address %}<div>{{ order.customer.address }}</div>{% endif %}
     {% if order.customer.phone %}<div class="muted">Tel {{ order.customer.phone }}</div>{% endif %}
@@ -31,13 +31,15 @@
 <table class="lines">
   <thead>
     <tr>
-      <th style="width: 5%">S.N.</th>
-      <th>Item</th>
-      <th style="width: 15%">Size</th>
-      <th class="num" style="width: 7%">Qty</th>
-      <th class="num" style="width: 11%">Sq ft</th>
-      <th class="num" style="width: 11%">Rate</th>
-      <th class="num" style="width: 14%">Amount</th>
+      <th style="width: 4%">S.N.</th>
+      <th style="width: 17%">Particular</th>
+      <th class="num" style="width: 6%">W</th>
+      <th class="num" style="width: 6%">H</th>
+      <th class="num" style="width: 7%">Sq ft</th>
+      <th class="num" style="width: 6%">Qty</th>
+      <th class="num" style="width: 9%">Rate</th>
+      <th class="num" style="width: 12%">Amount</th>
+      <th class="details">Details</th>
     </tr>
   </thead>
   <tbody>
@@ -45,21 +47,26 @@
     <tr>
       <td>{{ item.line_no }}</td>
       <td>
-        <strong>{{ item.media_name }}</strong>{% if item.description %} – {{ item.description }}{% endif %}
-        {% if item.finishing %}<div class="detail">Finishing: {{ item.finishing }}</div>{% endif %}
+        <strong>{{ item.media_name }}</strong>
+      </td>
+      <td class="num">{% if item.has_size %}{{ item.width|size:item.unit }}{% endif %}</td>
+      <td class="num">{% if item.has_size %}{{ item.height|size:item.unit }}{% endif %}</td>
+      <td class="num">{% if item.is_per_piece %}<span class="detail">per piece</span>{% else %}{{ item.total_billable_sqft|qty }}{% endif %}</td>
+      <td class="num">{{ item.quantity }}</td>
+      <td class="num">{{ item.rate|amount }}</td>
+      <td class="num">{{ item.base_amount|amount }}</td>
+      <td class="details">
+        {% if item.description %}{{ item.description }}{% endif %}
+        {% if item.finishing %}<div>Finishing: {{ item.finishing }}</div>{% endif %}
         {% if item.min_applied %}<div class="detail">Minimum {{ item.min_sqft|qty }} sq ft charged per piece</div>{% endif %}
       </td>
-      <td>{{ item.size_label|default:"—" }}</td>
-      <td class="num">{{ item.quantity }}</td>
-      <td class="num">{% if item.is_per_piece %}—{% else %}{{ item.total_billable_sqft|qty }}{% endif %}</td>
-      <td class="num">{{ item.rate|amount }}{% if item.is_per_piece %}<div class="detail">per piece</div>{% endif %}</td>
-      <td class="num">{{ item.base_amount|amount }}</td>
     </tr>
     {% for addon in item.addons.all %}
     <tr>
       <td></td>
-      <td colspan="5"><span class="muted">+ {{ addon.name }}</span> <span class="detail">({{ addon.get_basis_display|lower }}{% if addon.basis == "fixed" or addon.basis == "per_piece" %}, {{ addon.quantity|qty }}{% endif %})</span></td>
+      <td colspan="6"><span class="muted">+ {{ addon.name }}</span> <span class="detail">({{ addon.get_basis_display|lower }}{% if addon.basis == "fixed" or addon.basis == "per_piece" %}, {{ addon.quantity|qty }}{% endif %})</span></td>
       <td class="num">{{ addon.amount|amount }}</td>
+      <td></td>
     </tr>
     {% endfor %}
   {% endfor %}
@@ -74,6 +81,7 @@
       <div style="margin-top: 8pt"><span class="label">Terms</span><br>{{ shop.quotation_terms|linebreaksbr }}</div>
     {% endif %}
     {% if order.notes %}<div style="margin-top: 6pt"><span class="label">Notes</span><br>{{ order.notes|linebreaksbr }}</div>{% endif %}
+    {% include "documents/_payment_info.html" %}
   </div>
   <table class="totals">
     <tr><td>Sub-total</td><td>{{ order.subtotal|amount }}</td></tr>
@@ -83,7 +91,15 @@
       <tr><td>VAT {{ order.vat_rate|qty }}%</td><td>{{ order.vat_amount|amount }}</td></tr>
     {% endif %}
     {% if order.round_off %}<tr class="soft"><td>Round off</td><td>{{ order.round_off|amount }}</td></tr>{% endif %}
-    <tr class="grand"><td>Total</td><td>Rs. {{ order.total|amount }}</td></tr>
+    {% if paid %}
+      <tr class="grand"><td>Total</td><td>Rs. {{ order.total|amount }}</td></tr>
+      <tr class="soft"><td>Advance paid</td><td>{{ paid|amount }}</td></tr>
+      <tr class="gap"><td></td><td></td></tr>
+      <tr class="due"><td>Balance due</td><td>Rs. {{ balance|amount }}</td></tr>
+    {% else %}
+      <tr class="gap"><td></td><td></td></tr>
+      <tr class="due"><td>Total</td><td>Rs. {{ order.total|amount }}</td></tr>
+    {% endif %}
   </table>
 </div>
 

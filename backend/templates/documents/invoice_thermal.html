@@ -7,7 +7,7 @@
 {% block content %}
 <div class="t-center">
   <div class="t-shop">{{ shop.name }}</div>
-  <div class="t-meta">{{ shop.address }}{% if shop.phone %}<br>Tel {{ shop.phone }}{% endif %}
+  <div class="t-meta">{{ shop.address }}{% if shop.phone %}<br>Tel {{ shop.phone }}{% endif %}{% if shop.email %}<br>{{ shop.email }}{% endif %}
     {% if shop.pan_vat_number %}<br>{% if shop.is_vat_registered %}VAT{% else %}PAN{% endif %} No. {{ shop.pan_vat_number }}{% endif %}</div>
   <div class="t-title">{% if invoice.is_vat_invoice %}Tax Invoice{% else %}Invoice{% endif %}</div>
   {% if copy_number %}<div class="t-copy">COPY OF ORIGINAL – {{ copy_number }}</div>{% endif %}

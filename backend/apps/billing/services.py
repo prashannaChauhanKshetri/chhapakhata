@@ -138,15 +138,16 @@ def issue_invoice(*, order: Order, user: Any, notes: str = "", request: Any = No
     lines = []
     for item in order.items.prefetch_related("addons").order_by("line_no"):
         line_no += 1
-        description = item.media_name + (f" – {item.description}" if item.description else "")
+        # Size and pieces print in their own columns; Details holds the rest.
+        description = item.media_name
+        notes = [item.description, item.finishing]
         if item.is_per_piece:
-            details = item.size_label
             quantity, unit = q2(Decimal(item.quantity)), "pcs"
         else:
-            details = f"{item.size_label} × {item.quantity} pcs"
             if item.min_applied:
-                details += f" (min. {fmt_qty(item.min_sqft)} sq ft each)"
+                notes.append(f"min. {fmt_qty(item.min_sqft)} sq ft each")
             quantity, unit = q2(item.billable_sqft * item.quantity), "sq ft"
+        details = " · ".join(x for x in notes if x)
         lines.append(
             InvoiceLine(
                 invoice=invoice,
@@ -160,6 +161,11 @@ def issue_invoice(*, order: Order, user: Any, notes: str = "", request: Any = No
                 media_type_id=item.media_type_id,
                 sqft=q2(item.sqft * item.quantity),
                 billable_sqft=q2(item.billable_sqft * item.quantity),
+                width=item.width if item.has_size else None,
+                height=item.height if item.has_size else None,
+                size_unit=item.unit if item.has_size else "",
+                pieces=item.quantity,
+                per_piece=item.is_per_piece,
             )
         )
         for addon in item.addons.all():
