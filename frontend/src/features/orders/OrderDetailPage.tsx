@@ -17,6 +17,7 @@ import {
   IconCheck,
   IconDotsVertical,
   IconFileInvoice,
+  IconNotes,
   IconPencil,
   IconPrinter,
   IconReceipt2,
@@ -48,6 +49,7 @@ import { INVOICE_STATUS, ORDER_STATUS, PAYMENT_STATUS } from '@/lib/status';
 
 import { openReceivePayment } from '../billing/ReceivePaymentForm';
 import { openDeliver } from './DeliverForm';
+import { openEditDetails } from './EditDetailsForm';
 
 export default function OrderDetailPage() {
   const { t } = useTranslation();
@@ -256,6 +258,14 @@ export default function OrderDetailPage() {
                     onClick={() => navigate(`/orders/${order.id}/edit`)}
                   >
                     {t('Edit order')}
+                  </Menu.Item>
+                )}
+                {a.can_edit_details && (
+                  <Menu.Item
+                    leftSection={<IconNotes size={16} />}
+                    onClick={() => openEditDetails(order)}
+                  >
+                    {t('Edit details')}
                   </Menu.Item>
                 )}
                 {a.can_cancel && (

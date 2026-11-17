@@ -481,6 +481,45 @@ def update_order(
 
 
 @transaction.atomic
+def edit_item_details(
+    *, order: Order, user: Any, items: list[dict[str, Any]], request: Any = None
+) -> Order:
+    """Change the words on an order's items (details, finishing), never its amounts.
+
+    Works on any order that is not cancelled: delivered, billed or imported from the
+    work log. Bills already issued keep the words they were printed with.
+    """
+    order = Order.objects.select_for_update().get(pk=order.pk)
+    if order.status == OrderStatus.CANCELLED:
+        raise BusinessError("A cancelled order cannot be changed.")
+    existing = {i.pk: i for i in order.items.all()}
+    changed = []
+    for data in items:
+        item = existing.get(data["id"])
+        if item is None:
+            raise BusinessError({"items": ["An item does not belong to this order."]})
+        updated = [
+            name
+            for name in ("description", "finishing")
+            if name in data and (data[name] or "").strip() != getattr(item, name)
+        ]
+        for name in updated:
+            setattr(item, name, (data[name] or "").strip())
+        if updated:
+            item.save(update_fields=updated)
+            changed.append(item.line_no)
+    if changed:
+        log_activity(
+            user,
+            "order.details_edited",
+            order,
+            message=f"Details of item {', '.join(map(str, changed))} changed",
+            request=request,
+        )
+    return order
+
+
+@transaction.atomic
 def confirm_order(*, order: Order, user: Any, request: Any = None) -> Order:
     """Turn a quotation into a confirmed order and open one job per item."""
     from apps.production.services import create_jobs_for_order

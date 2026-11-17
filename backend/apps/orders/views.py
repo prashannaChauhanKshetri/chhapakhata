@@ -26,6 +26,7 @@ from .models import Order, OrderItem, OrderStatus
 from .serializers import (
     DeliverSerializer,
     IssueInvoiceSerializer,
+    OrderDetailsEditSerializer,
     OrderDetailSerializer,
     OrderListSerializer,
     OrderWriteSerializer,
@@ -91,6 +92,7 @@ class OrderViewSet(
         "confirm": Perm.ORDERS_MANAGE,
         "cancel": Perm.ORDERS_MANAGE,
         "deliver": Perm.ORDERS_MANAGE,
+        "details": Perm.ORDERS_MANAGE,
         "invoice": Perm.DOCUMENTS_ISSUE,
         "quotation_pdf": Perm.DOCUMENTS_ISSUE,
         "job_tickets_pdf": Perm.PRODUCTION_VIEW,
@@ -229,6 +231,20 @@ class OrderViewSet(
             "discount_limit": limit,
         }
         return Response(PricePreviewSerializer(payload).data)
+
+    @extend_schema(request=OrderDetailsEditSerializer, responses=OrderDetailSerializer)
+    @action(detail=True, methods=["post"])
+    def details(self, request, pk=None):
+        """Change item details and finishing on any order; amounts never change."""
+        serializer = OrderDetailsEditSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        order = services.edit_item_details(
+            order=self.get_object(),
+            user=request.user,
+            items=serializer.validated_data["items"],
+            request=request,
+        )
+        return self._detail(order)
 
     @extend_schema(request=None, responses=OrderDetailSerializer)
     @action(detail=True, methods=["post"])

@@ -167,6 +167,9 @@ class OrderInvoiceSerializer(serializers.Serializer):
 
 class OrderActionsSerializer(serializers.Serializer):
     can_edit = serializers.BooleanField()
+    can_edit_details = serializers.BooleanField(
+        help_text="Item details and finishing can be changed (amounts stay)."
+    )
     can_confirm = serializers.BooleanField()
     can_cancel = serializers.BooleanField()
     can_invoice = serializers.BooleanField()
@@ -235,6 +238,8 @@ class OrderDetailSerializer(OrderListSerializer):
             "can_edit": user.can(Perm.ORDERS_MANAGE)
             and obj.status in EDITABLE_STATUSES
             and not invoiced,
+            "can_edit_details": user.can(Perm.ORDERS_MANAGE)
+            and obj.status != OrderStatus.CANCELLED,
             "can_confirm": user.can(Perm.ORDERS_MANAGE) and obj.status == OrderStatus.QUOTATION,
             "can_cancel": user.can(Perm.ORDERS_MANAGE)
             and obj.status not in (OrderStatus.CANCELLED, OrderStatus.DELIVERED)
@@ -427,3 +432,15 @@ class DeliverSerializer(serializers.Serializer):
 
 class IssueInvoiceSerializer(serializers.Serializer):
     notes = serializers.CharField(max_length=255, required=False, allow_blank=True, default="")
+
+
+class ItemDetailsSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    description = serializers.CharField(
+        max_length=200, required=False, allow_blank=True, help_text="Printed under Details."
+    )
+    finishing = serializers.CharField(max_length=200, required=False, allow_blank=True)
+
+
+class OrderDetailsEditSerializer(serializers.Serializer):
+    items = ItemDetailsSerializer(many=True)

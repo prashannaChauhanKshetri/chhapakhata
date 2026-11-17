@@ -70,9 +70,7 @@ export function ItemRow({
   const { can } = useAuth();
   const navigate = useNavigate();
   const [mediaSearch, setMediaSearch] = useState('');
-  const [moreOpen, setMoreOpen] = useState(
-    Boolean(item.finishing || item.design_file_ref || item.description),
-  );
+  const [moreOpen, setMoreOpen] = useState(Boolean(item.finishing || item.design_file_ref));
   const path = (field: string) => `items.${index}.${field}`;
   const media = mediaTypes.find((m) => String(m.id) === item.media_type);
 
@@ -334,31 +332,33 @@ export function ItemRow({
         </Grid.Col>
       </Grid>
 
+      <TextInput
+        mt="sm"
+        label={t('Details')}
+        description={t('Printed in the Details column of the quotation, bill and statement')}
+        placeholder={t('e.g. Information board, sticker pasting on old hoarding')}
+        maxLength={200}
+        {...form.getInputProps(path('description'))}
+      />
+
       <UnstyledButton onClick={() => setMoreOpen((o) => !o)} mt="sm" className={classes.moreToggle}>
         <Group gap={4}>
           {moreOpen ? <IconChevronDown size={14} /> : <IconChevronRight size={14} />}
           <Text size="xs" c="dimmed" fw={500}>
-            {t('Description, finishing and design file')}
+            {t('Finishing and design file')}
           </Text>
         </Group>
       </UnstyledButton>
       <Collapse expanded={moreOpen}>
         <Grid gap="sm" mt={4}>
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <TextInput
-              label={t('Description')}
-              placeholder={t('e.g. Shop signboard')}
-              {...form.getInputProps(path('description'))}
-            />
-          </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 4 }}>
+          <Grid.Col span={{ base: 12, md: 6 }}>
             <TextInput
               label={t('Finishing')}
               placeholder={t('e.g. Hemmed edges, wooden frame')}
               {...form.getInputProps(path('finishing'))}
             />
           </Grid.Col>
-          <Grid.Col span={{ base: 12, md: 4 }}>
+          <Grid.Col span={{ base: 12, md: 6 }}>
             <TextInput
               label={t('Design file')}
               placeholder={t('File name or folder (.cdr, .psd)')}
