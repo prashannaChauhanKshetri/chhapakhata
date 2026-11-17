@@ -33,6 +33,8 @@ export interface OrderFormValues {
   notes: string;
   discount_type: 'none' | 'percent' | 'amount';
   discount_value: number | string;
+  /** Add VAT to this order; a new order starts from the customer's setting. */
+  add_vat: boolean;
   items: ItemValue[];
 }
 
@@ -73,6 +75,7 @@ export function initialValues(order?: OrderDetail): OrderFormValues {
       notes: '',
       discount_type: 'none',
       discount_value: 0,
+      add_vat: true,
       items: [emptyItem()],
     };
   }
@@ -82,6 +85,7 @@ export function initialValues(order?: OrderDetail): OrderFormValues {
     notes: order.notes ?? '',
     discount_type: (order.discount_type ?? 'none') as OrderFormValues['discount_type'],
     discount_value: toNumber(order.discount_value),
+    add_vat: toNumber(order.vat_rate) > 0,
     items: order.items.map((item) => ({
       key: newKey(),
       id: item.id,
@@ -129,6 +133,7 @@ export function pricingPayload(values: OrderFormValues) {
   return {
     discount_type: values.discount_type,
     discount_value: String(toNumber(values.discount_value)),
+    add_vat: values.add_vat,
     items: values.items.filter(isItemComplete).map(itemPayload),
   };
 }
@@ -145,6 +150,7 @@ export function orderPayload(
     notes: values.notes.trim(),
     discount_type: values.discount_type,
     discount_value: String(toNumber(values.discount_value)),
+    add_vat: values.add_vat,
     items: values.items.map(itemPayload),
     confirm,
   };

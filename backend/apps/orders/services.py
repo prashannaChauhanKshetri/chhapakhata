@@ -101,6 +101,8 @@ class OrderInput:
     items: list[ItemInput]
     discount_type: str = DiscountType.NONE
     discount_value: Decimal = Decimal("0")
+    # None: keep the order's choice, or the customer's setting for a new order.
+    add_vat: bool | None = None
 
 
 def item_input_from_data(data: dict[str, Any]) -> ItemInput:
@@ -203,6 +205,26 @@ def _item_lines(
     return lines, metas
 
 
+def order_vat_rate(
+    shop: ShopSettings, add_vat: bool | None, *, order: Order | None = None, customer: Any = None
+) -> Decimal:
+    """The VAT rate for an order: 0 when VAT is not added, else the shop's rate.
+
+    A confirmed order keeps the rate it was confirmed with.
+    """
+    fixed = order is not None and order.status != OrderStatus.QUOTATION
+    if add_vat is None:
+        if fixed:
+            add_vat = order.vat_rate > 0
+        else:
+            add_vat = customer.add_vat if customer is not None else True
+    if not add_vat:
+        return Decimal("0")
+    if fixed and order.vat_rate > 0:
+        return order.vat_rate
+    return shop.vat_rate if shop.is_vat_registered else Decimal("0")
+
+
 def calculate(
     data: OrderInput,
     *,
@@ -224,11 +246,7 @@ def calculate(
         else {}
     )
     lines, metas = _item_lines(data.items, shop, existing, last_rates)
-    vat_rate = (
-        order.vat_rate
-        if order is not None and order.status != OrderStatus.QUOTATION
-        else (shop.vat_rate if shop.is_vat_registered else Decimal("0"))
-    )
+    vat_rate = order_vat_rate(shop, data.add_vat, order=order, customer=customer)
     try:
         pricing = price_order(
             lines,

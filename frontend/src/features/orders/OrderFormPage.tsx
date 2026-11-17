@@ -76,7 +76,9 @@ function OrderFormInner({
   const { data: shop } = useShopSettings();
 
   const form = useForm<OrderFormValues>({
-    initialValues: initialValues(order),
+    initialValues: order
+      ? initialValues(order)
+      : { ...initialValues(), add_vat: presetCustomer?.add_vat ?? true },
     validate: {
       items: {
         media_type: (v) => (v ? null : t('Choose a media')),
@@ -259,6 +261,19 @@ function OrderFormInner({
           )}
         </Stack>
 
+        {shop?.is_vat_registered && (
+          <Switch
+            label={t('Add VAT {{rate}}%', { rate: formatQty(shop.vat_rate) })}
+            description={
+              customer && customer.add_vat !== form.values.add_vat
+                ? customer.add_vat
+                  ? t('This customer is usually billed with VAT.')
+                  : t('This customer is usually billed without VAT.')
+                : undefined
+            }
+            {...form.getInputProps('add_vat', { type: 'checkbox' })}
+          />
+        )}
         {toNumber(totals?.vat_rate) > 0 && (
           <>
             <div className={classes.summaryRow}>
@@ -368,6 +383,7 @@ function OrderFormInner({
                 error={form.errors.customer}
                 onChange={(c) => {
                   setCustomer(c);
+                  if (!isEdit && c) form.setFieldValue('add_vat', c.add_vat);
                   form.clearFieldError('customer');
                 }}
               />

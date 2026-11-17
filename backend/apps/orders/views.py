@@ -65,6 +65,7 @@ def _order_input(data: dict) -> services.OrderInput:
         items=[services.item_input_from_data(i) for i in data["items"]],
         discount_type=data.get("discount_type", "none"),
         discount_value=data.get("discount_value", 0),
+        add_vat=data.get("add_vat"),
     )
 
 

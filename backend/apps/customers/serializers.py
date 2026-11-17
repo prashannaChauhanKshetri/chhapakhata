@@ -41,6 +41,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             "customer_type_label",
             "notes",
             "is_active",
+            "add_vat",
             "balance",
             "opening_balance",
             "opening_date",

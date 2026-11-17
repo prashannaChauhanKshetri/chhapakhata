@@ -471,6 +471,7 @@ export default function CustomerDetailPage() {
           <Group gap={6}>
             <Badge color="slate">{customer.customer_type_label}</Badge>
             {!customer.is_active && <Badge color="red">{t('Inactive')}</Badge>}
+            {!customer.add_vat && <Badge color="gray">{t('Billed without VAT')}</Badge>}
           </Group>
         }
         actions={

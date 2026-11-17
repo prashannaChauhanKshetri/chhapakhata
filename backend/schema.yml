@@ -7915,6 +7915,151 @@ paths:
               schema:
                 $ref: '#/components/schemas/OrderDetail'
           description: Order after delivery
+  /api/v1/orders/{id}/details/:
+    post:
+      operationId: orders_details_create
+      description: Change item details and finishing on any order; amounts never change.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this order.
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderDetailsEditRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderDetailsEditRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderDetailsEditRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdersDetailsCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+          description: ''
   /api/v1/orders/{id}/invoice/:
     post:
       operationId: orders_invoice_create
@@ -10917,6 +11062,142 @@ paths:
         '200':
           content:
             image/*:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/settings/shop/preview/:
+    get:
+      operationId: settings_shop_preview_retrieve
+      description: A sample bill printed with the saved settings (Settings → Print
+        layout).
+      parameters:
+      - in: query
+        name: size
+        schema:
+          type: string
+          enum:
+          - a4
+          - a5
+      tags:
+      - settings
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsShopPreviewRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/pdf:
               schema:
                 type: string
                 format: binary
@@ -17971,6 +18252,11 @@ components:
           type: string
         is_active:
           type: boolean
+        add_vat:
+          type: boolean
+          title: Add VAT on bills
+          description: Off for customers billed without VAT. New orders and bills
+            start from this.
         balance:
           type: string
           readOnly: true
@@ -17982,6 +18268,7 @@ components:
           type: string
           readOnly: true
       required:
+      - add_vat
       - address
       - alt_phone
       - balance
@@ -18132,6 +18419,11 @@ components:
           type: string
         is_active:
           type: boolean
+        add_vat:
+          type: boolean
+          title: Add VAT on bills
+          description: Off for customers billed without VAT. New orders and bills
+            start from this.
         opening_balance:
           type: string
           format: decimal
@@ -18274,6 +18566,28 @@ components:
       required:
       - errors
       - type
+    CustomersCreateAddVatErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - add_vat
+          type: string
+          description: '* `add_vat` - add_vat'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     CustomersCreateAddressErrorComponent:
       type: object
       properties:
@@ -18363,6 +18677,7 @@ components:
       - $ref: '#/components/schemas/CustomersCreateCustomerTypeErrorComponent'
       - $ref: '#/components/schemas/CustomersCreateNotesErrorComponent'
       - $ref: '#/components/schemas/CustomersCreateIsActiveErrorComponent'
+      - $ref: '#/components/schemas/CustomersCreateAddVatErrorComponent'
       - $ref: '#/components/schemas/CustomersCreateOpeningBalanceErrorComponent'
       - $ref: '#/components/schemas/CustomersCreateOpeningDateErrorComponent'
       discriminator:
@@ -18377,6 +18692,7 @@ components:
           customer_type: '#/components/schemas/CustomersCreateCustomerTypeErrorComponent'
           notes: '#/components/schemas/CustomersCreateNotesErrorComponent'
           is_active: '#/components/schemas/CustomersCreateIsActiveErrorComponent'
+          add_vat: '#/components/schemas/CustomersCreateAddVatErrorComponent'
           opening_balance: '#/components/schemas/CustomersCreateOpeningBalanceErrorComponent'
           opening_date: '#/components/schemas/CustomersCreateOpeningDateErrorComponent'
     CustomersCreateErrorResponse400:
@@ -18802,6 +19118,28 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    CustomersPartialUpdateAddVatErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - add_vat
+          type: string
+          description: '* `add_vat` - add_vat'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     CustomersPartialUpdateAddressErrorComponent:
       type: object
       properties:
@@ -18891,6 +19229,7 @@ components:
       - $ref: '#/components/schemas/CustomersPartialUpdateCustomerTypeErrorComponent'
       - $ref: '#/components/schemas/CustomersPartialUpdateNotesErrorComponent'
       - $ref: '#/components/schemas/CustomersPartialUpdateIsActiveErrorComponent'
+      - $ref: '#/components/schemas/CustomersPartialUpdateAddVatErrorComponent'
       - $ref: '#/components/schemas/CustomersPartialUpdateOpeningBalanceErrorComponent'
       - $ref: '#/components/schemas/CustomersPartialUpdateOpeningDateErrorComponent'
       discriminator:
@@ -18905,6 +19244,7 @@ components:
           customer_type: '#/components/schemas/CustomersPartialUpdateCustomerTypeErrorComponent'
           notes: '#/components/schemas/CustomersPartialUpdateNotesErrorComponent'
           is_active: '#/components/schemas/CustomersPartialUpdateIsActiveErrorComponent'
+          add_vat: '#/components/schemas/CustomersPartialUpdateAddVatErrorComponent'
           opening_balance: '#/components/schemas/CustomersPartialUpdateOpeningBalanceErrorComponent'
           opening_date: '#/components/schemas/CustomersPartialUpdateOpeningDateErrorComponent'
     CustomersPartialUpdateErrorResponse400:
@@ -19199,6 +19539,28 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    CustomersUpdateAddVatErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - add_vat
+          type: string
+          description: '* `add_vat` - add_vat'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     CustomersUpdateAddressErrorComponent:
       type: object
       properties:
@@ -19288,6 +19650,7 @@ components:
       - $ref: '#/components/schemas/CustomersUpdateCustomerTypeErrorComponent'
       - $ref: '#/components/schemas/CustomersUpdateNotesErrorComponent'
       - $ref: '#/components/schemas/CustomersUpdateIsActiveErrorComponent'
+      - $ref: '#/components/schemas/CustomersUpdateAddVatErrorComponent'
       - $ref: '#/components/schemas/CustomersUpdateOpeningBalanceErrorComponent'
       - $ref: '#/components/schemas/CustomersUpdateOpeningDateErrorComponent'
       discriminator:
@@ -19302,6 +19665,7 @@ components:
           customer_type: '#/components/schemas/CustomersUpdateCustomerTypeErrorComponent'
           notes: '#/components/schemas/CustomersUpdateNotesErrorComponent'
           is_active: '#/components/schemas/CustomersUpdateIsActiveErrorComponent'
+          add_vat: '#/components/schemas/CustomersUpdateAddVatErrorComponent'
           opening_balance: '#/components/schemas/CustomersUpdateOpeningBalanceErrorComponent'
           opening_date: '#/components/schemas/CustomersUpdateOpeningDateErrorComponent'
     CustomersUpdateErrorResponse400:
@@ -20782,6 +21146,20 @@ components:
           type: string
           default: ''
           maxLength: 255
+    ItemDetailsRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        description:
+          type: string
+          description: Printed under Details.
+          maxLength: 200
+        finishing:
+          type: string
+          maxLength: 200
+      required:
+      - id
     ItemResult:
       type: object
       properties:
@@ -23754,6 +24132,9 @@ components:
       properties:
         can_edit:
           type: boolean
+        can_edit_details:
+          type: boolean
+          description: Item details and finishing can be changed (amounts stay).
         can_confirm:
           type: boolean
         can_cancel:
@@ -23769,6 +24150,7 @@ components:
       - can_confirm
       - can_deliver
       - can_edit
+      - can_edit_details
       - can_invoice
       - can_receive_payment
     OrderDetail:
@@ -23945,6 +24327,15 @@ components:
       - total
       - vat_amount
       - vat_rate
+    OrderDetailsEditRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemDetailsRequest'
+      required:
+      - items
     OrderInvoice:
       type: object
       properties:
@@ -24402,6 +24793,11 @@ components:
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
           default: '0.00'
+        add_vat:
+          type: boolean
+          nullable: true
+          description: 'Add VAT to this order. Empty: the customer''s setting (or
+            the order''s choice).'
         items:
           type: array
           items:
@@ -24517,6 +24913,25 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    OrdersCreateAddVatErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - add_vat
+          type: string
+          description: '* `add_vat` - add_vat'
+        code:
+          enum:
+          - invalid
+          type: string
+          description: '* `invalid` - invalid'
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     OrdersCreateConfirmErrorComponent:
       type: object
       properties:
@@ -24650,6 +25065,7 @@ components:
       - $ref: '#/components/schemas/OrdersCreateNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateDiscountTypeErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateDiscountValueErrorComponent'
+      - $ref: '#/components/schemas/OrdersCreateAddVatErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXIdErrorComponent'
@@ -24677,6 +25093,7 @@ components:
           non_field_errors: '#/components/schemas/OrdersCreateNonFieldErrorsErrorComponent'
           discount_type: '#/components/schemas/OrdersCreateDiscountTypeErrorComponent'
           discount_value: '#/components/schemas/OrdersCreateDiscountValueErrorComponent'
+          add_vat: '#/components/schemas/OrdersCreateAddVatErrorComponent'
           items.non_field_errors: '#/components/schemas/OrdersCreateItemsNonFieldErrorsErrorComponent'
           items.INDEX.non_field_errors: '#/components/schemas/OrdersCreateItemsINDEXNonFieldErrorsErrorComponent'
           items.INDEX.id: '#/components/schemas/OrdersCreateItemsINDEXIdErrorComponent'
@@ -25570,6 +25987,196 @@ components:
       required:
       - errors
       - type
+    OrdersDetailsCreateError:
+      oneOf:
+      - $ref: '#/components/schemas/OrdersDetailsCreateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/OrdersDetailsCreateItemsNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/OrdersDetailsCreateItemsINDEXNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/OrdersDetailsCreateItemsINDEXIdErrorComponent'
+      - $ref: '#/components/schemas/OrdersDetailsCreateItemsINDEXDescriptionErrorComponent'
+      - $ref: '#/components/schemas/OrdersDetailsCreateItemsINDEXFinishingErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/OrdersDetailsCreateNonFieldErrorsErrorComponent'
+          items.non_field_errors: '#/components/schemas/OrdersDetailsCreateItemsNonFieldErrorsErrorComponent'
+          items.INDEX.non_field_errors: '#/components/schemas/OrdersDetailsCreateItemsINDEXNonFieldErrorsErrorComponent'
+          items.INDEX.id: '#/components/schemas/OrdersDetailsCreateItemsINDEXIdErrorComponent'
+          items.INDEX.description: '#/components/schemas/OrdersDetailsCreateItemsINDEXDescriptionErrorComponent'
+          items.INDEX.finishing: '#/components/schemas/OrdersDetailsCreateItemsINDEXFinishingErrorComponent'
+    OrdersDetailsCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/OrdersDetailsCreateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/OrdersDetailsCreateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    OrdersDetailsCreateItemsINDEXDescriptionErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.INDEX.description
+          type: string
+          description: '* `items.INDEX.description` - items.INDEX.description'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    OrdersDetailsCreateItemsINDEXFinishingErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.INDEX.finishing
+          type: string
+          description: '* `items.INDEX.finishing` - items.INDEX.finishing'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    OrdersDetailsCreateItemsINDEXIdErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.INDEX.id
+          type: string
+          description: '* `items.INDEX.id` - items.INDEX.id'
+        code:
+          enum:
+          - invalid
+          - max_string_length
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_string_length` - max_string_length
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    OrdersDetailsCreateItemsINDEXNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.INDEX.non_field_errors
+          type: string
+          description: '* `items.INDEX.non_field_errors` - items.INDEX.non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    OrdersDetailsCreateItemsNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.non_field_errors
+          type: string
+          description: '* `items.non_field_errors` - items.non_field_errors'
+        code:
+          enum:
+          - not_a_list
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `not_a_list` - not_a_list
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    OrdersDetailsCreateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    OrdersDetailsCreateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrdersDetailsCreateError'
+      required:
+      - errors
+      - type
     OrdersInvoiceCreateError:
       oneOf:
       - $ref: '#/components/schemas/OrdersInvoiceCreateNonFieldErrorsErrorComponent'
@@ -25791,6 +26398,25 @@ components:
       required:
       - errors
       - type
+    OrdersPricePreviewCreateAddVatErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - add_vat
+          type: string
+          description: '* `add_vat` - add_vat'
+        code:
+          enum:
+          - invalid
+          type: string
+          description: '* `invalid` - invalid'
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     OrdersPricePreviewCreateCustomerErrorComponent:
       type: object
       properties:
@@ -25872,6 +26498,7 @@ components:
       - $ref: '#/components/schemas/OrdersPricePreviewCreateNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateDiscountTypeErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateDiscountValueErrorComponent'
+      - $ref: '#/components/schemas/OrdersPricePreviewCreateAddVatErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXIdErrorComponent'
@@ -25896,6 +26523,7 @@ components:
           non_field_errors: '#/components/schemas/OrdersPricePreviewCreateNonFieldErrorsErrorComponent'
           discount_type: '#/components/schemas/OrdersPricePreviewCreateDiscountTypeErrorComponent'
           discount_value: '#/components/schemas/OrdersPricePreviewCreateDiscountValueErrorComponent'
+          add_vat: '#/components/schemas/OrdersPricePreviewCreateAddVatErrorComponent'
           items.non_field_errors: '#/components/schemas/OrdersPricePreviewCreateItemsNonFieldErrorsErrorComponent'
           items.INDEX.non_field_errors: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent'
           items.INDEX.id: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXIdErrorComponent'
@@ -26419,6 +27047,25 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    OrdersUpdateAddVatErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - add_vat
+          type: string
+          description: '* `add_vat` - add_vat'
+        code:
+          enum:
+          - invalid
+          type: string
+          description: '* `invalid` - invalid'
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     OrdersUpdateConfirmErrorComponent:
       type: object
       properties:
@@ -26552,6 +27199,7 @@ components:
       - $ref: '#/components/schemas/OrdersUpdateNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateDiscountTypeErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateDiscountValueErrorComponent'
+      - $ref: '#/components/schemas/OrdersUpdateAddVatErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXIdErrorComponent'
@@ -26579,6 +27227,7 @@ components:
           non_field_errors: '#/components/schemas/OrdersUpdateNonFieldErrorsErrorComponent'
           discount_type: '#/components/schemas/OrdersUpdateDiscountTypeErrorComponent'
           discount_value: '#/components/schemas/OrdersUpdateDiscountValueErrorComponent'
+          add_vat: '#/components/schemas/OrdersUpdateAddVatErrorComponent'
           items.non_field_errors: '#/components/schemas/OrdersUpdateItemsNonFieldErrorsErrorComponent'
           items.INDEX.non_field_errors: '#/components/schemas/OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent'
           items.INDEX.id: '#/components/schemas/OrdersUpdateItemsINDEXIdErrorComponent'
@@ -27539,6 +28188,11 @@ components:
           type: string
         is_active:
           type: boolean
+        add_vat:
+          type: boolean
+          title: Add VAT on bills
+          description: Off for customers billed without VAT. New orders and bills
+            start from this.
         opening_balance:
           type: string
           format: decimal
@@ -27674,6 +28328,23 @@ components:
         invoice_footer_note:
           type: string
           maxLength: 255
+        payment_info:
+          type: string
+          title: Payment information
+          description: Bank account, eSewa / Khalti number and so on. Printed on bills,
+            quotations and statements.
+        print_color:
+          type: string
+          minLength: 1
+          title: Print colour
+          description: Headings, table headers and the balance-due bar.
+          maxLength: 7
+        print_text_size:
+          $ref: '#/components/schemas/PrintTextSizeEnum'
+        print_header:
+          allOf:
+          - $ref: '#/components/schemas/PrintHeaderEnum'
+          title: Header layout
         quotation_validity_days:
           type: integer
           maximum: 32767
@@ -29127,6 +29798,11 @@ components:
           format: decimal
           pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
           default: '0.00'
+        add_vat:
+          type: boolean
+          nullable: true
+          description: 'Add VAT to this order. Empty: the customer''s setting (or
+            the order''s choice).'
         items:
           type: array
           items:
@@ -29149,6 +29825,22 @@ components:
       description: |-
         * `sqft` - Per sq ft
         * `piece` - Per piece
+    PrintHeaderEnum:
+      enum:
+      - left
+      - center
+      type: string
+      description: |-
+        * `left` - Shop on the left, title on the right
+        * `center` - Letterhead: shop in the centre
+    PrintTextSizeEnum:
+      enum:
+      - normal
+      - large
+      type: string
+      description: |-
+        * `normal` - Normal
+        * `large` - Large
     PriorityEnum:
       enum:
       - 0
@@ -30320,6 +31012,10 @@ components:
       - $ref: '#/components/schemas/SettingsShopPartialUpdateRemoveStampImageErrorComponent'
       - $ref: '#/components/schemas/SettingsShopPartialUpdateRemoveSignatureImageErrorComponent'
       - $ref: '#/components/schemas/SettingsShopPartialUpdateInvoiceFooterNoteErrorComponent'
+      - $ref: '#/components/schemas/SettingsShopPartialUpdatePaymentInfoErrorComponent'
+      - $ref: '#/components/schemas/SettingsShopPartialUpdatePrintColorErrorComponent'
+      - $ref: '#/components/schemas/SettingsShopPartialUpdatePrintTextSizeErrorComponent'
+      - $ref: '#/components/schemas/SettingsShopPartialUpdatePrintHeaderErrorComponent'
       - $ref: '#/components/schemas/SettingsShopPartialUpdateQuotationValidityDaysErrorComponent'
       - $ref: '#/components/schemas/SettingsShopPartialUpdateQuotationTermsErrorComponent'
       - $ref: '#/components/schemas/SettingsShopPartialUpdateOrderNumberPatternErrorComponent'
@@ -30349,6 +31045,10 @@ components:
           remove_stamp_image: '#/components/schemas/SettingsShopPartialUpdateRemoveStampImageErrorComponent'
           remove_signature_image: '#/components/schemas/SettingsShopPartialUpdateRemoveSignatureImageErrorComponent'
           invoice_footer_note: '#/components/schemas/SettingsShopPartialUpdateInvoiceFooterNoteErrorComponent'
+          payment_info: '#/components/schemas/SettingsShopPartialUpdatePaymentInfoErrorComponent'
+          print_color: '#/components/schemas/SettingsShopPartialUpdatePrintColorErrorComponent'
+          print_text_size: '#/components/schemas/SettingsShopPartialUpdatePrintTextSizeErrorComponent'
+          print_header: '#/components/schemas/SettingsShopPartialUpdatePrintHeaderErrorComponent'
           quotation_validity_days: '#/components/schemas/SettingsShopPartialUpdateQuotationValidityDaysErrorComponent'
           quotation_terms: '#/components/schemas/SettingsShopPartialUpdateQuotationTermsErrorComponent'
           order_number_pattern: '#/components/schemas/SettingsShopPartialUpdateOrderNumberPatternErrorComponent'
@@ -30649,6 +31349,32 @@ components:
       - attr
       - code
       - detail
+    SettingsShopPartialUpdatePaymentInfoErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - payment_info
+          type: string
+          description: '* `payment_info` - payment_info'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     SettingsShopPartialUpdatePhoneErrorComponent:
       type: object
       properties:
@@ -30671,6 +31397,80 @@ components:
             * `null` - null
             * `null_characters_not_allowed` - null_characters_not_allowed
             * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SettingsShopPartialUpdatePrintColorErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - print_color
+          type: string
+          description: '* `print_color` - print_color'
+        code:
+          enum:
+          - blank
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `blank` - blank
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SettingsShopPartialUpdatePrintHeaderErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - print_header
+          type: string
+          description: '* `print_header` - print_header'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SettingsShopPartialUpdatePrintTextSizeErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - print_text_size
+          type: string
+          description: '* `print_text_size` - print_text_size'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
         detail:
           type: string
       required:
@@ -31013,6 +31813,13 @@ components:
       - attr
       - code
       - detail
+    SettingsShopPreviewRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
     SettingsShopRetrieveErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/ParseErrorResponse'
@@ -31083,6 +31890,22 @@ components:
         invoice_footer_note:
           type: string
           maxLength: 255
+        payment_info:
+          type: string
+          title: Payment information
+          description: Bank account, eSewa / Khalti number and so on. Printed on bills,
+            quotations and statements.
+        print_color:
+          type: string
+          title: Print colour
+          description: Headings, table headers and the balance-due bar.
+          maxLength: 7
+        print_text_size:
+          $ref: '#/components/schemas/PrintTextSizeEnum'
+        print_header:
+          allOf:
+          - $ref: '#/components/schemas/PrintHeaderEnum'
+          title: Header layout
         quotation_validity_days:
           type: integer
           maximum: 32767
@@ -31121,7 +31944,11 @@ components:
       - name
       - order_number_pattern
       - pan_vat_number
+      - payment_info
       - phone
+      - print_color
+      - print_header
+      - print_text_size
       - purchase_number_pattern
       - quotation_terms
       - quotation_validity_days

@@ -679,6 +679,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/{id}/details/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Change item details and finishing on any order; amounts never change. */
+        post: operations["orders_details_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/orders/{id}/invoice/": {
         parameters: {
             query?: never;
@@ -983,6 +1000,23 @@ export interface paths {
          *     bill look genuine) are for the owner, who manages them in Settings.
          */
         get: operations["settings_shop_images_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/shop/preview/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description A sample bill printed with the saved settings (Settings → Print layout). */
+        get: operations["settings_shop_preview_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2290,6 +2324,11 @@ export interface components {
             readonly customer_type_label: string;
             notes: string;
             is_active: boolean;
+            /**
+             * Add VAT on bills
+             * @description Off for customers billed without VAT. New orders and bills start from this.
+             */
+            add_vat: boolean;
             readonly balance: string;
             /** Format: date-time */
             readonly created_at: string;
@@ -2339,6 +2378,11 @@ export interface components {
             customer_type?: components["schemas"]["CustomerTypeEnum"];
             notes?: string;
             is_active?: boolean;
+            /**
+             * Add VAT on bills
+             * @description Off for customers billed without VAT. New orders and bills start from this.
+             */
+            add_vat?: boolean;
             /**
              * Format: decimal
              * @description Existing due (positive) or advance (negative) when the customer is added.
@@ -2418,6 +2462,20 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["CustomersAdjustBalanceCreateError"][];
         };
+        CustomersCreateAddVatErrorComponent: {
+            /**
+             * @description * `add_vat` - add_vat (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "add_vat";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
         CustomersCreateAddressErrorComponent: {
             /**
              * @description * `address` - address (enum property replaced by openapi-typescript)
@@ -2466,7 +2524,7 @@ export interface components {
             code: "invalid_choice" | "null";
             detail: string;
         };
-        CustomersCreateError: components["schemas"]["CustomersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersCreateNameErrorComponent"] | components["schemas"]["CustomersCreatePhoneErrorComponent"] | components["schemas"]["CustomersCreateAltPhoneErrorComponent"] | components["schemas"]["CustomersCreateAddressErrorComponent"] | components["schemas"]["CustomersCreatePanNoErrorComponent"] | components["schemas"]["CustomersCreateCustomerTypeErrorComponent"] | components["schemas"]["CustomersCreateNotesErrorComponent"] | components["schemas"]["CustomersCreateIsActiveErrorComponent"] | components["schemas"]["CustomersCreateOpeningBalanceErrorComponent"] | components["schemas"]["CustomersCreateOpeningDateErrorComponent"];
+        CustomersCreateError: components["schemas"]["CustomersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersCreateNameErrorComponent"] | components["schemas"]["CustomersCreatePhoneErrorComponent"] | components["schemas"]["CustomersCreateAltPhoneErrorComponent"] | components["schemas"]["CustomersCreateAddressErrorComponent"] | components["schemas"]["CustomersCreatePanNoErrorComponent"] | components["schemas"]["CustomersCreateCustomerTypeErrorComponent"] | components["schemas"]["CustomersCreateNotesErrorComponent"] | components["schemas"]["CustomersCreateIsActiveErrorComponent"] | components["schemas"]["CustomersCreateAddVatErrorComponent"] | components["schemas"]["CustomersCreateOpeningBalanceErrorComponent"] | components["schemas"]["CustomersCreateOpeningDateErrorComponent"];
         CustomersCreateErrorResponse400: components["schemas"]["CustomersCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         CustomersCreateIsActiveErrorComponent: {
             /**
@@ -2703,6 +2761,20 @@ export interface components {
             errors: components["schemas"]["CustomersOpeningBalanceCreateError"][];
         };
         CustomersOpeningBalanceRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        CustomersPartialUpdateAddVatErrorComponent: {
+            /**
+             * @description * `add_vat` - add_vat (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "add_vat";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
         CustomersPartialUpdateAddressErrorComponent: {
             /**
              * @description * `address` - address (enum property replaced by openapi-typescript)
@@ -2751,7 +2823,7 @@ export interface components {
             code: "invalid_choice" | "null";
             detail: string;
         };
-        CustomersPartialUpdateError: components["schemas"]["CustomersPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersPartialUpdateNameErrorComponent"] | components["schemas"]["CustomersPartialUpdatePhoneErrorComponent"] | components["schemas"]["CustomersPartialUpdateAltPhoneErrorComponent"] | components["schemas"]["CustomersPartialUpdateAddressErrorComponent"] | components["schemas"]["CustomersPartialUpdatePanNoErrorComponent"] | components["schemas"]["CustomersPartialUpdateCustomerTypeErrorComponent"] | components["schemas"]["CustomersPartialUpdateNotesErrorComponent"] | components["schemas"]["CustomersPartialUpdateIsActiveErrorComponent"] | components["schemas"]["CustomersPartialUpdateOpeningBalanceErrorComponent"] | components["schemas"]["CustomersPartialUpdateOpeningDateErrorComponent"];
+        CustomersPartialUpdateError: components["schemas"]["CustomersPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersPartialUpdateNameErrorComponent"] | components["schemas"]["CustomersPartialUpdatePhoneErrorComponent"] | components["schemas"]["CustomersPartialUpdateAltPhoneErrorComponent"] | components["schemas"]["CustomersPartialUpdateAddressErrorComponent"] | components["schemas"]["CustomersPartialUpdatePanNoErrorComponent"] | components["schemas"]["CustomersPartialUpdateCustomerTypeErrorComponent"] | components["schemas"]["CustomersPartialUpdateNotesErrorComponent"] | components["schemas"]["CustomersPartialUpdateIsActiveErrorComponent"] | components["schemas"]["CustomersPartialUpdateAddVatErrorComponent"] | components["schemas"]["CustomersPartialUpdateOpeningBalanceErrorComponent"] | components["schemas"]["CustomersPartialUpdateOpeningDateErrorComponent"];
         CustomersPartialUpdateErrorResponse400: components["schemas"]["CustomersPartialUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         CustomersPartialUpdateIsActiveErrorComponent: {
             /**
@@ -2915,6 +2987,20 @@ export interface components {
         };
         CustomersRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         CustomersStatementRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        CustomersUpdateAddVatErrorComponent: {
+            /**
+             * @description * `add_vat` - add_vat (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "add_vat";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
         CustomersUpdateAddressErrorComponent: {
             /**
              * @description * `address` - address (enum property replaced by openapi-typescript)
@@ -2963,7 +3049,7 @@ export interface components {
             code: "invalid_choice" | "null";
             detail: string;
         };
-        CustomersUpdateError: components["schemas"]["CustomersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersUpdateNameErrorComponent"] | components["schemas"]["CustomersUpdatePhoneErrorComponent"] | components["schemas"]["CustomersUpdateAltPhoneErrorComponent"] | components["schemas"]["CustomersUpdateAddressErrorComponent"] | components["schemas"]["CustomersUpdatePanNoErrorComponent"] | components["schemas"]["CustomersUpdateCustomerTypeErrorComponent"] | components["schemas"]["CustomersUpdateNotesErrorComponent"] | components["schemas"]["CustomersUpdateIsActiveErrorComponent"] | components["schemas"]["CustomersUpdateOpeningBalanceErrorComponent"] | components["schemas"]["CustomersUpdateOpeningDateErrorComponent"];
+        CustomersUpdateError: components["schemas"]["CustomersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["CustomersUpdateNameErrorComponent"] | components["schemas"]["CustomersUpdatePhoneErrorComponent"] | components["schemas"]["CustomersUpdateAltPhoneErrorComponent"] | components["schemas"]["CustomersUpdateAddressErrorComponent"] | components["schemas"]["CustomersUpdatePanNoErrorComponent"] | components["schemas"]["CustomersUpdateCustomerTypeErrorComponent"] | components["schemas"]["CustomersUpdateNotesErrorComponent"] | components["schemas"]["CustomersUpdateIsActiveErrorComponent"] | components["schemas"]["CustomersUpdateAddVatErrorComponent"] | components["schemas"]["CustomersUpdateOpeningBalanceErrorComponent"] | components["schemas"]["CustomersUpdateOpeningDateErrorComponent"];
         CustomersUpdateErrorResponse400: components["schemas"]["CustomersUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         CustomersUpdateIsActiveErrorComponent: {
             /**
@@ -3669,6 +3755,12 @@ export interface components {
         IssueInvoiceRequest: {
             /** @default  */
             notes?: string;
+        };
+        ItemDetailsRequest: {
+            id: number;
+            /** @description Printed under Details. */
+            description?: string;
+            finishing?: string;
         };
         ItemResult: {
             /** Format: decimal */
@@ -5104,6 +5196,8 @@ export interface components {
         };
         OrderActions: {
             can_edit: boolean;
+            /** @description Item details and finishing can be changed (amounts stay). */
+            can_edit_details: boolean;
             can_confirm: boolean;
             can_cancel: boolean;
             can_invoice: boolean;
@@ -5163,6 +5257,9 @@ export interface components {
             readonly payments: components["schemas"]["OrderPayment"][];
             readonly invoices: components["schemas"]["OrderInvoice"][];
             readonly actions: components["schemas"]["OrderActions"];
+        };
+        OrderDetailsEditRequest: {
+            items: components["schemas"]["ItemDetailsRequest"][];
         };
         OrderInvoice: {
             id: number;
@@ -5353,6 +5450,8 @@ export interface components {
              * @default 0.00
              */
             discount_value?: string;
+            /** @description Add VAT to this order. Empty: the customer's setting (or the order's choice). */
+            add_vat?: boolean | null;
             items: components["schemas"]["OrderItemWriteRequest"][];
             customer: number;
             /** Format: date-time */
@@ -5411,6 +5510,19 @@ export interface components {
             errors: components["schemas"]["OrdersCancelCreateError"][];
         };
         OrdersConfirmCreateErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        OrdersCreateAddVatErrorComponent: {
+            /**
+             * @description * `add_vat` - add_vat (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "add_vat";
+            /**
+             * @description * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "invalid";
+            detail: string;
+        };
         OrdersCreateConfirmErrorComponent: {
             /**
              * @description * `confirm` - confirm (enum property replaced by openapi-typescript)
@@ -5490,7 +5602,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersCreateError: components["schemas"]["OrdersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateCustomerErrorComponent"] | components["schemas"]["OrdersCreateDeadlineErrorComponent"] | components["schemas"]["OrdersCreateIsUrgentErrorComponent"] | components["schemas"]["OrdersCreateNotesErrorComponent"] | components["schemas"]["OrdersCreateConfirmErrorComponent"];
+        OrdersCreateError: components["schemas"]["OrdersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersCreateAddVatErrorComponent"] | components["schemas"]["OrdersCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateCustomerErrorComponent"] | components["schemas"]["OrdersCreateDeadlineErrorComponent"] | components["schemas"]["OrdersCreateIsUrgentErrorComponent"] | components["schemas"]["OrdersCreateNotesErrorComponent"] | components["schemas"]["OrdersCreateConfirmErrorComponent"];
         OrdersCreateErrorResponse400: components["schemas"]["OrdersCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersCreateIsUrgentErrorComponent: {
             /**
@@ -6004,6 +6116,110 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["OrdersDeliverCreateError"][];
         };
+        OrdersDetailsCreateError: components["schemas"]["OrdersDetailsCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersDetailsCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersDetailsCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersDetailsCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersDetailsCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersDetailsCreateItemsINDEXFinishingErrorComponent"];
+        OrdersDetailsCreateErrorResponse400: components["schemas"]["OrdersDetailsCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        OrdersDetailsCreateItemsINDEXDescriptionErrorComponent: {
+            /**
+             * @description * `items.INDEX.description` - items.INDEX.description (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.INDEX.description";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        OrdersDetailsCreateItemsINDEXFinishingErrorComponent: {
+            /**
+             * @description * `items.INDEX.finishing` - items.INDEX.finishing (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.INDEX.finishing";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        OrdersDetailsCreateItemsINDEXIdErrorComponent: {
+            /**
+             * @description * `items.INDEX.id` - items.INDEX.id (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.INDEX.id";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_string_length` - max_string_length
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid" | "max_string_length" | "null" | "required";
+            detail: string;
+        };
+        OrdersDetailsCreateItemsINDEXNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `items.INDEX.non_field_errors` - items.INDEX.non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.INDEX.non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid" | "null" | "required";
+            detail: string;
+        };
+        OrdersDetailsCreateItemsNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `items.non_field_errors` - items.non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.non_field_errors";
+            /**
+             * @description * `not_a_list` - not_a_list
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "not_a_list" | "null" | "required";
+            detail: string;
+        };
+        OrdersDetailsCreateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        OrdersDetailsCreateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["OrdersDetailsCreateError"][];
+        };
         OrdersInvoiceCreateError: components["schemas"]["OrdersInvoiceCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersInvoiceCreateNotesErrorComponent"];
         OrdersInvoiceCreateErrorResponse400: components["schemas"]["OrdersInvoiceCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersInvoiceCreateNonFieldErrorsErrorComponent: {
@@ -6122,6 +6338,19 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["OrdersListError"][];
         };
+        OrdersPricePreviewCreateAddVatErrorComponent: {
+            /**
+             * @description * `add_vat` - add_vat (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "add_vat";
+            /**
+             * @description * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "invalid";
+            detail: string;
+        };
         OrdersPricePreviewCreateCustomerErrorComponent: {
             /**
              * @description * `customer` - customer (enum property replaced by openapi-typescript)
@@ -6169,7 +6398,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersPricePreviewCreateError: components["schemas"]["OrdersPricePreviewCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateCustomerErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateOrderErrorComponent"];
+        OrdersPricePreviewCreateError: components["schemas"]["OrdersPricePreviewCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateAddVatErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateCustomerErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateOrderErrorComponent"];
         OrdersPricePreviewCreateErrorResponse400: components["schemas"]["OrdersPricePreviewCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent: {
             /**
@@ -6470,6 +6699,19 @@ export interface components {
         };
         OrdersQuotationPdfRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         OrdersRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        OrdersUpdateAddVatErrorComponent: {
+            /**
+             * @description * `add_vat` - add_vat (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "add_vat";
+            /**
+             * @description * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "invalid";
+            detail: string;
+        };
         OrdersUpdateConfirmErrorComponent: {
             /**
              * @description * `confirm` - confirm (enum property replaced by openapi-typescript)
@@ -6549,7 +6791,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersUpdateError: components["schemas"]["OrdersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateDiscountTypeErrorComponent"] | components["schemas"]["OrdersUpdateDiscountValueErrorComponent"] | components["schemas"]["OrdersUpdateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateCustomerErrorComponent"] | components["schemas"]["OrdersUpdateDeadlineErrorComponent"] | components["schemas"]["OrdersUpdateIsUrgentErrorComponent"] | components["schemas"]["OrdersUpdateNotesErrorComponent"] | components["schemas"]["OrdersUpdateConfirmErrorComponent"];
+        OrdersUpdateError: components["schemas"]["OrdersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateDiscountTypeErrorComponent"] | components["schemas"]["OrdersUpdateDiscountValueErrorComponent"] | components["schemas"]["OrdersUpdateAddVatErrorComponent"] | components["schemas"]["OrdersUpdateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateCustomerErrorComponent"] | components["schemas"]["OrdersUpdateDeadlineErrorComponent"] | components["schemas"]["OrdersUpdateIsUrgentErrorComponent"] | components["schemas"]["OrdersUpdateNotesErrorComponent"] | components["schemas"]["OrdersUpdateConfirmErrorComponent"];
         OrdersUpdateErrorResponse400: components["schemas"]["OrdersUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersUpdateIsUrgentErrorComponent: {
             /**
@@ -7103,6 +7345,11 @@ export interface components {
             notes?: string;
             is_active?: boolean;
             /**
+             * Add VAT on bills
+             * @description Off for customers billed without VAT. New orders and bills start from this.
+             */
+            add_vat?: boolean;
+            /**
              * Format: decimal
              * @description Existing due (positive) or advance (negative) when the customer is added.
              */
@@ -7176,6 +7423,19 @@ export interface components {
             remove_stamp_image?: boolean;
             remove_signature_image?: boolean;
             invoice_footer_note?: string;
+            /**
+             * Payment information
+             * @description Bank account, eSewa / Khalti number and so on. Printed on bills, quotations and statements.
+             */
+            payment_info?: string;
+            /**
+             * Print colour
+             * @description Headings, table headers and the balance-due bar.
+             */
+            print_color?: string;
+            print_text_size?: components["schemas"]["PrintTextSizeEnum"];
+            /** Header layout */
+            print_header?: components["schemas"]["PrintHeaderEnum"];
             quotation_validity_days?: number;
             quotation_terms?: string;
             order_number_pattern?: string;
@@ -7916,6 +8176,8 @@ export interface components {
              * @default 0.00
              */
             discount_value?: string;
+            /** @description Add VAT to this order. Empty: the customer's setting (or the order's choice). */
+            add_vat?: boolean | null;
             items: components["schemas"]["OrderItemWriteRequest"][];
             /** @description Lets the calculator recognise the customer's last rates. */
             customer?: number | null;
@@ -7928,6 +8190,18 @@ export interface components {
          * @enum {string}
          */
         PricingUnitEnum: "sqft" | "piece";
+        /**
+         * @description * `left` - Shop on the left, title on the right
+         *     * `center` - Letterhead: shop in the centre
+         * @enum {string}
+         */
+        PrintHeaderEnum: "left" | "center";
+        /**
+         * @description * `normal` - Normal
+         *     * `large` - Large
+         * @enum {string}
+         */
+        PrintTextSizeEnum: "normal" | "large";
         /**
          * @description * `0` - Normal
          *     * `1` - Urgent
@@ -8484,7 +8758,7 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
-        SettingsShopPartialUpdateError: components["schemas"]["SettingsShopPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateNameErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateTaglineErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateAddressErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePhoneErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateEmailErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePanVatNumberErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateIsVatRegisteredErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateVatRateErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateDefaultMinSqftErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRoundTotalToRupeeErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateFrontDeskMaxDiscountPercentErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateLogoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateStampImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateSignatureImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveLogoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveStampImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveSignatureImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateInvoiceFooterNoteErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateQuotationValidityDaysErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateQuotationTermsErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateOrderNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateJobNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateInvoiceNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateReceiptNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePurchaseNumberPatternErrorComponent"];
+        SettingsShopPartialUpdateError: components["schemas"]["SettingsShopPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateNameErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateTaglineErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateAddressErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePhoneErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateEmailErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePanVatNumberErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateIsVatRegisteredErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateVatRateErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateDefaultMinSqftErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRoundTotalToRupeeErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateFrontDeskMaxDiscountPercentErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateLogoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateStampImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateSignatureImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveLogoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveStampImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveSignatureImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateInvoiceFooterNoteErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePaymentInfoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePrintColorErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePrintTextSizeErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePrintHeaderErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateQuotationValidityDaysErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateQuotationTermsErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateOrderNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateJobNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateInvoiceNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateReceiptNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePurchaseNumberPatternErrorComponent"];
         SettingsShopPartialUpdateErrorResponse400: components["schemas"]["SettingsShopPartialUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         SettingsShopPartialUpdateFrontDeskMaxDiscountPercentErrorComponent: {
             /**
@@ -8658,6 +8932,22 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
+        SettingsShopPartialUpdatePaymentInfoErrorComponent: {
+            /**
+             * @description * `payment_info` - payment_info (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "payment_info";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
         SettingsShopPartialUpdatePhoneErrorComponent: {
             /**
              * @description * `phone` - phone (enum property replaced by openapi-typescript)
@@ -8673,6 +8963,52 @@ export interface components {
              * @enum {string}
              */
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        SettingsShopPartialUpdatePrintColorErrorComponent: {
+            /**
+             * @description * `print_color` - print_color (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "print_color";
+            /**
+             * @description * `blank` - blank
+             *     * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "blank" | "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        SettingsShopPartialUpdatePrintHeaderErrorComponent: {
+            /**
+             * @description * `print_header` - print_header (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "print_header";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null";
+            detail: string;
+        };
+        SettingsShopPartialUpdatePrintTextSizeErrorComponent: {
+            /**
+             * @description * `print_text_size` - print_text_size (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "print_text_size";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null";
             detail: string;
         };
         SettingsShopPartialUpdatePurchaseNumberPatternErrorComponent: {
@@ -8881,6 +9217,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_value" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
+        SettingsShopPreviewRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SettingsShopRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         ShopSettings: {
             name: string;
@@ -8914,6 +9251,19 @@ export interface components {
             /** Format: uri */
             signature_image: string | null;
             invoice_footer_note: string;
+            /**
+             * Payment information
+             * @description Bank account, eSewa / Khalti number and so on. Printed on bills, quotations and statements.
+             */
+            payment_info: string;
+            /**
+             * Print colour
+             * @description Headings, table headers and the balance-due bar.
+             */
+            print_color: string;
+            print_text_size: components["schemas"]["PrintTextSizeEnum"];
+            /** Header layout */
+            print_header: components["schemas"]["PrintHeaderEnum"];
             quotation_validity_days: number;
             quotation_terms: string;
             order_number_pattern: string;
@@ -16190,6 +16540,98 @@ export interface operations {
             };
         };
     };
+    orders_details_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this order. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderDetailsEditRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["OrderDetailsEditRequest"];
+                "multipart/form-data": components["schemas"]["OrderDetailsEditRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetail"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrdersDetailsCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
     orders_invoice_create: {
         parameters: {
             query?: never;
@@ -18022,6 +18464,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettingsShopImagesRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    settings_shop_preview_retrieve: {
+        parameters: {
+            query?: {
+                size?: "a4" | "a5";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsShopPreviewRetrieveErrorResponse400"];
                 };
             };
             401: {

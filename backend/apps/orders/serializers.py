@@ -307,6 +307,12 @@ class PricingInputSerializer(serializers.Serializer):
     discount_value = serializers.DecimalField(
         max_digits=12, decimal_places=2, min_value=Decimal("0"), default=Decimal("0")
     )
+    add_vat = serializers.BooleanField(
+        required=False,
+        allow_null=True,
+        default=None,
+        help_text="Add VAT to this order. Empty: the customer's setting (or the order's choice).",
+    )
     items = OrderItemWriteSerializer(many=True)
 
     def validate_items(self, value):

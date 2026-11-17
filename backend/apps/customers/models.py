@@ -34,6 +34,11 @@ class Customer(BusinessOwned, TimeStampedModel):
     )
     notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    add_vat = models.BooleanField(
+        "Add VAT on bills",
+        default=True,
+        help_text="Off for customers billed without VAT. New orders and bills start from this.",
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL, related_name="+"
     )

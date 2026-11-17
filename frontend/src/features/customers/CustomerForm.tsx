@@ -20,6 +20,8 @@ import { api, unwrap } from '@/api/client';
 import type { Customer } from '@/api/types';
 import { handleFormError, notifySuccess } from '@/lib/forms';
 
+import { useShopSettings } from '../orders/useCatalog';
+
 interface CustomerFormProps {
   customer?: Customer;
   initialName?: string;
@@ -32,6 +34,7 @@ export function CustomerForm({ customer, initialName, onSaved, onCancel }: Custo
   const client = useQueryClient();
   const [busy, setBusy] = useState(false);
   const isNew = !customer;
+  const { data: shop } = useShopSettings();
   const form = useForm({
     initialValues: {
       name: customer?.name ?? initialName ?? '',
@@ -42,6 +45,7 @@ export function CustomerForm({ customer, initialName, onSaved, onCancel }: Custo
       customer_type: (customer?.customer_type ?? 'individual') as 'individual' | 'business',
       notes: customer?.notes ?? '',
       is_active: customer?.is_active ?? true,
+      add_vat: customer?.add_vat ?? true,
       opening_balance: 0 as number | string,
     },
     validate: {
@@ -125,6 +129,15 @@ export function CustomerForm({ customer, initialName, onSaved, onCancel }: Custo
           />
         )}
         <Textarea label={t('Notes')} {...form.getInputProps('notes')} />
+        {shop?.is_vat_registered && (
+          <Switch
+            label={t("Add VAT on this customer's bills")}
+            description={t(
+              'Turn off for customers billed without VAT. Each order and bill can still be changed.',
+            )}
+            {...form.getInputProps('add_vat', { type: 'checkbox' })}
+          />
+        )}
         {!isNew && (
           <Switch
             label={t('Active')}
