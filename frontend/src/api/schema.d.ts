@@ -13191,6 +13191,8 @@ export interface operations {
                 export?: "json" | "pdf" | "xlsx";
                 /** @description Start date (AD, YYYY-MM-DD) */
                 from?: string;
+                /** @description PDF and Excel: list every item (size, qty, rate) */
+                items?: boolean;
                 /** @description End date (AD, YYYY-MM-DD) */
                 to?: string;
             };

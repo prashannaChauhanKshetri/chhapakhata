@@ -3107,6 +3107,11 @@ paths:
         description: A unique integer value identifying this customer.
         required: true
       - in: query
+        name: items
+        schema:
+          type: boolean
+        description: 'PDF and Excel: list every item (size, qty, rate)'
+      - in: query
         name: to
         schema:
           type: string

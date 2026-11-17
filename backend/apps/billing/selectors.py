@@ -12,9 +12,10 @@ from django.db.models import Case, DecimalField, F, Max, OuterRef, Q, Subquery, 
 from django.db.models.functions import Coalesce
 
 from apps.core.dates import bs_string, local_today
-from apps.core.money import ZERO, q2
+from apps.core.money import ZERO, fmt_qty, q2
+from apps.orders.models import Order
 
-from .models import LedgerEntry, LedgerEntryType, Payment, PaymentStatus
+from .models import Invoice, LedgerEntry, LedgerEntryType, Payment, PaymentStatus
 
 MONEY_FIELD = DecimalField(max_digits=14, decimal_places=2)
 
@@ -289,3 +290,96 @@ def outstanding_by_customer(
             buckets={k: q2(v) for k, v in buckets.items()},
         )
     return result
+
+
+ITEM_ENTRY_TYPES = (LedgerEntryType.INVOICE, LedgerEntryType.IMPORTED_WORK)
+
+
+def _size(value: Decimal, unit: str) -> str:
+    text = fmt_qty(value)
+    return text if unit == "ft" else f"{text} {unit}"
+
+
+def _bill_orders(invoice_ids: set[int]) -> dict[int, list[int]]:
+    """The orders each bill covers, in order."""
+    found: dict[int, list[int]] = defaultdict(list)
+    for invoice_id, order_id in (
+        Invoice.objects.filter(pk__in=invoice_ids).values_list("pk", "order_id").order_by("pk")
+    ):
+        found[invoice_id].append(order_id)
+    return found
+
+
+def add_item_lines(statement: dict[str, Any]) -> dict[str, Any]:
+    """Give every bill and imported-work entry its printed lines (size, qty, rate, amount).
+
+    Item rows add up to the order subtotal; discount, VAT and round-off rows follow,
+    so the lines of an entry always add up to its debit.
+    """
+    entries = [
+        e for e in statement["entries"] if e["entry_type"] in ITEM_ENTRY_TYPES and e["debit"] > 0
+    ]
+    invoice_ids = {e["invoice_id"] for e in entries if e["invoice_id"]}
+    bill_orders = _bill_orders(invoice_ids)
+    bills = {i.pk: i for i in Invoice.objects.filter(pk__in=invoice_ids)}
+    order_ids = {e["order_id"] for e in entries if e["order_id"] and not e["invoice_id"]}
+    for ids in bill_orders.values():
+        order_ids.update(ids)
+    orders = {
+        o.pk: o for o in Order.objects.filter(pk__in=order_ids).prefetch_related("items__addons")
+    }
+
+    for entry in statement["entries"]:
+        entry["lines"] = []
+    for entry in entries:
+        if entry["invoice_id"]:
+            source = bills.get(entry["invoice_id"])
+            covered = [orders[i] for i in bill_orders.get(entry["invoice_id"], []) if i in orders]
+        else:
+            source = orders.get(entry["order_id"])
+            covered = [source] if source is not None else []
+        if source is None:
+            continue
+        lines = entry["lines"]
+        for order in covered:
+            for item in sorted(order.items.all(), key=lambda i: i.line_no):
+                sized = item.has_size
+                details = [item.description, item.finishing]
+                if len(covered) > 1 or entry["invoice_id"]:
+                    details.insert(0, order.order_no)
+                lines.append(
+                    {
+                        "kind": "item",
+                        "particular": item.media_name,
+                        "width": _size(item.width, item.unit) if sized else "",
+                        "height": _size(item.height, item.unit) if sized else "",
+                        "sqft": (
+                            q2(item.billable_sqft * item.quantity)
+                            if sized and not item.is_per_piece
+                            else None
+                        ),
+                        "quantity": item.quantity,
+                        "rate": item.rate,
+                        "amount": item.base_amount,
+                        "details": " · ".join(d for d in details if d),
+                    }
+                )
+                for addon in item.addons.all():
+                    lines.append(
+                        {
+                            "kind": "addon",
+                            "particular": f"+ {addon.name}",
+                            "amount": addon.amount,
+                            "details": "",
+                        }
+                    )
+        if source.discount_amount:
+            lines.append(
+                {"kind": "charge", "particular": "Discount", "amount": -source.discount_amount}
+            )
+        if source.vat_amount:
+            label = f"VAT {fmt_qty(source.vat_rate)}%" if source.vat_rate else "VAT"
+            lines.append({"kind": "charge", "particular": label, "amount": source.vat_amount})
+        if source.round_off:
+            lines.append({"kind": "charge", "particular": "Round off", "amount": source.round_off})
+    return statement

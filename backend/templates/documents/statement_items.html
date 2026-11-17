@@ -1,0 +1,115 @@
+{% extends "documents/base.html" %}
+{% load docs %}
+{% block title %}Statement – {{ customer.name }}{% endblock %}
+{% block page_size %}A4 landscape{% endblock %}
+{% block page_margin %}12mm 10mm 14mm 10mm{% endblock %}
+{% block extra_style %}
+  table.items { font-size: 8pt; }
+  table.items th, table.items td { padding: 3pt 4pt; }
+  table.items tbody tr.first td { border-top: 0.75pt solid #CBD5E1; }
+  table.items td.details { color: #475569; font-size: 7.5pt; }
+  table.items tr.charge td.particular { padding-left: 12pt; color: #475569; }
+  table.items tr.addon td.particular { padding-left: 12pt; }
+  table.items tr.total td { border-top: 1pt solid #0F172A; font-weight: 700; }
+  .balance-due { font-weight: 700; }
+{% endblock %}
+{% block content %}
+<div class="doc-header">
+  {% include "documents/_shop_header.html" %}
+  <div class="doc-title">
+    <h1>Statement of Account</h1>
+    <div class="sub">{{ period }}</div>
+  </div>
+</div>
+
+<div class="info">
+  <div class="block">
+    <div class="label">Bill to</div>
+    <div class="strong">{{ customer.name }}</div>
+    {% if customer.address %}<div>{{ customer.address }}</div>{% endif %}
+    {% if customer.phone %}<div class="muted">Tel {{ customer.phone }}</div>{% endif %}
+    {% if customer.pan_no %}<div>PAN {{ customer.pan_no }}</div>{% endif %}
+  </div>
+  <div class="block">
+    <div class="label">From</div>
+    <div class="strong">{{ shop.name }}</div>
+    {% if shop.address %}<div>{{ shop.address }}</div>{% endif %}
+    {% if shop.phone %}<div class="muted">Tel {{ shop.phone }}</div>{% endif %}
+    {% if shop.pan_vat_number %}<div>PAN/VAT {{ shop.pan_vat_number }}</div>{% endif %}
+  </div>
+  <div class="block">
+    <table class="kv">
+      <tr><td>Opening balance</td><td class="num">{{ statement.opening_balance|amount }}</td></tr>
+      <tr><td>Total billed</td><td class="num">{{ statement.total_debit|amount }}</td></tr>
+      <tr><td>Total received</td><td class="num">{{ statement.total_credit|amount }}</td></tr>
+      <tr><td><strong>{% if statement.closing_balance < 0 %}Advance with us{% else %}Balance due{% endif %}</strong></td><td class="num"><strong>Rs. {{ statement.closing_balance|amount }}</strong></td></tr>
+    </table>
+  </div>
+</div>
+
+<table class="lines items">
+  <thead>
+    <tr>
+      <th style="width: 8%">Date (BS)</th>
+      <th style="width: 17%">Particular</th>
+      <th class="num" style="width: 6%">W</th>
+      <th class="num" style="width: 6%">H</th>
+      <th class="num" style="width: 7%">Sq ft</th>
+      <th class="num" style="width: 5%">Qty</th>
+      <th class="num" style="width: 7%">Rate</th>
+      <th class="num" style="width: 9%">Amount</th>
+      <th class="num" style="width: 9%">Received</th>
+      <th class="num" style="width: 9%">Balance</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="first">
+      <td>{% if statement.date_from %}{{ statement.date_from|bs }}{% endif %}</td>
+      <td colspan="8" class="muted">Opening balance{% if statement.date_from %} (brought forward){% endif %}</td>
+      <td class="num">{{ statement.opening_balance|amount }}</td>
+      <td></td>
+    </tr>
+  {% for e in statement.entries %}
+    {% if e.lines %}
+      {% for line in e.lines %}
+      <tr class="{{ line.kind }}{% if forloop.first %} first{% endif %}">
+        <td>{% if forloop.first %}{{ e.date_bs }}{% endif %}</td>
+        <td class="particular">{{ line.particular }}</td>
+        <td class="num">{{ line.width }}</td>
+        <td class="num">{{ line.height }}</td>
+        <td class="num">{% if line.sqft %}{{ line.sqft|qty }}{% endif %}</td>
+        <td class="num">{% if line.quantity %}{{ line.quantity }}{% endif %}</td>
+        <td class="num">{% if line.rate %}{{ line.rate|amount }}{% endif %}</td>
+        <td class="num">{{ line.amount|amount }}</td>
+        <td></td>
+        <td class="num">{% if forloop.last %}{{ e.balance|amount }}{% endif %}</td>
+        <td class="details">{% if forloop.first and e.reference %}{{ e.reference }}{% if line.details %} · {% endif %}{% endif %}{{ line.details }}</td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      <tr class="first">
+        <td>{{ e.date_bs }}</td>
+        <td class="particular">{{ e.entry_type_label }}</td>
+        <td colspan="5"></td>
+        <td class="num">{% if e.debit %}{{ e.debit|amount }}{% endif %}</td>
+        <td class="num">{% if e.credit %}{{ e.credit|amount }}{% endif %}</td>
+        <td class="num">{{ e.balance|amount }}</td>
+        <td class="details">{% if e.reference and e.reference not in e.narration %}{{ e.reference }} · {% endif %}{{ e.narration }}</td>
+      </tr>
+    {% endif %}
+  {% empty %}
+    <tr><td colspan="11" class="muted center">No transactions in this period.</td></tr>
+  {% endfor %}
+    <tr class="total">
+      <td colspan="7">Total</td>
+      <td class="num">{{ statement.total_debit|amount }}</td>
+      <td class="num">{{ statement.total_credit|amount }}</td>
+      <td class="num balance-due">{{ statement.closing_balance|amount }}</td>
+      <td>{% if statement.closing_balance < 0 %}Advance with us{% else %}Balance due{% endif %}</td>
+    </tr>
+  </tbody>
+</table>
+{% include "documents/_signatures.html" %}
+<div class="footer-note">Positive balance is the amount due to {{ shop.name }}. Generated {{ generated_at|date:"d M Y, H:i" }} ({{ generated_at_bs }} BS).</div>
+{% endblock %}

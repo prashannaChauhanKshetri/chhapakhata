@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from apps.billing import services as billing_services
 from apps.billing.models import LedgerEntryType
-from apps.billing.selectors import balance_subquery, customer_statement
+from apps.billing.selectors import add_item_lines, balance_subquery, customer_statement
 from apps.catalog.models import MediaType
 from apps.core.activity import log_activity
 from apps.core.dates import bs_string, local_today
@@ -31,6 +31,61 @@ from .serializers import (
     OpeningBalanceSerializer,
     StatementSerializer,
 )
+
+
+def _item_table(data: dict) -> Table:
+    """Every bill and imported order line by line, as the printed detailed statement."""
+    rows = []
+    for e in data["entries"]:
+        lines = e.get("lines") or [
+            {
+                "particular": e["entry_type_label"],
+                "amount": e["debit"] or None,
+                "details": e["narration"],
+            }
+        ]
+        for index, line in enumerate(lines):
+            first, last = index == 0, index == len(lines) - 1
+            rows.append(
+                {
+                    "date_bs": e["date_bs"] if first else "",
+                    "reference": e["reference"] if first else "",
+                    "particular": line["particular"],
+                    "width": line.get("width", ""),
+                    "height": line.get("height", ""),
+                    "sqft": line.get("sqft"),
+                    "quantity": line.get("quantity"),
+                    "rate": line.get("rate"),
+                    "amount": line.get("amount"),
+                    "received": e["credit"] if first and e["credit"] else None,
+                    "balance": e["balance"] if last else None,
+                    "details": line.get("details", ""),
+                }
+            )
+    return Table(
+        title="Items",
+        columns=[
+            Column("date_bs", "Date (BS)"),
+            Column("reference", "Reference"),
+            Column("particular", "Particular"),
+            Column("width", "W"),
+            Column("height", "H"),
+            Column("sqft", "Sq ft", "number"),
+            Column("quantity", "Qty", "number"),
+            Column("rate", "Rate", "money"),
+            Column("amount", "Amount", "money"),
+            Column("received", "Received", "money"),
+            Column("balance", "Balance", "money"),
+            Column("details", "Details"),
+        ],
+        rows=rows,
+        totals={
+            "particular": "Total",
+            "amount": data["total_debit"],
+            "received": data["total_credit"],
+            "balance": data["closing_balance"],
+        },
+    )
 
 
 class CustomerFilter(django_filters.FilterSet):
@@ -108,6 +163,9 @@ class CustomerViewSet(
             OpenApiParameter("from", str, description="Start date (AD, YYYY-MM-DD)"),
             OpenApiParameter("to", str, description="End date (AD, YYYY-MM-DD)"),
             OpenApiParameter("export", str, enum=["json", "pdf", "xlsx"]),
+            OpenApiParameter(
+                "items", bool, description="PDF and Excel: list every item (size, qty, rate)"
+            ),
         ],
         responses=StatementSerializer,
     )
@@ -118,9 +176,12 @@ class CustomerViewSet(
         date_from, date_to = parse_range(request.query_params, None, local_today())
         data = customer_statement(customer, date_from, date_to)
         fmt = output_format(request.query_params)
+        with_items = request.query_params.get("items") in ("1", "true", "yes")
+        if with_items and fmt in ("pdf", "xlsx"):
+            add_item_lines(data)
         if fmt == "pdf":
             pdf = render_pdf(
-                "documents/statement.html",
+                "documents/statement_items.html" if with_items else "documents/statement.html",
                 {
                     "customer": customer,
                     "statement": data,
@@ -160,6 +221,8 @@ class CustomerViewSet(
                     )
                 ],
             )
+            if with_items:
+                report.tables.append(_item_table(data))
             return xlsx_response(report_to_xlsx(report), f"statement-{customer.name}")
         return Response(StatementSerializer(data).data)
 

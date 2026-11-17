@@ -18,6 +18,7 @@ import {
   IconAdjustments,
   IconCalendarStats,
   IconFileSpreadsheet,
+  IconListDetails,
   IconPencil,
   IconPlus,
   IconPrinter,
@@ -139,10 +140,15 @@ function StatementPanel({ customerId }: { customerId: number }) {
     placeholderData: (previous) => previous,
     enabled: !waiting,
   });
-  const exportAs = (kind: 'pdf' | 'xlsx') =>
-    openFile(withQuery(`/api/v1/customers/${customerId}/statement/`, { ...query, export: kind }), {
-      download: kind === 'xlsx',
-    }).catch((e) => notifyError(e, t('Could not create the statement')));
+  const exportAs = (kind: 'pdf' | 'xlsx', items = false) =>
+    openFile(
+      withQuery(`/api/v1/customers/${customerId}/statement/`, {
+        ...query,
+        export: kind,
+        items: items ? '1' : undefined,
+      }),
+      { download: kind === 'xlsx' },
+    ).catch((e) => notifyError(e, t('Could not create the statement')));
 
   if (error) return <QueryError error={error} onRetry={() => void refetch()} />;
   const blank = { reference: '', invoice_id: null, payment_id: null, order_id: null };
@@ -213,8 +219,15 @@ function StatementPanel({ customerId }: { customerId: number }) {
           </Button>
           <Button
             variant="default"
+            leftSection={<IconListDetails size={16} />}
+            onClick={() => void exportAs('pdf', true)}
+          >
+            {t('Print with item details')}
+          </Button>
+          <Button
+            variant="default"
             leftSection={<IconFileSpreadsheet size={16} />}
-            onClick={() => void exportAs('xlsx')}
+            onClick={() => void exportAs('xlsx', true)}
           >
             {t('Excel')}
           </Button>

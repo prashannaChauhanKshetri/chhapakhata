@@ -60,5 +60,6 @@
   {% endfor %}
   </tbody>
 </table>
+{% include "documents/_signatures.html" %}
 <div class="footer-note">Positive balance is the amount due to {{ shop.name }}. Generated {{ generated_at|date:"d M Y, H:i" }} ({{ generated_at_bs }} BS).</div>
 {% endblock %}
