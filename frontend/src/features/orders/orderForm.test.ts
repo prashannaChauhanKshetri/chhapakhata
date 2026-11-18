@@ -15,6 +15,7 @@ const values = (): OrderFormValues => ({
   notes: '  Call before delivery  ',
   discount_type: 'percent',
   discount_value: 5,
+  add_vat: false,
   items: [
     {
       ...emptyItem(),
@@ -36,6 +37,7 @@ describe('order form payloads', () => {
     const pricing = pricingPayload(v);
     expect(pricing.items).toHaveLength(1);
     expect(pricing.discount_value).toBe('5');
+    expect(pricing.add_vat).toBe(false);
   });
 
   it('sends decimals as strings and trims text', () => {
