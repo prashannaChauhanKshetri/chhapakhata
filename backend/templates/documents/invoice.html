@@ -42,7 +42,7 @@
       <tr><td>Date (Miti)</td><td><strong>{{ invoice.invoice_date_bs }}</strong> BS</td></tr>
       <tr><td>Date (AD)</td><td>{{ invoice.invoice_date|date:"d M Y" }}</td></tr>
       <tr><td>Fiscal year</td><td>{{ invoice.fiscal_year }}</td></tr>
-      <tr><td>Order</td><td>{{ invoice.order.order_no }}</td></tr>
+      <tr><td>{% if invoice_orders > 1 %}Orders{% else %}Order{% endif %}</td><td>{{ orders_label|default:invoice.order.order_no }}</td></tr>
     </table>
   </div>
 </div>
@@ -102,6 +102,8 @@
     {% if invoice.is_vat_invoice %}
       <tr><td>Taxable amount</td><td>{{ invoice.taxable_amount|amount }}</td></tr>
       <tr><td>VAT {{ invoice.vat_rate|qty }}%</td><td>{{ invoice.vat_amount|amount }}</td></tr>
+    {% elif shop.is_vat_registered %}
+      <tr class="soft"><td colspan="2">VAT not added{% if invoice.vat_note %}: {{ invoice.vat_note }}{% endif %}</td></tr>
     {% endif %}
     {% if invoice.round_off %}<tr class="soft"><td>Round off</td><td>{{ invoice.round_off|amount }}</td></tr>{% endif %}
     <tr class="grand"><td>Grand total</td><td>Rs. {{ invoice.total|amount }}</td></tr>

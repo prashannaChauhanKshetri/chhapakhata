@@ -158,15 +158,11 @@ def _imported_work_metric(date_from: dt.date, date_to: dt.date) -> list[Metric]:
 
     Kept apart from Total sales, which follows the bills (the IRD sales register).
     """
-    imported = _sum(
-        LedgerEntry.objects.filter(
-            entry_type=LedgerEntryType.IMPORTED_WORK,
-            entry_date__gte=date_from,
-            entry_date__lte=date_to,
-        ),
-        "debit",
-    )
-    return [Metric("Work imported from the work log (not billed)", imported)] if imported else []
+    entries = LedgerEntry.objects.filter(entry_date__gte=date_from, entry_date__lte=date_to)
+    imported = _sum(entries.filter(entry_type=LedgerEntryType.IMPORTED_WORK), "debit")
+    billed = _sum(entries.filter(entry_type=LedgerEntryType.WORK_BILLED), "credit")
+    net = imported - billed
+    return [Metric("Work imported from the work log (not billed)", net)] if net else []
 
 
 def sales_summary(date_from: dt.date, date_to: dt.date, **_: Any) -> Report:
@@ -224,6 +220,8 @@ def sales_summary(date_from: dt.date, date_to: dt.date, **_: Any) -> Report:
             Metric("Taxable amount", _sum(issued, "taxable_amount")),
             Metric("VAT", _sum(issued, "vat_amount")),
             Metric("Invoices", issued.count(), "number"),
+            Metric("Bills with VAT", _sum(issued.filter(is_vat_invoice=True), "total")),
+            Metric("Bills without VAT", _sum(issued.filter(is_vat_invoice=False), "total")),
             Metric(
                 "Average per selling day", q2(total / days_with_sales) if days_with_sales else ZERO
             ),

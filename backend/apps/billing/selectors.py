@@ -55,6 +55,33 @@ def order_paid_amount(order: Any) -> Decimal:
     return q2(total or 0)
 
 
+def bill_paid_amount(invoice: Any) -> Decimal:
+    """Payments taken against the orders on a bill."""
+    order_ids = invoice.order_links.values("order_id")
+    total = Payment.objects.filter(order_id__in=order_ids, status=PaymentStatus.VALID).aggregate(
+        s=Sum("amount")
+    )["s"]
+    return q2(total or 0)
+
+
+def unbilled_orders(customer: Any):
+    """A customer's orders that can go on a bill: confirmed, not cancelled, not billed."""
+    from apps.orders.models import OrderStatus
+
+    from .models import InvoiceOrder
+
+    billed = InvoiceOrder.objects.filter(is_active=True).values("order_id")
+    return (
+        Order.objects.filter(customer=customer)
+        .exclude(status__in=(OrderStatus.QUOTATION, OrderStatus.CANCELLED))
+        .exclude(pk__in=billed)
+        .filter(total__gt=0)
+        .annotate(paid_amount=paid_subquery())
+        .prefetch_related("items")
+        .order_by("order_date", "id")
+    )
+
+
 def customer_statement(
     customer: Any, date_from: dt.date | None = None, date_to: dt.date | None = None
 ) -> dict[str, Any]:
@@ -302,9 +329,13 @@ def _size(value: Decimal, unit: str) -> str:
 
 def _bill_orders(invoice_ids: set[int]) -> dict[int, list[int]]:
     """The orders each bill covers, in order."""
+    from .models import InvoiceOrder
+
     found: dict[int, list[int]] = defaultdict(list)
     for invoice_id, order_id in (
-        Invoice.objects.filter(pk__in=invoice_ids).values_list("pk", "order_id").order_by("pk")
+        InvoiceOrder.objects.filter(invoice_id__in=invoice_ids)
+        .values_list("invoice_id", "order_id")
+        .order_by("order__order_date", "order_id")
     ):
         found[invoice_id].append(order_id)
     return found
@@ -319,10 +350,14 @@ def add_item_lines(statement: dict[str, Any]) -> dict[str, Any]:
     entries = [
         e for e in statement["entries"] if e["entry_type"] in ITEM_ENTRY_TYPES and e["debit"] > 0
     ]
-    invoice_ids = {e["invoice_id"] for e in entries if e["invoice_id"]}
+
+    def is_bill(e: dict[str, Any]) -> bool:
+        return e["entry_type"] == LedgerEntryType.INVOICE and bool(e["invoice_id"])
+
+    invoice_ids = {e["invoice_id"] for e in entries if is_bill(e)}
     bill_orders = _bill_orders(invoice_ids)
     bills = {i.pk: i for i in Invoice.objects.filter(pk__in=invoice_ids)}
-    order_ids = {e["order_id"] for e in entries if e["order_id"] and not e["invoice_id"]}
+    order_ids = {e["order_id"] for e in entries if e["order_id"] and not is_bill(e)}
     for ids in bill_orders.values():
         order_ids.update(ids)
     orders = {
@@ -332,7 +367,7 @@ def add_item_lines(statement: dict[str, Any]) -> dict[str, Any]:
     for entry in statement["entries"]:
         entry["lines"] = []
     for entry in entries:
-        if entry["invoice_id"]:
+        if is_bill(entry):
             source = bills.get(entry["invoice_id"])
             covered = [orders[i] for i in bill_orders.get(entry["invoice_id"], []) if i in orders]
         else:
@@ -345,7 +380,7 @@ def add_item_lines(statement: dict[str, Any]) -> dict[str, Any]:
             for item in sorted(order.items.all(), key=lambda i: i.line_no):
                 sized = item.has_size
                 details = [item.description, item.finishing]
-                if len(covered) > 1 or entry["invoice_id"]:
+                if len(covered) > 1 or is_bill(entry):
                     details.insert(0, order.order_no)
                 lines.append(
                     {

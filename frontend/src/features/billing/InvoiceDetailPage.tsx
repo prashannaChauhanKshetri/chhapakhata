@@ -56,7 +56,7 @@ export default function InvoiceDetailPage() {
     openReasonModal({
       title: t('Cancel invoice {{no}}', { no: invoice.invoice_no }),
       message: t(
-        'The invoice stays on record with its number and is marked CANCELLED. The amount is reversed in the customer ledger. The order can then be edited and invoiced again.',
+        'The invoice stays on record with its number and is marked CANCELLED. The amount is reversed in the customer ledger. Its orders can then be edited and billed again.',
       ),
       confirmLabel: t('Cancel invoice'),
       onConfirm: async (reason) => {
@@ -79,7 +79,7 @@ export default function InvoiceDetailPage() {
     const customer = await apiGet<Customer>(`/api/v1/customers/${invoice.customer}/`);
     openReceivePayment({
       customer,
-      orderId: invoice.order.id,
+      orderId: invoice.orders.length > 1 ? undefined : invoice.order.id,
       suggestedAmount: invoice.order_balance,
     });
   };
@@ -90,7 +90,7 @@ export default function InvoiceDetailPage() {
         back={{ to: '/invoices', label: t('Invoices') }}
         title={invoice.invoice_no}
         badge={<StatusBadge value={invoice.status} map={INVOICE_STATUS} />}
-        description={`${invoice.is_vat_invoice ? t('Tax invoice') : t('Invoice')} · ${t('Fiscal year')} ${invoice.fiscal_year}`}
+        description={`${invoice.is_vat_invoice ? t('Tax invoice') : t('Invoice · VAT not added')}${invoice.vat_note ? ` (${invoice.vat_note})` : ''} · ${t('Fiscal year')} ${invoice.fiscal_year}`}
         actions={
           <>
             {!cancelled && can(Perm.PAYMENTS_RECEIVE) && toNumber(invoice.order_balance) > 0 && (
@@ -282,11 +282,15 @@ export default function InvoiceDetailPage() {
                   },
                   { label: t("Buyer's PAN"), value: invoice.customer_pan || '—' },
                   {
-                    label: t('Order'),
+                    label: invoice.orders.length > 1 ? t('Orders') : t('Order'),
                     value: (
-                      <Anchor component={Link} to={`/orders/${invoice.order.id}`} size="sm">
-                        {invoice.order.order_no}
-                      </Anchor>
+                      <Group gap={6}>
+                        {(invoice.orders.length ? invoice.orders : [invoice.order]).map((o) => (
+                          <Anchor key={o.id} component={Link} to={`/orders/${o.id}`} size="sm">
+                            {o.order_no}
+                          </Anchor>
+                        ))}
+                      </Group>
                     ),
                   },
                   {

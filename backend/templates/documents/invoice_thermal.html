@@ -32,6 +32,8 @@
 {% if invoice.is_vat_invoice %}
   <div class="t-row"><span>Taxable</span><span>{{ invoice.taxable_amount|amount }}</span></div>
   <div class="t-row"><span>VAT {{ invoice.vat_rate|qty }}%</span><span>{{ invoice.vat_amount|amount }}</span></div>
+{% elif shop.is_vat_registered %}
+  <div class="t-row"><span>VAT not added{% if invoice.vat_note %}: {{ invoice.vat_note }}{% endif %}</span><span></span></div>
 {% endif %}
 {% if invoice.round_off %}<div class="t-row"><span>Round off</span><span>{{ invoice.round_off|amount }}</span></div>{% endif %}
 <div class="t-row t-grand"><span>TOTAL</span><span>Rs. {{ invoice.total|amount }}</span></div>

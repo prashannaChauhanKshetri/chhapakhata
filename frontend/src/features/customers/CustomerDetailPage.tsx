@@ -17,6 +17,7 @@ import { modals } from '@mantine/modals';
 import {
   IconAdjustments,
   IconCalendarStats,
+  IconFileInvoice,
   IconFileSpreadsheet,
   IconListDetails,
   IconPencil,
@@ -53,6 +54,7 @@ import { formatAmount, formatDate, formatNPR, toNumber } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
 import { ORDER_STATUS } from '@/lib/status';
 
+import { openMakeBill } from '../billing/MakeBillForm';
 import { openReceivePayment } from '../billing/ReceivePaymentForm';
 import { openCustomerModal } from './CustomerForm';
 import { openOpeningBalance } from './OpeningBalanceForm';
@@ -503,6 +505,21 @@ export default function CustomerDetailPage() {
                 onClick={() => openCustomerModal({ customer })}
               >
                 {t('Edit')}
+              </Button>
+            )}
+            {can(Perm.DOCUMENTS_ISSUE) && (
+              <Button
+                variant="default"
+                leftSection={<IconFileInvoice size={16} />}
+                onClick={() =>
+                  openMakeBill({
+                    customerId: customer.id,
+                    customerName: customer.name,
+                    onMade: (invoiceId) => navigate(`/invoices/${invoiceId}`),
+                  })
+                }
+              >
+                {t('Make a bill')}
               </Button>
             )}
             {can(Perm.PAYMENTS_RECEIVE) && (

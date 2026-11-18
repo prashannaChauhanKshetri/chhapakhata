@@ -11,7 +11,13 @@ from rest_framework.response import Response
 
 from apps.billing import services as billing_services
 from apps.billing.models import LedgerEntryType
-from apps.billing.selectors import add_item_lines, balance_subquery, customer_statement
+from apps.billing.selectors import (
+    add_item_lines,
+    balance_subquery,
+    customer_statement,
+    unbilled_orders,
+)
+from apps.billing.serializers import UnbilledOrderSerializer
 from apps.catalog.models import MediaType
 from apps.core.activity import log_activity
 from apps.core.dates import bs_string, local_today
@@ -126,6 +132,7 @@ class CustomerViewSet(
         "update": Perm.CUSTOMERS_MANAGE,
         "partial_update": Perm.CUSTOMERS_MANAGE,
         "statement": Perm.LEDGER_VIEW,
+        "unbilled_orders": Perm.DOCUMENTS_ISSUE,
         "adjust_balance": Perm.LEDGER_MANAGE,
         "opening_balance": Perm.LEDGER_VIEW,
         "set_opening_balance": Perm.LEDGER_MANAGE,
@@ -227,6 +234,13 @@ class CustomerViewSet(
                 report.tables.append(_item_table(data))
             return xlsx_response(report_to_xlsx(report), f"statement-{customer.name}")
         return Response(StatementSerializer(data).data)
+
+    @extend_schema(responses=UnbilledOrderSerializer(many=True))
+    @action(detail=True, methods=["get"], url_path="unbilled-orders")
+    def unbilled_orders(self, request, pk=None):
+        """Orders that can go on a bill (Make a bill), oldest first."""
+        customer = self.get_object()
+        return Response(UnbilledOrderSerializer(unbilled_orders(customer), many=True).data)
 
     @extend_schema(responses=CustomerRateSerializer(many=True))
     @action(detail=True, methods=["get"])

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import django_filters
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
@@ -25,8 +27,10 @@ from .models import (
     PaymentMode,
     PaymentStatus,
 )
-from .selectors import ledger_summary, order_paid_amount
+from .selectors import bill_paid_amount, ledger_summary
 from .serializers import (
+    BillInputSerializer,
+    BillPreviewSerializer,
     InvoiceCreateSerializer,
     InvoiceDetailSerializer,
     InvoiceListSerializer,
@@ -63,13 +67,14 @@ class InvoiceViewSet(
     """Tax invoices. Never deleted: cancel with a reason instead."""
 
     filterset_class = InvoiceFilter
-    search_fields = ["invoice_no", "customer_name", "customer_phone", "order__order_no"]
+    search_fields = ["invoice_no", "customer_name", "customer_phone", "orders__order_no"]
     ordering_fields = ["invoice_date", "sequence", "total"]
     ordering = ["-invoice_date", "-sequence"]
     required_perms = {
         "list": Perm.INVOICES_VIEW,
         "retrieve": Perm.INVOICES_VIEW,
         "create": Perm.DOCUMENTS_ISSUE,
+        "preview": Perm.DOCUMENTS_ISSUE,
         "cancel": Perm.INVOICES_CANCEL,
         "print": Perm.DOCUMENTS_ISSUE,
     }
@@ -85,15 +90,40 @@ class InvoiceViewSet(
 
     @extend_schema(request=InvoiceCreateSerializer, responses={201: InvoiceDetailSerializer})
     def create(self, request, *args, **kwargs):
+        """Make a bill for one or more of a customer's orders, with or without VAT."""
         serializer = InvoiceCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        invoice = services.issue_invoice(
-            order=serializer.validated_data["order"],
+        data = serializer.validated_data
+        invoice = services.issue_bill(
+            customer=data["customer"],
+            orders=data["orders"],
             user=request.user,
-            notes=serializer.validated_data.get("notes", ""),
+            add_vat=data.get("add_vat"),
+            vat_note=data.get("vat_note", ""),
+            notes=data.get("notes", ""),
             request=request,
         )
         return Response(InvoiceDetailSerializer(invoice).data, status=status.HTTP_201_CREATED)
+
+    @extend_schema(request=BillInputSerializer, responses=BillPreviewSerializer)
+    @action(detail=False, methods=["post"])
+    def preview(self, request):
+        """The totals a bill would have. Nothing is saved and no number is used."""
+        serializer = BillInputSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        customer = data["customer"]
+        orders = services.billable_orders(customer, data["orders"])
+        totals = services.bill_totals(customer, orders, data.get("add_vat"))
+        on_account = sum((services.work_on_account(o) for o in orders), Decimal("0"))
+        payload = {
+            **{f: getattr(totals, f) for f in BillPreviewSerializer().fields if hasattr(totals, f)},
+            "orders": [{"id": o.pk, "order_no": o.order_no} for o in orders],
+            "default_add_vat": services.default_add_vat(customer, orders),
+            "work_on_account": on_account,
+            "account_change": totals.total - on_account,
+        }
+        return Response(BillPreviewSerializer(payload).data)
 
     @extend_schema(request=ReasonSerializer, responses=InvoiceDetailSerializer)
     @action(detail=True, methods=["post"])
@@ -122,15 +152,20 @@ class InvoiceViewSet(
         count = services.record_invoice_print(
             invoice=invoice, user=request.user, size=size, request=request
         )
-        paid = order_paid_amount(invoice.order)
+        paid = bill_paid_amount(invoice)
+        numbers = [link.order.order_no for link in invoice.order_links.select_related("order")]
         context = {
+            "orders_label": services.orders_label(numbers),
+            "invoice_orders": len(numbers),
             "invoice": invoice,
             "lines": invoice.lines.all(),
             "size": size,
             "page_size": PAGE_SIZES[size],
             "copy_number": count - 1 if count > 1 else 0,
             "paid": paid,
-            "balance": invoice.total - paid if invoice.status == InvoiceStatus.ISSUED else 0,
+            "balance": max(invoice.total - paid, Decimal("0"))
+            if invoice.status == InvoiceStatus.ISSUED
+            else 0,
         }
         template = "documents/invoice_thermal.html" if size == "80mm" else "documents/invoice.html"
         return pdf_response(

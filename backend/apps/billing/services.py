@@ -7,7 +7,8 @@ balance is always ``sum(debit) - sum(credit)`` over their ledger.
 from __future__ import annotations
 
 import datetime as dt
-from decimal import Decimal
+from dataclasses import dataclass
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from django.db import transaction
@@ -19,13 +20,15 @@ from apps.catalog.pricing import perimeter_ft
 from apps.core.activity import log_activity
 from apps.core.dates import bs_string, fiscal_year_for, fiscal_year_range, local_today
 from apps.core.exceptions import BusinessError
+from apps.core.models import ShopSettings
 from apps.core.money import amount_in_words, fmt_qty, format_npr, q2
 from apps.core.sequences import DocType, next_number
-from apps.orders.models import Order, OrderStatus
+from apps.orders.models import Order, OrderSource, OrderStatus
 
 from .models import (
     Invoice,
     InvoiceLine,
+    InvoiceOrder,
     InvoiceStatus,
     LedgerEntry,
     LedgerEntryType,
@@ -87,33 +90,197 @@ def _addon_line(addon: Any, item: Any) -> dict[str, Any]:
             }
 
 
-@transaction.atomic
-def issue_invoice(*, order: Order, user: Any, notes: str = "", request: Any = None) -> Invoice:
-    """Issue the tax invoice for a confirmed order, dated today."""
-    order = Order.objects.select_for_update().select_related("customer").get(pk=order.pk)
-    if order.status == OrderStatus.QUOTATION:
-        raise BusinessError("Confirm the order before issuing an invoice.")
-    if order.status == OrderStatus.CANCELLED:
-        raise BusinessError("A cancelled order cannot be invoiced.")
-    existing = order.invoices.filter(status=InvoiceStatus.ISSUED).first()
-    if existing is not None:
-        raise BusinessError(f"This order already has invoice {existing.invoice_no}.")
-    if order.total <= 0:
-        raise BusinessError("The order total is zero; there is nothing to invoice.")
-    if order.ledger_entries.filter(entry_type=LedgerEntryType.IMPORTED_WORK).exists():
-        raise BusinessError(
-            "This order came from the work log and is already charged to the customer's "
-            "account. A bill now would charge it twice."
-        )
+@dataclass(frozen=True)
+class BillTotals:
+    add_vat: bool
+    subtotal: Decimal
+    discount_amount: Decimal
+    taxable_amount: Decimal
+    vat_rate: Decimal
+    vat_amount: Decimal
+    round_off: Decimal
+    total: Decimal
 
+
+def default_add_vat(customer: Any, orders: list[Order]) -> bool:
+    """Counter orders that agree keep their choice; otherwise the customer's setting."""
+    counter = {o.vat_rate > 0 for o in orders if o.source != OrderSource.IMPORT}
+    if len(counter) == 1 and all(o.source != OrderSource.IMPORT for o in orders):
+        return counter.pop()
+    return bool(customer.add_vat) and ShopSettings.load().is_vat_registered
+
+
+def bill_totals(customer: Any, orders: list[Order], add_vat: bool | None = None) -> BillTotals:
+    """Totals for a bill over ``orders``. VAT is worked out once, on the net amount.
+
+    Each order counts at its amount before VAT (sub-total less discount), so VAT an
+    order already showed is never taxed again.
+    """
+    shop = ShopSettings.load()
+    explicit = add_vat is not None
+    if add_vat is None:
+        add_vat = default_add_vat(customer, orders)
+    subtotal = q2(sum((o.subtotal for o in orders), Decimal("0")))
+    discount = q2(sum((o.discount_amount for o in orders), Decimal("0")))
+    taxable = q2(subtotal - discount)
+    rate = Decimal("0")
+    if add_vat:
+        rates = {o.vat_rate for o in orders if o.vat_rate > 0}
+        if len(rates) == 1:
+            rate = rates.pop()
+        elif shop.is_vat_registered:
+            rate = shop.vat_rate
+        elif explicit:
+            raise BusinessError({"add_vat": ["The shop is not VAT-registered (Settings → Shop)."]})
+    vat = q2(taxable * rate / 100)
+    total = q2(taxable + vat)
+    round_off = Decimal("0")
+    if shop.round_total_to_rupee:
+        rounded = total.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+        round_off, total = q2(rounded - total), q2(rounded)
+    return BillTotals(
+        add_vat=vat > 0,
+        subtotal=subtotal,
+        discount_amount=discount,
+        taxable_amount=taxable,
+        vat_rate=q2(rate),
+        vat_amount=vat,
+        round_off=round_off,
+        total=total,
+    )
+
+
+def billable_orders(customer: Any, orders: Any, *, lock: bool = False) -> list[Order]:
+    """The orders as they will be billed, oldest first. Raises if any cannot be billed."""
+    ids = list(dict.fromkeys(o.pk if isinstance(o, Order) else int(o) for o in orders))
+    if not ids:
+        raise BusinessError({"orders": ["Choose at least one order."]})
+    qs = Order.objects.filter(pk__in=ids)
+    if lock:
+        qs = qs.select_for_update()
+    found = sorted(qs, key=lambda o: (o.order_date, o.pk))
+    if len(found) != len(ids):
+        raise BusinessError({"orders": ["An order was not found."]})
+    problems = []
+    for order in found:
+        if order.customer_id != customer.pk:
+            problems.append(f"{order.order_no} is another customer's order.")
+        elif order.status == OrderStatus.QUOTATION:
+            problems.append(f"{order.order_no} is a quotation; confirm it first.")
+        elif order.status == OrderStatus.CANCELLED:
+            problems.append(f"{order.order_no} is cancelled.")
+    billed = (
+        InvoiceOrder.objects.filter(order_id__in=ids, is_active=True)
+        .select_related("invoice", "order")
+        .order_by("order__order_no")
+    )
+    problems += [
+        f"{link.order.order_no} is already on bill {link.invoice.invoice_no}." for link in billed
+    ]
+    if problems:
+        raise BusinessError({"orders": problems})
+    if sum((o.total for o in found), Decimal("0")) <= 0:
+        raise BusinessError({"orders": ["These orders total zero; there is nothing to bill."]})
+    return found
+
+
+def work_on_account(order: Order) -> Decimal:
+    """What a work-log order has charged to the account and not yet moved to a bill."""
+    entries = order.ledger_entries.filter(
+        entry_type__in=(LedgerEntryType.IMPORTED_WORK, LedgerEntryType.WORK_BILLED)
+    )
+    net = sum((e.debit - e.credit for e in entries), Decimal("0"))
+    return q2(net)
+
+
+def _bill_lines(invoice: Invoice, orders: list[Order]) -> list[InvoiceLine]:
+    several = len(orders) > 1
+    line_no = 0
+    lines = []
+    for order in orders:
+        for item in order.items.prefetch_related("addons").order_by("line_no"):
+            line_no += 1
+            # Size and pieces print in their own columns; Details holds the rest.
+            notes = [order.order_no if several else "", item.description, item.finishing]
+            if item.is_per_piece:
+                quantity, unit = q2(Decimal(item.quantity)), "pcs"
+            else:
+                if item.min_applied:
+                    notes.append(f"min. {fmt_qty(item.min_sqft)} sq ft each")
+                quantity, unit = q2(item.billable_sqft * item.quantity), "sq ft"
+            lines.append(
+                InvoiceLine(
+                    invoice=invoice,
+                    line_no=line_no,
+                    description=item.media_name[:200],
+                    details=" · ".join(x for x in notes if x)[:200],
+                    quantity=quantity,
+                    unit=unit,
+                    rate=item.rate,
+                    amount=item.base_amount,
+                    media_type_id=item.media_type_id,
+                    sqft=q2(item.sqft * item.quantity),
+                    billable_sqft=q2(item.billable_sqft * item.quantity),
+                    width=item.width if item.has_size else None,
+                    height=item.height if item.has_size else None,
+                    size_unit=item.unit if item.has_size else "",
+                    pieces=item.quantity,
+                    per_piece=item.is_per_piece,
+                )
+            )
+            for addon in item.addons.all():
+                line_no += 1
+                info = _addon_line(addon, item)
+                lines.append(
+                    InvoiceLine(
+                        invoice=invoice,
+                        line_no=line_no,
+                        description=f"{addon.name} (item {item.line_no})"[:200],
+                        details=info["details"][:200],
+                        quantity=info["quantity"],
+                        unit=info["unit"],
+                        rate=info["rate"],
+                        amount=addon.amount,
+                    )
+                )
+    return lines
+
+
+def orders_label(numbers: list[str]) -> str:
+    if len(numbers) <= 3:
+        return ", ".join(numbers)
+    return f"{numbers[0]} to {numbers[-1]} ({len(numbers)} orders)"
+
+
+@transaction.atomic
+def issue_bill(
+    *,
+    customer: Any,
+    orders: Any,
+    user: Any,
+    add_vat: bool | None = None,
+    vat_note: str = "",
+    notes: str = "",
+    request: Any = None,
+) -> Invoice:
+    """Issue one tax invoice, dated today, for one or more of a customer's orders.
+
+    ``add_vat`` None follows the orders (or the customer's setting). Work-log orders
+    were charged to the account when imported: that charge moves onto the bill, so
+    the account goes up only by the VAT.
+    """
+    from apps.customers.models import Customer
+
+    customer = Customer.objects.select_for_update().get(pk=customer.pk)
+    found = billable_orders(customer, orders, lock=True)
+    totals = bill_totals(customer, found, add_vat)
     today = local_today()
     allocated = next_number(DocType.INVOICE, today)
-    customer = order.customer
     invoice = Invoice.objects.create(
         invoice_no=allocated.number,
         fiscal_year=allocated.fiscal_year,
         sequence=allocated.sequence,
-        order=order,
+        order=found[0],
         customer=customer,
         customer_name=customer.name,
         customer_address=customer.address,
@@ -121,86 +288,83 @@ def issue_invoice(*, order: Order, user: Any, notes: str = "", request: Any = No
         customer_pan=customer.pan_no,
         invoice_date=today,
         invoice_date_bs=bs_string(today) or "",
-        is_vat_invoice=order.vat_rate > 0,
-        subtotal=order.subtotal,
-        discount_amount=order.discount_amount,
-        taxable_amount=order.taxable_amount,
-        vat_rate=order.vat_rate,
-        vat_amount=order.vat_amount,
-        round_off=order.round_off,
-        total=order.total,
-        amount_in_words=amount_in_words(order.total),
+        is_vat_invoice=totals.add_vat,
+        subtotal=totals.subtotal,
+        discount_amount=totals.discount_amount,
+        taxable_amount=totals.taxable_amount,
+        vat_rate=totals.vat_rate,
+        vat_amount=totals.vat_amount,
+        round_off=totals.round_off,
+        total=totals.total,
+        amount_in_words=amount_in_words(totals.total),
         notes=notes,
+        vat_note="" if totals.add_vat else (vat_note or "").strip()[:255],
         issued_by=user,
     )
+    InvoiceOrder.objects.bulk_create(InvoiceOrder(invoice=invoice, order=o) for o in found)
+    InvoiceLine.objects.bulk_create(_bill_lines(invoice, found))
 
-    line_no = 0
-    lines = []
-    for item in order.items.prefetch_related("addons").order_by("line_no"):
-        line_no += 1
-        # Size and pieces print in their own columns; Details holds the rest.
-        description = item.media_name
-        notes = [item.description, item.finishing]
-        if item.is_per_piece:
-            quantity, unit = q2(Decimal(item.quantity)), "pcs"
-        else:
-            if item.min_applied:
-                notes.append(f"min. {fmt_qty(item.min_sqft)} sq ft each")
-            quantity, unit = q2(item.billable_sqft * item.quantity), "sq ft"
-        details = " · ".join(x for x in notes if x)
-        lines.append(
-            InvoiceLine(
-                invoice=invoice,
-                line_no=line_no,
-                description=description[:200],
-                details=details[:200],
-                quantity=quantity,
-                unit=unit,
-                rate=item.rate,
-                amount=item.base_amount,
-                media_type_id=item.media_type_id,
-                sqft=q2(item.sqft * item.quantity),
-                billable_sqft=q2(item.billable_sqft * item.quantity),
-                width=item.width if item.has_size else None,
-                height=item.height if item.has_size else None,
-                size_unit=item.unit if item.has_size else "",
-                pieces=item.quantity,
-                per_piece=item.is_per_piece,
-            )
-        )
-        for addon in item.addons.all():
-            line_no += 1
-            info = _addon_line(addon, item)
-            lines.append(
-                InvoiceLine(
-                    invoice=invoice,
-                    line_no=line_no,
-                    description=f"{addon.name} (item {item.line_no})"[:200],
-                    details=info["details"][:200],
-                    quantity=info["quantity"],
-                    unit=info["unit"],
-                    rate=info["rate"],
-                    amount=addon.amount,
-                )
-            )
-    InvoiceLine.objects.bulk_create(lines)
-
+    numbers = [o.order_no for o in found]
     LedgerEntry.objects.create(
         customer=customer,
         entry_date=today,
         entry_type=LedgerEntryType.INVOICE,
         debit=invoice.total,
         invoice=invoice,
-        narration=f"Invoice {invoice.invoice_no} for order {order.order_no}",
+        narration=f"Invoice {invoice.invoice_no} for {orders_label(numbers)}"[:255],
         created_by=user,
     )
-    log_activity(user, "invoice.issued", invoice, message=f"Total {invoice.total}", request=request)
+    for order in found:
+        on_account = work_on_account(order)
+        if on_account > 0:
+            LedgerEntry.objects.create(
+                customer=customer,
+                entry_date=today,
+                entry_type=LedgerEntryType.WORK_BILLED,
+                credit=on_account,
+                invoice=invoice,
+                order=order,
+                narration=f"{order.order_no} moved to bill {invoice.invoice_no}"[:255],
+                created_by=user,
+            )
+    log_activity(
+        user,
+        "invoice.issued",
+        invoice,
+        message=f"Total {invoice.total} for {orders_label(numbers)}"
+        + ("" if totals.add_vat else " (no VAT)"),
+        request=request,
+    )
     return invoice
+
+
+def issue_invoice(
+    *,
+    order: Order,
+    user: Any,
+    notes: str = "",
+    add_vat: bool | None = None,
+    vat_note: str = "",
+    request: Any = None,
+) -> Invoice:
+    """Issue the tax invoice for one confirmed order, dated today."""
+    return issue_bill(
+        customer=order.customer,
+        orders=[order],
+        user=user,
+        add_vat=add_vat,
+        vat_note=vat_note,
+        notes=notes,
+        request=request,
+    )
 
 
 @transaction.atomic
 def cancel_invoice(*, invoice: Invoice, user: Any, reason: str, request: Any = None) -> Invoice:
-    """Cancel (never delete) an invoice. The number stays used; the ledger is reversed."""
+    """Cancel (never delete) an invoice. The number stays used; the ledger is reversed.
+
+    Its orders can be billed again, and work-log orders go back on the account.
+    """
     reason = _require_reason(reason)
     invoice = Invoice.objects.select_for_update().get(pk=invoice.pk)
     if invoice.status == InvoiceStatus.CANCELLED:
@@ -210,15 +374,32 @@ def cancel_invoice(*, invoice: Invoice, user: Any, reason: str, request: Any = N
     invoice.cancelled_at = timezone.now()
     invoice.cancelled_by = user
     invoice.save(update_fields=["status", "cancel_reason", "cancelled_at", "cancelled_by"])
+    invoice.order_links.update(is_active=False)
+    today = local_today()
     LedgerEntry.objects.create(
         customer_id=invoice.customer_id,
-        entry_date=local_today(),
+        entry_date=today,
         entry_type=LedgerEntryType.INVOICE_CANCEL,
         credit=invoice.total,
         invoice=invoice,
         narration=f"Invoice {invoice.invoice_no} cancelled: {reason}"[:255],
         created_by=user,
     )
+    moved = invoice.ledger_entries.filter(entry_type=LedgerEntryType.WORK_BILLED).select_related(
+        "order"
+    )
+    for entry in moved:
+        LedgerEntry.objects.create(
+            customer_id=invoice.customer_id,
+            entry_date=today,
+            entry_type=LedgerEntryType.IMPORTED_WORK,
+            debit=entry.credit,
+            invoice=invoice,
+            order=entry.order,
+            narration=f"{entry.order.order_no} back on the account: bill "
+            f"{invoice.invoice_no} cancelled"[:255],
+            created_by=user,
+        )
     log_activity(user, "invoice.cancelled", invoice, message=reason, request=request)
     return invoice
 

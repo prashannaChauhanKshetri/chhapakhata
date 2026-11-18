@@ -9,7 +9,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.billing.models import Invoice, InvoiceStatus
+from apps.billing.models import InvoiceOrder
 from apps.billing.selectors import order_paid_amount, paid_subquery
 from apps.billing.serializers import InvoiceDetailSerializer, PaymentSerializer
 from apps.catalog.pricing import discount_percent
@@ -100,9 +100,9 @@ class OrderViewSet(
     http_method_names = ["get", "post", "put", "head", "options"]
 
     def get_queryset(self):
-        active_invoice = Invoice.objects.filter(
-            order=OuterRef("pk"), status=InvoiceStatus.ISSUED
-        ).values("invoice_no")[:1]
+        active_invoice = InvoiceOrder.objects.filter(order=OuterRef("pk"), is_active=True).values(
+            "invoice__invoice_no"
+        )[:1]
         qs = (
             Order.objects.select_related("customer", "created_by")
             .annotate(
@@ -274,10 +274,13 @@ class OrderViewSet(
 
         serializer = IssueInvoiceSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
         invoice = billing.issue_invoice(
             order=self.get_object(),
             user=request.user,
-            notes=serializer.validated_data.get("notes", ""),
+            notes=data.get("notes", ""),
+            add_vat=data.get("add_vat"),
+            vat_note=data.get("vat_note", ""),
             request=request,
         )
         return Response(InvoiceDetailSerializer(invoice).data, status=status.HTTP_201_CREATED)

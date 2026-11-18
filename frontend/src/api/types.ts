@@ -43,6 +43,8 @@ export type MoveResult = S['MoveResult'];
 
 export type InvoiceList = S['InvoiceList'];
 export type InvoiceDetail = S['InvoiceDetail'];
+export type UnbilledOrder = S['UnbilledOrder'];
+export type BillPreview = S['BillPreview'];
 export type Payment = S['Payment'];
 export type PaymentCreate = S['PaymentCreateRequest'];
 

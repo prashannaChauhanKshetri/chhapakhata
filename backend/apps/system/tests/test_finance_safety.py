@@ -46,14 +46,17 @@ def _work_log(owner, rows, **kwargs):
     )
 
 
-def test_an_imported_order_cannot_be_billed_again(api, owner):
+def test_billing_an_imported_order_adds_only_the_vat(api, owner, shop):
     _work_log(owner, [["2083.04.10", "Rapti Stores", "Banner", 1, 500, 500, 0]])
     order = Order.objects.get()
-    with pytest.raises(BusinessError, match="charge it twice"):
+    assert api(owner).get(f"/api/v1/orders/{order.pk}/").json()["actions"]["can_invoice"]
+    invoice = billing.issue_invoice(order=order, user=owner, add_vat=True)
+    assert (invoice.total, invoice.vat_amount) == (D("565.00"), D("65.00"))
+    assert customer_balance(order.customer) == D("565.00")  # 500 moved to the bill + VAT
+    with pytest.raises(BusinessError, match="already on bill"):
         billing.issue_invoice(order=order, user=owner)
-    actions = api(owner).get(f"/api/v1/orders/{order.pk}/").json()["actions"]
-    assert actions["can_invoice"] is False
-    assert customer_balance(order.customer) == D("500.00")
+    billing.cancel_invoice(invoice=invoice, user=owner, reason="Wrong customer")
+    assert customer_balance(order.customer) == D("500.00")  # back on the account
 
 
 def test_work_before_the_opening_balance_is_already_inside_it(owner):

@@ -60,6 +60,7 @@ class InvoiceListSerializer(serializers.ModelSerializer):
 
 class InvoiceDetailSerializer(InvoiceListSerializer):
     lines = InvoiceLineSerializer(many=True, read_only=True)
+    orders = serializers.SerializerMethodField(help_text="Every order on this bill")
     cancelled_by = UserRefSerializer(read_only=True, allow_null=True)
     order_paid = serializers.SerializerMethodField()
     order_balance = serializers.SerializerMethodField()
@@ -77,6 +78,8 @@ class InvoiceDetailSerializer(InvoiceListSerializer):
             "round_off",
             "amount_in_words",
             "notes",
+            "vat_note",
+            "orders",
             "cancel_reason",
             "cancelled_at",
             "cancelled_by",
@@ -86,11 +89,16 @@ class InvoiceDetailSerializer(InvoiceListSerializer):
             "order_balance",
         ]
 
+    @extend_schema_field(OrderRefSerializer(many=True))
+    def get_orders(self, obj: Invoice) -> list[dict]:
+        links = obj.order_links.select_related("order").order_by("order__order_date", "order_id")
+        return [{"id": link.order_id, "order_no": link.order.order_no} for link in links]
+
     def _paid(self, obj: Invoice) -> Decimal:
-        from .selectors import order_paid_amount
+        from .selectors import bill_paid_amount
 
         if not hasattr(obj, "_paid_cache"):
-            obj._paid_cache = order_paid_amount(obj.order)
+            obj._paid_cache = bill_paid_amount(obj)
         return obj._paid_cache
 
     def get_order_paid(self, obj: Invoice) -> str:
@@ -102,9 +110,80 @@ class InvoiceDetailSerializer(InvoiceListSerializer):
         return f"{obj.total - self._paid(obj):.2f}"
 
 
-class InvoiceCreateSerializer(serializers.Serializer):
-    order = serializers.PrimaryKeyRelatedField(queryset=Order.objects.all())
+class BillInputSerializer(serializers.Serializer):
+    """Make a bill: one or more of a customer's orders, with or without VAT."""
+
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
+    orders = serializers.ListField(child=serializers.IntegerField(), min_length=1)
+    add_vat = serializers.BooleanField(
+        required=False,
+        allow_null=True,
+        default=None,
+        help_text="Empty: the orders' choice, or the customer's setting.",
+    )
+    vat_note = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True,
+        default="",
+        help_text="Printed on a bill without VAT, e.g. an exemption reference.",
+    )
     notes = serializers.CharField(max_length=255, required=False, allow_blank=True, default="")
+
+
+class InvoiceCreateSerializer(BillInputSerializer):
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), required=False)
+    orders = serializers.ListField(child=serializers.IntegerField(), min_length=1, required=False)
+    order = serializers.PrimaryKeyRelatedField(
+        queryset=Order.objects.all(), required=False, help_text="One order (older clients)."
+    )
+
+    def validate(self, attrs):
+        if attrs.get("order") is not None:
+            attrs["customer"] = attrs["order"].customer
+            attrs["orders"] = [attrs["order"].pk]
+        elif not attrs.get("customer") or not attrs.get("orders"):
+            raise serializers.ValidationError({"orders": ["Choose the customer and orders."]})
+        return attrs
+
+
+class BillPreviewSerializer(serializers.Serializer):
+    orders = OrderRefSerializer(many=True)
+    add_vat = serializers.BooleanField()
+    default_add_vat = serializers.BooleanField(help_text="What the bill does if not told")
+    subtotal = serializers.DecimalField(**MONEY)
+    discount_amount = serializers.DecimalField(**MONEY)
+    taxable_amount = serializers.DecimalField(**MONEY)
+    vat_rate = serializers.DecimalField(max_digits=5, decimal_places=2)
+    vat_amount = serializers.DecimalField(**MONEY)
+    round_off = serializers.DecimalField(**MONEY)
+    total = serializers.DecimalField(**MONEY)
+    work_on_account = serializers.DecimalField(
+        **MONEY, help_text="Work-log charges already on the account that move onto the bill"
+    )
+    account_change = serializers.DecimalField(
+        **MONEY, help_text="How much the customer's balance goes up"
+    )
+
+
+class UnbilledOrderSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    order_no = serializers.CharField()
+    order_date = serializers.DateField()
+    order_date_bs = BSDateField(source="order_date")
+    source = serializers.CharField()
+    status = serializers.CharField()
+    items = serializers.SerializerMethodField()
+    subtotal = serializers.DecimalField(**MONEY)
+    discount_amount = serializers.DecimalField(**MONEY)
+    taxable_amount = serializers.DecimalField(**MONEY)
+    vat_amount = serializers.DecimalField(**MONEY)
+    total = serializers.DecimalField(**MONEY)
+    paid_amount = serializers.DecimalField(**MONEY)
+
+    def get_items(self, obj) -> str:
+        names = [i.media_name for i in sorted(obj.items.all(), key=lambda i: i.line_no)]
+        return ", ".join(dict.fromkeys(names))
 
 
 class PaymentSerializer(serializers.ModelSerializer):

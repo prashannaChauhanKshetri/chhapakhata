@@ -41,6 +41,7 @@ TABLES = [
     Table("billing.LedgerEntry", "Ledger entries"),
     Table("billing.Payment", "Payments"),
     Table("billing.InvoiceLine", ""),
+    Table("billing.InvoiceOrder", ""),
     Table("billing.Invoice", "Invoices"),
     Table("inventory.StockMovement", "Stock movements"),
     Table("production.JobStageEvent", ""),

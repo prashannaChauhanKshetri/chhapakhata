@@ -13,7 +13,7 @@ from apps.customers.models import Customer
 from apps.customers.serializers import CustomerRefSerializer
 from apps.production.selectors import order_progress
 
-from .models import DiscountType, Order, OrderItem, OrderItemAddOn, OrderSource, OrderStatus
+from .models import DiscountType, Order, OrderItem, OrderItemAddOn, OrderStatus
 from .services import EDITABLE_STATUSES
 
 MONEY = {"max_digits": 12, "decimal_places": 2}
@@ -244,11 +244,8 @@ class OrderDetailSerializer(OrderListSerializer):
             "can_cancel": user.can(Perm.ORDERS_MANAGE)
             and obj.status not in (OrderStatus.CANCELLED, OrderStatus.DELIVERED)
             and not invoiced,
-            # Work-log orders were charged to the account when imported.
-            "can_invoice": user.can(Perm.DOCUMENTS_ISSUE)
-            and live
-            and not invoiced
-            and obj.source != OrderSource.IMPORT,
+            # Work-log orders too: their charge moves onto the bill (see issue_bill).
+            "can_invoice": user.can(Perm.DOCUMENTS_ISSUE) and live and not invoiced,
             "can_deliver": user.can(Perm.ORDERS_MANAGE) and obj.status == OrderStatus.READY,
             "can_receive_payment": user.can(Perm.PAYMENTS_RECEIVE)
             and live
@@ -432,6 +429,10 @@ class DeliverSerializer(serializers.Serializer):
 
 class IssueInvoiceSerializer(serializers.Serializer):
     notes = serializers.CharField(max_length=255, required=False, allow_blank=True, default="")
+    add_vat = serializers.BooleanField(
+        required=False, allow_null=True, default=None, help_text="Empty: as on the order."
+    )
+    vat_note = serializers.CharField(max_length=255, required=False, allow_blank=True, default="")
 
 
 class ItemDetailsSerializer(serializers.Serializer):

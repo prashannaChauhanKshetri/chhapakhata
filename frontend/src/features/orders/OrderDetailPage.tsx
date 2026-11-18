@@ -48,6 +48,7 @@ import { deadlineLabel, formatAmount, formatDateTime, formatQty, toNumber } from
 import { INVOICE_STATUS, ORDER_STATUS, PAYMENT_STATUS } from '@/lib/status';
 
 import { openReceivePayment } from '../billing/ReceivePaymentForm';
+import { openMakeBill } from '../billing/MakeBillForm';
 import { openDeliver } from './DeliverForm';
 import { openEditDetails } from './EditDetailsForm';
 
@@ -109,28 +110,11 @@ export default function OrderDetailPage() {
     });
 
   const issueInvoice = () =>
-    modals.openConfirmModal({
-      title: t('Issue invoice for {{no}}?', { no: order.order_no }),
-      children: (
-        <Text size="sm">
-          {t(
-            'An invoice cannot be deleted. After this, the order cannot be edited unless the owner cancels the invoice.',
-          )}
-        </Text>
-      ),
-      labels: { confirm: t('Issue invoice'), cancel: t('Cancel') },
-      onConfirm: () =>
-        void run(
-          'invoice',
-          () =>
-            unwrap(
-              api.POST('/api/v1/orders/{id}/invoice/', {
-                params: { path: { id: order.id } },
-                body: { notes: '' },
-              }),
-            ),
-          t('Invoice issued'),
-        ),
+    openMakeBill({
+      customerId: order.customer.id,
+      customerName: order.customer.name,
+      preselect: [order.id],
+      onMade: (invoiceId) => navigate(`/invoices/${invoiceId}`),
     });
 
   const cancel = () =>

@@ -31,7 +31,13 @@ class Invoice(BusinessOwned):
     invoice_no = models.CharField(max_length=40)
     fiscal_year = models.CharField(max_length=7, db_index=True)
     sequence = models.PositiveIntegerField()
-    order = models.ForeignKey("orders.Order", on_delete=models.PROTECT, related_name="invoices")
+    # The first order on the bill; ``orders`` lists every order it covers.
+    order = models.ForeignKey(
+        "orders.Order", on_delete=models.PROTECT, related_name="first_invoices"
+    )
+    orders = models.ManyToManyField(
+        "orders.Order", through="InvoiceOrder", related_name="invoices", blank=True
+    )
     customer = models.ForeignKey(
         "customers.Customer", on_delete=models.PROTECT, related_name="invoices"
     )
@@ -55,6 +61,12 @@ class Invoice(BusinessOwned):
     total = models.DecimalField(**MONEY)
     amount_in_words = models.CharField(max_length=255)
     notes = models.CharField(max_length=255, blank=True)
+    vat_note = models.CharField(
+        "Why VAT is not added",
+        max_length=255,
+        blank=True,
+        help_text="Printed on bills made without VAT (e.g. exemption reference).",
+    )
 
     status = models.CharField(
         max_length=10, choices=InvoiceStatus.choices, default=InvoiceStatus.ISSUED, db_index=True
@@ -97,6 +109,32 @@ class Invoice(BusinessOwned):
     @property
     def is_cancelled(self) -> bool:
         return self.status == InvoiceStatus.CANCELLED
+
+
+class InvoiceOrder(BusinessOwned):
+    """An order covered by a bill. An order is on at most one issued bill at a time."""
+
+    invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="order_links")
+    order = models.ForeignKey(
+        "orders.Order", on_delete=models.PROTECT, related_name="invoice_links"
+    )
+    is_active = models.BooleanField(
+        default=True, help_text="Off once the bill is cancelled, so the order can be billed again."
+    )
+
+    class Meta:
+        ordering = ["invoice", "id"]
+        constraints = [
+            models.UniqueConstraint(fields=["invoice", "order"], name="uniq_invoice_order"),
+            models.UniqueConstraint(
+                fields=["order"],
+                condition=models.Q(is_active=True),
+                name="one_active_bill_per_order",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.invoice_id} → {self.order_id}"
 
 
 class InvoiceLine(BusinessOwned):
@@ -224,6 +262,7 @@ class LedgerEntryType(models.TextChoices):
     PAYMENT_VOID = "payment_void", "Payment voided"
     ADJUSTMENT = "adjustment", "Adjustment"
     IMPORTED_WORK = "imported_work", "Work (imported)"
+    WORK_BILLED = "work_billed", "Work moved to a bill"
 
 
 class LedgerEntry(BusinessOwned):
