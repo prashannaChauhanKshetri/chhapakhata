@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Autocomplete,
   Badge,
   Box,
   Chip,
@@ -16,30 +17,16 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import type { UseFormReturnType } from '@mantine/form';
-import {
-  IconChevronDown,
-  IconChevronRight,
-  IconCopy,
-  IconPlus,
-  IconSettings,
-  IconTrash,
-} from '@tabler/icons-react';
+import { IconChevronDown, IconChevronRight, IconCopy, IconTrash } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
 
 import type { AddOn, CustomerRate, ItemResult, MediaType } from '@/api/types';
-import { useAuth } from '@/auth/AuthContext';
 import { formatAmount, formatQty, toNumber } from '@/lib/format';
-import { Perm } from '@/lib/permissions';
 import { UNITS } from '@/lib/status';
 
-import { openMediaTypeModal } from '../settings/MediaTypeForm';
 import classes from './OrderForm.module.css';
 import { newKey, type OrderFormValues } from './orderForm';
-
-const ADD_MEDIA = '__add_media__';
-const OPEN_RATE_CARD = '__open_rate_card__';
 
 interface ItemRowProps {
   form: UseFormReturnType<OrderFormValues>;
@@ -67,21 +54,19 @@ export function ItemRow({
 }: ItemRowProps) {
   const { t } = useTranslation();
   const item = form.values.items[index];
-  const { can } = useAuth();
-  const navigate = useNavigate();
-  const [mediaSearch, setMediaSearch] = useState('');
   const [moreOpen, setMoreOpen] = useState(Boolean(item.finishing || item.design_file_ref));
   const path = (field: string) => `items.${index}.${field}`;
   const media = mediaTypes.find((m) => String(m.id) === item.media_type);
 
-  const mediaOptions = mediaTypes
-    .filter((m) => m.is_active || String(m.id) === item.media_type)
-    .map((m) => ({
-      value: String(m.id),
-      label: `${m.name} · Rs ${formatQty(m.rate)}/${m.pricing_unit === 'piece' ? 'piece' : 'sq ft'}`,
-    }));
+  // Names only, no rates: the media can be chosen or typed freely.
+  const mediaNames = Array.from(
+    new Set(
+      mediaTypes.filter((m) => m.is_active || String(m.id) === item.media_type).map((m) => m.name),
+    ),
+  );
   const last = item.media_type ? lastRates[item.media_type] : undefined;
-  const perUnit = item.per_piece ? t('piece') : t('sq ft');
+  const noSize = !toNumber(item.width) && !toNumber(item.height);
+  const perUnit = item.per_piece || noSize ? t('piece') : t('sq ft');
   const rateSource = result?.rate_source;
 
   const applyMedia = (chosen: MediaType | undefined) => {
@@ -93,31 +78,21 @@ export function ItemRow({
     form.setFieldValue(path('rate'), previous ? toNumber(previous.last_rate) : '');
   };
 
-  // Something not on the rate card yet: the owner can add it without leaving the order.
-  const typed = mediaSearch.trim();
-  const canAddMedia = can(Perm.CATALOG_MANAGE);
-  const exists = mediaTypes.some((m) => m.name.toLowerCase() === typed.toLowerCase());
-  const showAdd =
-    canAddMedia && typed.length >= 2 && !exists && !mediaOptions.some((o) => o.label === typed);
-  const selectData = [
-    ...mediaOptions,
-    ...(showAdd
-      ? [{ value: ADD_MEDIA, label: t('Add “{{name}}” to the rate card', { name: typed }) }]
-      : []),
-    ...(canAddMedia ? [{ value: OPEN_RATE_CARD, label: t('Open rate card…') }] : []),
-  ];
-
-  const chooseMedia = (value: string | null) => {
-    if (value === ADD_MEDIA) {
-      openMediaTypeModal({ initialName: typed, onSaved: (created) => applyMedia(created) });
-      return;
+  const typeMedia = (name: string) => {
+    form.setFieldValue(path('media_name'), name);
+    const match = mediaTypes.find(
+      (m) =>
+        m.name.toLowerCase() === name.trim().toLowerCase() &&
+        (m.is_active || String(m.id) === item.media_type),
+    );
+    if (match && String(match.id) !== item.media_type) applyMedia(match);
+    if (!match && item.media_type) {
+      // A new name: the rate is typed by hand.
+      form.setFieldValue(path('media_type'), null);
+      form.setFieldValue(path('per_piece'), false);
     }
-    if (value === OPEN_RATE_CARD) {
-      navigate('/settings/rate-card');
-      return;
-    }
-    applyMedia(mediaTypes.find((m) => String(m.id) === value));
   };
+  const isNewName = !item.media_type && item.media_name.trim().length >= 2;
 
   const activeAddOns = addOns.filter(
     (a) => a.is_active || item.addons.some((x) => x.addon === String(a.id)),
@@ -187,35 +162,21 @@ export function ItemRow({
 
       <Grid gap="sm" align="flex-start">
         <Grid.Col span={{ base: 12, sm: 12, lg: 4 }}>
-          <Select
+          <Autocomplete
             label={t('Media')}
-            placeholder={t('Choose material')}
-            data={selectData}
-            searchable
-            searchValue={mediaSearch}
-            onSearchChange={setMediaSearch}
-            nothingFoundMessage={
-              canAddMedia ? undefined : t('Not on the rate card. Ask the owner to add it.')
-            }
-            renderOption={({ option }) =>
-              option.value === ADD_MEDIA || option.value === OPEN_RATE_CARD ? (
-                <Group gap={6} wrap="nowrap" c="orange.8">
-                  {option.value === ADD_MEDIA ? <IconPlus size={15} /> : <IconSettings size={15} />}
-                  <Text size="sm" fw={500} c="inherit">
-                    {option.label}
-                  </Text>
-                </Group>
-              ) : (
-                option.label
-              )
-            }
-            {...form.getInputProps(path('media_type'))}
-            onChange={chooseMedia}
+            placeholder={t('Type or choose, e.g. Star Flex')}
+            data={mediaNames}
+            limit={40}
+            description={isNewName ? t('New: added to the media list when saved') : undefined}
+            inputWrapperOrder={['label', 'input', 'description', 'error']}
+            {...form.getInputProps(path('media_name'))}
+            onChange={typeMedia}
           />
         </Grid.Col>
         <Grid.Col span={{ base: 6, sm: 3, lg: 2 }}>
           <NumberInput
-            label={item.per_piece ? t('Width (optional)') : t('Width')}
+            label={t('Width')}
+            placeholder={t('Optional')}
             min={0}
             decimalScale={2}
             {...form.getInputProps(path('width'))}
@@ -223,7 +184,8 @@ export function ItemRow({
         </Grid.Col>
         <Grid.Col span={{ base: 6, sm: 3, lg: 2 }}>
           <NumberInput
-            label={item.per_piece ? t('Height (optional)') : t('Height')}
+            label={t('Height')}
+            placeholder={t('Optional')}
             min={0}
             decimalScale={2}
             {...form.getInputProps(path('height'))}

@@ -33,7 +33,7 @@ from apps.catalog.pricing import (
 from apps.core.activity import log_activity
 from apps.core.exceptions import BusinessError
 from apps.core.models import ShopSettings
-from apps.core.money import fmt_qty, q2
+from apps.core.money import ZERO, fmt_qty, q2
 from apps.core.sequences import DocType, next_number
 
 from .models import DiscountType, Order, OrderItem, OrderItemAddOn, OrderStatus, RateSource
@@ -55,7 +55,8 @@ class AddOnInput:
 
 @dataclass
 class ItemInput:
-    media_type: MediaType
+    # None with ``media_name``: a name typed on the order, added to the list on save.
+    media_type: MediaType | None
     width: Decimal
     height: Decimal
     unit: str
@@ -66,6 +67,7 @@ class ItemInput:
     addons: list[AddOnInput] = field(default_factory=list)
     id: int | None = None
     rate: Decimal | None = None  # None = keep the quoted rate, or use the rate card
+    media_name: str = ""  # typed by hand (matched to the list, or new)
 
 
 @dataclass(frozen=True)
@@ -108,7 +110,8 @@ class OrderInput:
 def item_input_from_data(data: dict[str, Any]) -> ItemInput:
     return ItemInput(
         id=data.get("id"),
-        media_type=data["media_type"],
+        media_type=data.get("media_type"),
+        media_name=data.get("media_name", ""),
         width=data["width"],
         height=data["height"],
         unit=data.get("unit", "ft"),
@@ -136,14 +139,36 @@ def _item_lines(
     metas: list[LineMeta] = []
     for index, item in enumerate(items):
         media = item.media_type
-        if not media.is_active and not (
-            item.id in existing and existing[item.id].media_type_id == media.pk
+        sized = item.width > 0 and item.height > 0
+        if not sized and (item.width > 0 or item.height > 0):
+            raise BusinessError(
+                {
+                    f"items.{index}.width": [
+                        "Enter both width and height, or leave both empty to charge Qty × Rate."
+                    ]
+                }
+            )
+        typed = bool(item.media_name)
+        if (
+            media is not None
+            and not typed
+            and not media.is_active
+            and not (item.id in existing and existing[item.id].media_type_id == media.pk)
         ):
             raise BusinessError(
                 {f"items.{index}.media_type": [f"{media.name} is no longer offered."]}
             )
         previous = existing.get(item.id) if item.id else None
-        if previous is not None and previous.media_type_id == media.pk:
+        if media is None:
+            # A new name typed on the order: the rate is the one entered, no minimum size.
+            if item.rate is None:
+                raise BusinessError({f"items.{index}.rate": ["Enter the rate."]})
+            rate = card_rate = q2(item.rate)
+            pricing_unit, min_sqft, source = "sqft", ZERO, RateSource.CUSTOM
+            old_addons = (
+                {a.addon_id: a for a in previous.addons.all()} if previous is not None else {}
+            )
+        elif previous is not None and previous.media_type_id == media.pk:
             rate, min_sqft = previous.rate, previous.min_sqft
             pricing_unit = previous.pricing_unit
             card_rate = previous.card_rate if previous.card_rate is not None else media.rate
@@ -161,13 +186,16 @@ def _item_lines(
             if item.rate < 0:
                 raise BusinessError({f"items.{index}.rate": ["Rate cannot be negative."]})
             rate, changed = q2(item.rate), True
-            last = last_rates.get(media.pk)
+            last = last_rates.get(media.pk) if media is not None else None
             if rate == card_rate:
                 source = RateSource.CARD
             elif last is not None and rate == last.rate:
                 source = RateSource.PREVIOUS
             else:
                 source = RateSource.CUSTOM
+
+        if not sized:
+            pricing_unit = "piece"  # no size: Qty × Rate
 
         addon_lines = []
         for a in item.addons:
@@ -304,6 +332,22 @@ def _apply_totals(order: Order, pricing: PricedOrder) -> None:
     order.total = t.total
 
 
+def _media_for_name(name: str, rate: Decimal, pricing_unit: str) -> MediaType:
+    """The list entry for a media name typed on an order, added if it is new."""
+    name = " ".join(name.split())[:80]
+    found = MediaType.objects.filter(name__iexact=name).first()
+    if found is not None:
+        return found
+    return MediaType.objects.create(
+        name=name,
+        pricing_unit=pricing_unit,
+        rate=rate,
+        min_sqft=ZERO,
+        description="Added from an order; check the rate.",
+        sort_order=900,
+    )
+
+
 def _write_item(
     order: Order,
     line_no: int,
@@ -314,8 +358,9 @@ def _write_item(
 ) -> OrderItem:
     item = item or OrderItem(order=order)
     item.line_no = line_no
-    item.media_type = data.media_type
-    item.media_name = data.media_type.name
+    media = data.media_type or _media_for_name(data.media_name, result.rate, meta.pricing_unit)
+    item.media_type = media
+    item.media_name = media.name
     item.description = data.description
     item.width = data.width
     item.height = data.height

@@ -5668,7 +5668,12 @@ export interface components {
         };
         OrderItemWriteRequest: {
             id?: number | null;
-            media_type: number;
+            media_type?: number | null;
+            /**
+             * @description Media typed by hand. Matched to the list by name, or added to it on save.
+             * @default
+             */
+            media_name?: string;
             /** @default  */
             description?: string;
             /**
@@ -5919,7 +5924,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersCreateError: components["schemas"]["OrdersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersCreateAddVatErrorComponent"] | components["schemas"]["OrdersCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateCustomerErrorComponent"] | components["schemas"]["OrdersCreateDeadlineErrorComponent"] | components["schemas"]["OrdersCreateIsUrgentErrorComponent"] | components["schemas"]["OrdersCreateNotesErrorComponent"] | components["schemas"]["OrdersCreateConfirmErrorComponent"];
+        OrdersCreateError: components["schemas"]["OrdersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersCreateAddVatErrorComponent"] | components["schemas"]["OrdersCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaNameErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateCustomerErrorComponent"] | components["schemas"]["OrdersCreateDeadlineErrorComponent"] | components["schemas"]["OrdersCreateIsUrgentErrorComponent"] | components["schemas"]["OrdersCreateNotesErrorComponent"] | components["schemas"]["OrdersCreateConfirmErrorComponent"];
         OrdersCreateErrorResponse400: components["schemas"]["OrdersCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersCreateIsUrgentErrorComponent: {
             /**
@@ -6082,6 +6087,23 @@ export interface components {
             code: "invalid" | "max_string_length";
             detail: string;
         };
+        OrdersCreateItemsINDEXMediaNameErrorComponent: {
+            /**
+             * @description * `items.INDEX.media_name` - items.INDEX.media_name (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.INDEX.media_name";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
         OrdersCreateItemsINDEXMediaTypeErrorComponent: {
             /**
              * @description * `items.INDEX.media_type` - items.INDEX.media_type (enum property replaced by openapi-typescript)
@@ -6091,11 +6113,9 @@ export interface components {
             /**
              * @description * `does_not_exist` - does_not_exist
              *     * `incorrect_type` - incorrect_type
-             *     * `null` - null
-             *     * `required` - required
              * @enum {string}
              */
-            code: "does_not_exist" | "incorrect_type" | "null" | "required";
+            code: "does_not_exist" | "incorrect_type";
             detail: string;
         };
         OrdersCreateItemsINDEXNonFieldErrorsErrorComponent: {
@@ -6745,7 +6765,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersPricePreviewCreateError: components["schemas"]["OrdersPricePreviewCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateAddVatErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateCustomerErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateOrderErrorComponent"];
+        OrdersPricePreviewCreateError: components["schemas"]["OrdersPricePreviewCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateAddVatErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXMediaNameErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateCustomerErrorComponent"] | components["schemas"]["OrdersPricePreviewCreateOrderErrorComponent"];
         OrdersPricePreviewCreateErrorResponse400: components["schemas"]["OrdersPricePreviewCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersPricePreviewCreateItemsINDEXAddonsINDEXAddonErrorComponent: {
             /**
@@ -6894,6 +6914,23 @@ export interface components {
             code: "invalid" | "max_string_length";
             detail: string;
         };
+        OrdersPricePreviewCreateItemsINDEXMediaNameErrorComponent: {
+            /**
+             * @description * `items.INDEX.media_name` - items.INDEX.media_name (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.INDEX.media_name";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
         OrdersPricePreviewCreateItemsINDEXMediaTypeErrorComponent: {
             /**
              * @description * `items.INDEX.media_type` - items.INDEX.media_type (enum property replaced by openapi-typescript)
@@ -6903,11 +6940,9 @@ export interface components {
             /**
              * @description * `does_not_exist` - does_not_exist
              *     * `incorrect_type` - incorrect_type
-             *     * `null` - null
-             *     * `required` - required
              * @enum {string}
              */
-            code: "does_not_exist" | "incorrect_type" | "null" | "required";
+            code: "does_not_exist" | "incorrect_type";
             detail: string;
         };
         OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent: {
@@ -7138,7 +7173,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersUpdateError: components["schemas"]["OrdersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateDiscountTypeErrorComponent"] | components["schemas"]["OrdersUpdateDiscountValueErrorComponent"] | components["schemas"]["OrdersUpdateAddVatErrorComponent"] | components["schemas"]["OrdersUpdateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateCustomerErrorComponent"] | components["schemas"]["OrdersUpdateDeadlineErrorComponent"] | components["schemas"]["OrdersUpdateIsUrgentErrorComponent"] | components["schemas"]["OrdersUpdateNotesErrorComponent"] | components["schemas"]["OrdersUpdateConfirmErrorComponent"];
+        OrdersUpdateError: components["schemas"]["OrdersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateDiscountTypeErrorComponent"] | components["schemas"]["OrdersUpdateDiscountValueErrorComponent"] | components["schemas"]["OrdersUpdateAddVatErrorComponent"] | components["schemas"]["OrdersUpdateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaNameErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateCustomerErrorComponent"] | components["schemas"]["OrdersUpdateDeadlineErrorComponent"] | components["schemas"]["OrdersUpdateIsUrgentErrorComponent"] | components["schemas"]["OrdersUpdateNotesErrorComponent"] | components["schemas"]["OrdersUpdateConfirmErrorComponent"];
         OrdersUpdateErrorResponse400: components["schemas"]["OrdersUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersUpdateIsUrgentErrorComponent: {
             /**
@@ -7301,6 +7336,23 @@ export interface components {
             code: "invalid" | "max_string_length";
             detail: string;
         };
+        OrdersUpdateItemsINDEXMediaNameErrorComponent: {
+            /**
+             * @description * `items.INDEX.media_name` - items.INDEX.media_name (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "items.INDEX.media_name";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
         OrdersUpdateItemsINDEXMediaTypeErrorComponent: {
             /**
              * @description * `items.INDEX.media_type` - items.INDEX.media_type (enum property replaced by openapi-typescript)
@@ -7310,11 +7362,9 @@ export interface components {
             /**
              * @description * `does_not_exist` - does_not_exist
              *     * `incorrect_type` - incorrect_type
-             *     * `null` - null
-             *     * `required` - required
              * @enum {string}
              */
-            code: "does_not_exist" | "incorrect_type" | "null" | "required";
+            code: "does_not_exist" | "incorrect_type";
             detail: string;
         };
         OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent: {

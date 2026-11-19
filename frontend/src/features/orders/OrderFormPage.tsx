@@ -46,9 +46,9 @@ import {
 } from './orderForm';
 import { useAddOns, useMediaTypes, useShopSettings } from './useCatalog';
 
-/** Per-piece rows may leave both width and height empty. `path` is e.g. "items.2.width". */
-function perPieceAt(values: OrderFormValues, path: string): boolean {
-  return values.items[Number(path.split('.')[1])]?.per_piece ?? false;
+/** The item a field path such as "items.2.width" belongs to. */
+function itemAt(values: OrderFormValues, path: string) {
+  return values.items[Number(path.split('.')[1])];
 }
 
 function otherSide(values: OrderFormValues, path: string) {
@@ -81,15 +81,15 @@ function OrderFormInner({
       : { ...initialValues(), add_vat: presetCustomer?.add_vat ?? true },
     validate: {
       items: {
-        media_type: (v) => (v ? null : t('Choose a media')),
+        media_name: (v, values, path) =>
+          v.trim() || itemAt(values, path)?.media_type ? null : t('Type or choose the media'),
+        // No size at all is fine: the amount is Qty × Rate.
         width: (v, values, path) =>
-          toNumber(v) > 0 || (perPieceAt(values, path) && !toNumber(otherSide(values, path)))
-            ? null
-            : t('Enter width'),
+          toNumber(v) > 0 || !toNumber(otherSide(values, path)) ? null : t('Enter width'),
         height: (v, values, path) =>
-          toNumber(v) > 0 || (perPieceAt(values, path) && !toNumber(otherSide(values, path)))
-            ? null
-            : t('Enter height'),
+          toNumber(v) > 0 || !toNumber(otherSide(values, path)) ? null : t('Enter height'),
+        rate: (v, values, path) =>
+          v !== '' || itemAt(values, path)?.media_type ? null : t('Enter the rate'),
         quantity: (v) => (toNumber(v) >= 1 ? null : t('At least 1')),
       },
     },

@@ -265,7 +265,16 @@ class OrderItemAddOnWriteSerializer(serializers.Serializer):
 
 class OrderItemWriteSerializer(serializers.Serializer):
     id = serializers.IntegerField(required=False, allow_null=True)
-    media_type = serializers.PrimaryKeyRelatedField(queryset=MediaType.objects.all())
+    media_type = serializers.PrimaryKeyRelatedField(
+        queryset=MediaType.objects.all(), required=False, allow_null=True, default=None
+    )
+    media_name = serializers.CharField(
+        max_length=80,
+        required=False,
+        allow_blank=True,
+        default="",
+        help_text="Media typed by hand. Matched to the list by name, or added to it on save.",
+    )
     description = serializers.CharField(
         max_length=200, required=False, allow_blank=True, default=""
     )
@@ -296,6 +305,17 @@ class OrderItemWriteSerializer(serializers.Serializer):
         max_length=255, required=False, allow_blank=True, default=""
     )
     addons = OrderItemAddOnWriteSerializer(many=True, required=False, default=list)
+
+    def validate(self, attrs):
+        name = " ".join((attrs.get("media_name") or "").split())
+        attrs["media_name"] = name
+        if attrs.get("media_type") is None:
+            if not name:
+                raise serializers.ValidationError({"media_type": ["Choose or type the media."]})
+            attrs["media_type"] = MediaType.objects.filter(name__iexact=name).first()
+        elif name.lower() == attrs["media_type"].name.lower():
+            attrs["media_name"] = ""  # picked from the list
+        return attrs
 
     def validate_addons(self, value):
         ids = [a["addon"].pk for a in value]

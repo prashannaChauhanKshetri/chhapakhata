@@ -13,6 +13,8 @@ export interface ItemValue {
   key: string;
   id: number | null;
   media_type: string | null;
+  /** The media as typed; matched to the list by name, or added to it when saved. */
+  media_name: string;
   /** Priced per piece: size optional, no minimum. Copied from the media when chosen. */
   per_piece: boolean;
   /** Empty = rate card (or the rate the order was quoted at). */
@@ -49,6 +51,7 @@ export function emptyItem(
     key: newKey(),
     id: null,
     media_type: mediaType,
+    media_name: '',
     per_piece: false,
     rate: '',
     description: '',
@@ -90,6 +93,7 @@ export function initialValues(order?: OrderDetail): OrderFormValues {
       key: newKey(),
       id: item.id,
       media_type: String(item.media_type),
+      media_name: item.media_name,
       per_piece: item.pricing_unit === 'piece',
       rate: toNumber(item.rate),
       description: item.description ?? '',
@@ -107,13 +111,17 @@ export function initialValues(order?: OrderDetail): OrderFormValues {
 export function isItemComplete(item: ItemValue): boolean {
   const sized = toNumber(item.width) > 0 && toNumber(item.height) > 0;
   const noSize = toNumber(item.width) === 0 && toNumber(item.height) === 0;
-  return !!item.media_type && (sized || (item.per_piece && noSize)) && toNumber(item.quantity) >= 1;
+  const named = !!item.media_type || item.media_name.trim().length > 0;
+  // A new name has no list rate, so its rate must be typed.
+  const priced = !!item.media_type || item.rate !== '';
+  return named && priced && (sized || noSize) && toNumber(item.quantity) >= 1;
 }
 
 export function itemPayload(item: ItemValue): OrderItemWrite {
   return {
     id: item.id,
-    media_type: Number(item.media_type),
+    media_type: item.media_type ? Number(item.media_type) : null,
+    media_name: item.media_type ? '' : item.media_name.trim(),
     description: item.description.trim(),
     width: String(toNumber(item.width)),
     height: String(toNumber(item.height)),

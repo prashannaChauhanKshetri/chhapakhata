@@ -25406,6 +25406,13 @@ components:
           nullable: true
         media_type:
           type: integer
+          nullable: true
+        media_name:
+          type: string
+          default: ''
+          description: Media typed by hand. Matched to the list by name, or added
+            to it on save.
+          maxLength: 80
         description:
           type: string
           default: ''
@@ -25450,8 +25457,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderItemAddOnWriteRequest'
-      required:
-      - media_type
     OrderList:
       type: object
       properties:
@@ -25907,6 +25912,7 @@ components:
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXIdErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXMediaTypeErrorComponent'
+      - $ref: '#/components/schemas/OrdersCreateItemsINDEXMediaNameErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXDescriptionErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXWidthErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXHeightErrorComponent'
@@ -25935,6 +25941,7 @@ components:
           items.INDEX.non_field_errors: '#/components/schemas/OrdersCreateItemsINDEXNonFieldErrorsErrorComponent'
           items.INDEX.id: '#/components/schemas/OrdersCreateItemsINDEXIdErrorComponent'
           items.INDEX.media_type: '#/components/schemas/OrdersCreateItemsINDEXMediaTypeErrorComponent'
+          items.INDEX.media_name: '#/components/schemas/OrdersCreateItemsINDEXMediaNameErrorComponent'
           items.INDEX.description: '#/components/schemas/OrdersCreateItemsINDEXDescriptionErrorComponent'
           items.INDEX.width: '#/components/schemas/OrdersCreateItemsINDEXWidthErrorComponent'
           items.INDEX.height: '#/components/schemas/OrdersCreateItemsINDEXHeightErrorComponent'
@@ -26223,6 +26230,34 @@ components:
       - attr
       - code
       - detail
+    OrdersCreateItemsINDEXMediaNameErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.INDEX.media_name
+          type: string
+          description: '* `items.INDEX.media_name` - items.INDEX.media_name'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     OrdersCreateItemsINDEXMediaTypeErrorComponent:
       type: object
       properties:
@@ -26235,14 +26270,10 @@ components:
           enum:
           - does_not_exist
           - incorrect_type
-          - 'null'
-          - required
           type: string
           description: |-
             * `does_not_exist` - does_not_exist
             * `incorrect_type` - incorrect_type
-            * `null` - null
-            * `required` - required
         detail:
           type: string
       required:
@@ -27391,6 +27422,7 @@ components:
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXIdErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXMediaTypeErrorComponent'
+      - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXMediaNameErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXDescriptionErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXWidthErrorComponent'
       - $ref: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXHeightErrorComponent'
@@ -27416,6 +27448,7 @@ components:
           items.INDEX.non_field_errors: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXNonFieldErrorsErrorComponent'
           items.INDEX.id: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXIdErrorComponent'
           items.INDEX.media_type: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXMediaTypeErrorComponent'
+          items.INDEX.media_name: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXMediaNameErrorComponent'
           items.INDEX.description: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXDescriptionErrorComponent'
           items.INDEX.width: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXWidthErrorComponent'
           items.INDEX.height: '#/components/schemas/OrdersPricePreviewCreateItemsINDEXHeightErrorComponent'
@@ -27679,6 +27712,34 @@ components:
       - attr
       - code
       - detail
+    OrdersPricePreviewCreateItemsINDEXMediaNameErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.INDEX.media_name
+          type: string
+          description: '* `items.INDEX.media_name` - items.INDEX.media_name'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     OrdersPricePreviewCreateItemsINDEXMediaTypeErrorComponent:
       type: object
       properties:
@@ -27691,14 +27752,10 @@ components:
           enum:
           - does_not_exist
           - incorrect_type
-          - 'null'
-          - required
           type: string
           description: |-
             * `does_not_exist` - does_not_exist
             * `incorrect_type` - incorrect_type
-            * `null` - null
-            * `required` - required
         detail:
           type: string
       required:
@@ -28092,6 +28149,7 @@ components:
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXIdErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXMediaTypeErrorComponent'
+      - $ref: '#/components/schemas/OrdersUpdateItemsINDEXMediaNameErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXDescriptionErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXWidthErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXHeightErrorComponent'
@@ -28120,6 +28178,7 @@ components:
           items.INDEX.non_field_errors: '#/components/schemas/OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent'
           items.INDEX.id: '#/components/schemas/OrdersUpdateItemsINDEXIdErrorComponent'
           items.INDEX.media_type: '#/components/schemas/OrdersUpdateItemsINDEXMediaTypeErrorComponent'
+          items.INDEX.media_name: '#/components/schemas/OrdersUpdateItemsINDEXMediaNameErrorComponent'
           items.INDEX.description: '#/components/schemas/OrdersUpdateItemsINDEXDescriptionErrorComponent'
           items.INDEX.width: '#/components/schemas/OrdersUpdateItemsINDEXWidthErrorComponent'
           items.INDEX.height: '#/components/schemas/OrdersUpdateItemsINDEXHeightErrorComponent'
@@ -28408,6 +28467,34 @@ components:
       - attr
       - code
       - detail
+    OrdersUpdateItemsINDEXMediaNameErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - items.INDEX.media_name
+          type: string
+          description: '* `items.INDEX.media_name` - items.INDEX.media_name'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     OrdersUpdateItemsINDEXMediaTypeErrorComponent:
       type: object
       properties:
@@ -28420,14 +28507,10 @@ components:
           enum:
           - does_not_exist
           - incorrect_type
-          - 'null'
-          - required
           type: string
           description: |-
             * `does_not_exist` - does_not_exist
             * `incorrect_type` - incorrect_type
-            * `null` - null
-            * `required` - required
         detail:
           type: string
       required:

@@ -65,13 +65,24 @@ describe('order form payloads', () => {
 });
 
 describe('per-piece items and rates', () => {
-  it('lets per-piece items skip the size', () => {
+  it('lets any item skip the size (Qty × Rate)', () => {
     const photo = { ...emptyItem(), media_type: '7', per_piece: true, quantity: 4 };
     expect(isItemComplete(photo)).toBe(true);
-    expect(isItemComplete({ ...photo, per_piece: false })).toBe(false);
+    expect(isItemComplete({ ...photo, per_piece: false })).toBe(true);
     // Half a size is still a mistake.
     expect(isItemComplete({ ...photo, width: 2 })).toBe(false);
     expect(itemPayload(photo)).toMatchObject({ width: '0', height: '0', rate: null });
+  });
+
+  it('sends a typed media name, which needs its rate', () => {
+    const typed = { ...emptyItem(), media_name: ' Forex Sticker 2mm ', quantity: 10 };
+    expect(isItemComplete(typed)).toBe(false); // no rate yet
+    expect(isItemComplete({ ...typed, rate: 50 })).toBe(true);
+    expect(itemPayload({ ...typed, rate: 50 })).toMatchObject({
+      media_type: null,
+      media_name: 'Forex Sticker 2mm',
+      rate: '50',
+    });
   });
 
   it('sends a chosen rate, or null for the rate card', () => {
