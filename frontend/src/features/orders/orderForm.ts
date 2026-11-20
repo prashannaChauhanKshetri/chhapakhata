@@ -30,6 +30,8 @@ export interface ItemValue {
 }
 
 export interface OrderFormValues {
+  /** AD, YYYY-MM-DD. Today, or an earlier day for orders entered late. */
+  order_date: string;
   deadline: string | null;
   is_urgent: boolean;
   notes: string;
@@ -73,6 +75,7 @@ export function defaultDeadline(): string {
 export function initialValues(order?: OrderDetail): OrderFormValues {
   if (!order) {
     return {
+      order_date: dayjs().format('YYYY-MM-DD'),
       deadline: defaultDeadline(),
       is_urgent: false,
       notes: '',
@@ -83,6 +86,7 @@ export function initialValues(order?: OrderDetail): OrderFormValues {
     };
   }
   return {
+    order_date: order.order_date,
     deadline: order.deadline ? dayjs(order.deadline).format('YYYY-MM-DD HH:mm:ss') : null,
     is_urgent: order.is_urgent,
     notes: order.notes ?? '',
@@ -153,6 +157,7 @@ export function orderPayload(
 ): OrderWrite {
   return {
     customer: customerId,
+    order_date: values.order_date,
     deadline: values.deadline ? dayjs(values.deadline).toISOString() : null,
     is_urgent: values.is_urgent,
     notes: values.notes.trim(),

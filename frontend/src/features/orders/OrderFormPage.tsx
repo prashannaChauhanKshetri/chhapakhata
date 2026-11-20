@@ -35,6 +35,7 @@ import { useUnsavedChanges } from '@/lib/useUnsavedChanges';
 
 import { CustomerSelect } from '../customers/CustomerSelect';
 import { ItemRow } from './ItemRow';
+import { OrderDateField } from './OrderDateField';
 import classes from './OrderForm.module.css';
 import {
   emptyItem,
@@ -387,6 +388,13 @@ function OrderFormInner({
                   form.clearFieldError('customer');
                 }}
               />
+              <Box mt="sm">
+                <OrderDateField
+                  value={form.values.order_date}
+                  onChange={(ad) => form.setFieldValue('order_date', ad)}
+                  error={form.errors.order_date}
+                />
+              </Box>
               {customer && toNumber(customer.balance) > 0 && (
                 <Text size="xs" c="red.7" mt={6}>
                   {t('This customer already owes {{amount}}.', {

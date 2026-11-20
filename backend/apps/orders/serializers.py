@@ -345,6 +345,12 @@ class PricingInputSerializer(serializers.Serializer):
 
 class OrderWriteSerializer(PricingInputSerializer):
     customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
+    order_date = serializers.DateField(
+        required=False,
+        allow_null=True,
+        default=None,
+        help_text="Today when empty. Past dates are allowed (orders entered late); not future.",
+    )
     deadline = serializers.DateTimeField(required=False, allow_null=True)
     is_urgent = serializers.BooleanField(default=False)
     notes = serializers.CharField(required=False, allow_blank=True, default="")

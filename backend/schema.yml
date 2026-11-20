@@ -25646,6 +25646,12 @@ components:
             $ref: '#/components/schemas/OrderItemWriteRequest'
         customer:
           type: integer
+        order_date:
+          type: string
+          format: date
+          nullable: true
+          description: Today when empty. Past dates are allowed (orders entered late);
+            not future.
         deadline:
           type: string
           format: date-time
@@ -25926,6 +25932,7 @@ components:
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXAddonsINDEXAddonErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateItemsINDEXAddonsINDEXQuantityErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateCustomerErrorComponent'
+      - $ref: '#/components/schemas/OrdersCreateOrderDateErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateDeadlineErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateIsUrgentErrorComponent'
       - $ref: '#/components/schemas/OrdersCreateNotesErrorComponent'
@@ -25955,6 +25962,7 @@ components:
           items.INDEX.addons.INDEX.addon: '#/components/schemas/OrdersCreateItemsINDEXAddonsINDEXAddonErrorComponent'
           items.INDEX.addons.INDEX.quantity: '#/components/schemas/OrdersCreateItemsINDEXAddonsINDEXQuantityErrorComponent'
           customer: '#/components/schemas/OrdersCreateCustomerErrorComponent'
+          order_date: '#/components/schemas/OrdersCreateOrderDateErrorComponent'
           deadline: '#/components/schemas/OrdersCreateDeadlineErrorComponent'
           is_urgent: '#/components/schemas/OrdersCreateIsUrgentErrorComponent'
           notes: '#/components/schemas/OrdersCreateNotesErrorComponent'
@@ -26482,6 +26490,28 @@ components:
             * `null` - null
             * `null_characters_not_allowed` - null_characters_not_allowed
             * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    OrdersCreateOrderDateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - order_date
+          type: string
+          description: '* `order_date` - order_date'
+        code:
+          enum:
+          - datetime
+          - invalid
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
         detail:
           type: string
       required:
@@ -28163,6 +28193,7 @@ components:
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXAddonsINDEXAddonErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateItemsINDEXAddonsINDEXQuantityErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateCustomerErrorComponent'
+      - $ref: '#/components/schemas/OrdersUpdateOrderDateErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateDeadlineErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateIsUrgentErrorComponent'
       - $ref: '#/components/schemas/OrdersUpdateNotesErrorComponent'
@@ -28192,6 +28223,7 @@ components:
           items.INDEX.addons.INDEX.addon: '#/components/schemas/OrdersUpdateItemsINDEXAddonsINDEXAddonErrorComponent'
           items.INDEX.addons.INDEX.quantity: '#/components/schemas/OrdersUpdateItemsINDEXAddonsINDEXQuantityErrorComponent'
           customer: '#/components/schemas/OrdersUpdateCustomerErrorComponent'
+          order_date: '#/components/schemas/OrdersUpdateOrderDateErrorComponent'
           deadline: '#/components/schemas/OrdersUpdateDeadlineErrorComponent'
           is_urgent: '#/components/schemas/OrdersUpdateIsUrgentErrorComponent'
           notes: '#/components/schemas/OrdersUpdateNotesErrorComponent'
@@ -28719,6 +28751,28 @@ components:
             * `null` - null
             * `null_characters_not_allowed` - null_characters_not_allowed
             * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    OrdersUpdateOrderDateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - order_date
+          type: string
+          description: '* `order_date` - order_date'
+        code:
+          enum:
+          - datetime
+          - invalid
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
         detail:
           type: string
       required:

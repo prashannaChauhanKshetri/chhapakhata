@@ -5776,6 +5776,11 @@ export interface components {
             add_vat?: boolean | null;
             items: components["schemas"]["OrderItemWriteRequest"][];
             customer: number;
+            /**
+             * Format: date
+             * @description Today when empty. Past dates are allowed (orders entered late); not future.
+             */
+            order_date?: string | null;
             /** Format: date-time */
             deadline?: string | null;
             /** @default false */
@@ -5924,7 +5929,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersCreateError: components["schemas"]["OrdersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersCreateAddVatErrorComponent"] | components["schemas"]["OrdersCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaNameErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateCustomerErrorComponent"] | components["schemas"]["OrdersCreateDeadlineErrorComponent"] | components["schemas"]["OrdersCreateIsUrgentErrorComponent"] | components["schemas"]["OrdersCreateNotesErrorComponent"] | components["schemas"]["OrdersCreateConfirmErrorComponent"];
+        OrdersCreateError: components["schemas"]["OrdersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateDiscountTypeErrorComponent"] | components["schemas"]["OrdersCreateDiscountValueErrorComponent"] | components["schemas"]["OrdersCreateAddVatErrorComponent"] | components["schemas"]["OrdersCreateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXMediaNameErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersCreateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersCreateCustomerErrorComponent"] | components["schemas"]["OrdersCreateOrderDateErrorComponent"] | components["schemas"]["OrdersCreateDeadlineErrorComponent"] | components["schemas"]["OrdersCreateIsUrgentErrorComponent"] | components["schemas"]["OrdersCreateNotesErrorComponent"] | components["schemas"]["OrdersCreateConfirmErrorComponent"];
         OrdersCreateErrorResponse400: components["schemas"]["OrdersCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersCreateIsUrgentErrorComponent: {
             /**
@@ -6244,6 +6249,20 @@ export interface components {
              * @enum {string}
              */
             code: "invalid" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        OrdersCreateOrderDateErrorComponent: {
+            /**
+             * @description * `order_date` - order_date (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "order_date";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "datetime" | "invalid";
             detail: string;
         };
         OrdersCreateValidationError: {
@@ -7173,7 +7192,7 @@ export interface components {
             code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null";
             detail: string;
         };
-        OrdersUpdateError: components["schemas"]["OrdersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateDiscountTypeErrorComponent"] | components["schemas"]["OrdersUpdateDiscountValueErrorComponent"] | components["schemas"]["OrdersUpdateAddVatErrorComponent"] | components["schemas"]["OrdersUpdateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaNameErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateCustomerErrorComponent"] | components["schemas"]["OrdersUpdateDeadlineErrorComponent"] | components["schemas"]["OrdersUpdateIsUrgentErrorComponent"] | components["schemas"]["OrdersUpdateNotesErrorComponent"] | components["schemas"]["OrdersUpdateConfirmErrorComponent"];
+        OrdersUpdateError: components["schemas"]["OrdersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateDiscountTypeErrorComponent"] | components["schemas"]["OrdersUpdateDiscountValueErrorComponent"] | components["schemas"]["OrdersUpdateAddVatErrorComponent"] | components["schemas"]["OrdersUpdateItemsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXIdErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaTypeErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXMediaNameErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDescriptionErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXWidthErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXHeightErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXUnitErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXRateErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXFinishingErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXDesignFileRefErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXNonFieldErrorsErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXAddonErrorComponent"] | components["schemas"]["OrdersUpdateItemsINDEXAddonsINDEXQuantityErrorComponent"] | components["schemas"]["OrdersUpdateCustomerErrorComponent"] | components["schemas"]["OrdersUpdateOrderDateErrorComponent"] | components["schemas"]["OrdersUpdateDeadlineErrorComponent"] | components["schemas"]["OrdersUpdateIsUrgentErrorComponent"] | components["schemas"]["OrdersUpdateNotesErrorComponent"] | components["schemas"]["OrdersUpdateConfirmErrorComponent"];
         OrdersUpdateErrorResponse400: components["schemas"]["OrdersUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         OrdersUpdateIsUrgentErrorComponent: {
             /**
@@ -7493,6 +7512,20 @@ export interface components {
              * @enum {string}
              */
             code: "invalid" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        OrdersUpdateOrderDateErrorComponent: {
+            /**
+             * @description * `order_date` - order_date (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "order_date";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "datetime" | "invalid";
             detail: string;
         };
         OrdersUpdateValidationError: {

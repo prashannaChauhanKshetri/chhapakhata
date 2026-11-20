@@ -10,6 +10,7 @@ import {
 } from './orderForm';
 
 const values = (): OrderFormValues => ({
+  order_date: '2026-10-15',
   deadline: '2026-10-16 17:00:00',
   is_urgent: true,
   notes: '  Call before delivery  ',

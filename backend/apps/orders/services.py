@@ -31,6 +31,7 @@ from apps.catalog.pricing import (
     price_order,
 )
 from apps.core.activity import log_activity
+from apps.core.dates import local_today
 from apps.core.exceptions import BusinessError
 from apps.core.models import ShopSettings
 from apps.core.money import ZERO, fmt_qty, q2
@@ -397,8 +398,24 @@ def _write_item(
     return item
 
 
-def _validate_deadline(deadline: dt.datetime | None, *, is_new: bool) -> None:
-    if deadline is not None and is_new and deadline < timezone.now() - dt.timedelta(minutes=5):
+def _validate_order_date(order_date: dt.date | None) -> dt.date | None:
+    """Orders may be entered late (any past date), never ahead of today."""
+    if order_date is not None and order_date > local_today():
+        raise BusinessError({"order_date": ["An order cannot be dated in the future."]})
+    return order_date
+
+
+def _validate_deadline(
+    deadline: dt.datetime | None, *, is_new: bool, order_date: dt.date | None = None
+) -> None:
+    if deadline is None or not is_new:
+        return
+    if order_date is not None and order_date < local_today():
+        # An order entered late may have been due (and delivered) already.
+        if timezone.localtime(deadline).date() < order_date:
+            raise BusinessError({"deadline": ["The deadline is before the order date."]})
+        return
+    if deadline < timezone.now() - dt.timedelta(minutes=5):
         raise BusinessError({"deadline": ["The deadline is in the past."]})
 
 
@@ -412,12 +429,14 @@ def create_order(
     is_urgent: bool = False,
     notes: str = "",
     confirm: bool = False,
+    order_date: dt.date | None = None,
     request: Any = None,
 ) -> Order:
-    """Create a quotation (default) or a confirmed order."""
+    """Create a quotation (default) or a confirmed order, dated today or earlier."""
     if not customer.is_active:
         raise BusinessError({"customer": ["This customer is inactive."]})
-    _validate_deadline(deadline, is_new=True)
+    order_date = _validate_order_date(order_date) or local_today()
+    _validate_deadline(deadline, is_new=True, order_date=order_date)
     shop = ShopSettings.load()
     pricing = calculate(data, shop=shop, customer=customer)
     check_discount_limit(user, pricing)
@@ -426,6 +445,7 @@ def create_order(
         order_no=next_number(DocType.ORDER).number,
         customer=customer,
         status=OrderStatus.QUOTATION,
+        order_date=order_date,
         deadline=deadline,
         is_urgent=is_urgent,
         notes=notes,
@@ -458,9 +478,11 @@ def update_order(
     deadline: dt.datetime | None = None,
     is_urgent: bool = False,
     notes: str = "",
+    order_date: dt.date | None = None,
     request: Any = None,
 ) -> Order:
     """Edit items and terms. Locked once invoiced; printed items cannot be removed."""
+    _validate_order_date(order_date)
     from apps.production.models import Stage
     from apps.production.services import create_jobs_for_order
 
@@ -514,6 +536,8 @@ def update_order(
 
     order.discount_type = data.discount_type
     order.discount_value = data.discount_value
+    if order_date is not None:
+        order.order_date = order_date
     order.deadline = deadline
     order.is_urgent = is_urgent
     order.notes = notes
