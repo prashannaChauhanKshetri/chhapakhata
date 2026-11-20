@@ -341,6 +341,93 @@ def _bill_orders(invoice_ids: set[int]) -> dict[int, list[int]]:
     return found
 
 
+def source_lines(source: Any, covered: list[Any], show_order_no: bool = False) -> list[dict]:
+    """The printed lines of a bill or an order: items (with add-ons), then discount,
+    VAT and round-off, so they add up to its total."""
+    lines: list[dict] = []
+    for order in covered:
+        for item in sorted(order.items.all(), key=lambda i: i.line_no):
+            sized = item.has_size
+            details = [item.description, item.finishing]
+            if show_order_no:
+                details.insert(0, order.order_no)
+            lines.append(
+                {
+                    "kind": "item",
+                    "particular": item.media_name,
+                    "width": _size(item.width, item.unit) if sized else "",
+                    "height": _size(item.height, item.unit) if sized else "",
+                    "sqft": (
+                        q2(item.billable_sqft * item.quantity)
+                        if sized and not item.is_per_piece
+                        else None
+                    ),
+                    "quantity": item.quantity,
+                    "unit": "Piece" if item.is_per_piece else "Sq ft",
+                    "rate": item.rate,
+                    "amount": item.base_amount,
+                    "details": " · ".join(d for d in details if d),
+                }
+            )
+            for addon in item.addons.all():
+                lines.append(
+                    {
+                        "kind": "addon",
+                        "particular": f"+ {addon.name}",
+                        "amount": addon.amount,
+                        "details": "",
+                    }
+                )
+    if source.discount_amount:
+        lines.append(
+            {"kind": "charge", "particular": "Discount", "amount": -source.discount_amount}
+        )
+    if source.vat_amount:
+        label = f"VAT {fmt_qty(source.vat_rate)}%" if source.vat_rate else "VAT"
+        lines.append({"kind": "charge", "particular": label, "amount": source.vat_amount})
+    if source.round_off:
+        lines.append({"kind": "charge", "particular": "Round off", "amount": source.round_off})
+    return lines
+
+
+def orders_for_print(
+    date_from: dt.date | None, date_to: dt.date, customer: Any = None
+) -> dict[str, Any]:
+    """Orders between two dates (not quotations or cancelled), each with its item lines."""
+    from apps.orders.models import OrderStatus
+
+    qs = (
+        Order.objects.filter(order_date__lte=date_to)
+        .exclude(status__in=(OrderStatus.QUOTATION, OrderStatus.CANCELLED))
+        .select_related("customer")
+        .prefetch_related("items__addons")
+        .order_by("order_date", "id")
+    )
+    if date_from is not None:
+        qs = qs.filter(order_date__gte=date_from)
+    if customer is not None:
+        qs = qs.filter(customer=customer)
+    rows = []
+    totals = {"orders": 0, "sqft": ZERO, "amount": ZERO, "total": ZERO}
+    for order in qs:
+        lines = source_lines(order, [order])
+        rows.append(
+            {
+                "order": order,
+                "order_no": order.order_no,
+                "date_bs": bs_string(order.order_date),
+                "customer": order.customer.name,
+                "lines": lines,
+                "total": order.total,
+            }
+        )
+        totals["orders"] += 1
+        totals["sqft"] += sum((ln.get("sqft") or ZERO for ln in lines), ZERO)
+        totals["amount"] += order.subtotal
+        totals["total"] += order.total
+    return {"rows": rows, "totals": totals, "date_from": date_from, "date_to": date_to}
+
+
 def add_item_lines(statement: dict[str, Any]) -> dict[str, Any]:
     """Give every bill and imported-work entry its printed lines (size, qty, rate, amount).
 
@@ -375,47 +462,5 @@ def add_item_lines(statement: dict[str, Any]) -> dict[str, Any]:
             covered = [source] if source is not None else []
         if source is None:
             continue
-        lines = entry["lines"]
-        for order in covered:
-            for item in sorted(order.items.all(), key=lambda i: i.line_no):
-                sized = item.has_size
-                details = [item.description, item.finishing]
-                if len(covered) > 1 or is_bill(entry):
-                    details.insert(0, order.order_no)
-                lines.append(
-                    {
-                        "kind": "item",
-                        "particular": item.media_name,
-                        "width": _size(item.width, item.unit) if sized else "",
-                        "height": _size(item.height, item.unit) if sized else "",
-                        "sqft": (
-                            q2(item.billable_sqft * item.quantity)
-                            if sized and not item.is_per_piece
-                            else None
-                        ),
-                        "quantity": item.quantity,
-                        "unit": "Piece" if item.is_per_piece else "Sq ft",
-                        "rate": item.rate,
-                        "amount": item.base_amount,
-                        "details": " · ".join(d for d in details if d),
-                    }
-                )
-                for addon in item.addons.all():
-                    lines.append(
-                        {
-                            "kind": "addon",
-                            "particular": f"+ {addon.name}",
-                            "amount": addon.amount,
-                            "details": "",
-                        }
-                    )
-        if source.discount_amount:
-            lines.append(
-                {"kind": "charge", "particular": "Discount", "amount": -source.discount_amount}
-            )
-        if source.vat_amount:
-            label = f"VAT {fmt_qty(source.vat_rate)}%" if source.vat_rate else "VAT"
-            lines.append({"kind": "charge", "particular": label, "amount": source.vat_amount})
-        if source.round_off:
-            lines.append({"kind": "charge", "particular": "Round off", "amount": source.round_off})
+        entry["lines"] = source_lines(source, covered, len(covered) > 1 or is_bill(entry))
     return statement

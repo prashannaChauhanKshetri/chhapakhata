@@ -798,6 +798,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/print/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Orders from one date to another, item by item (PDF or Excel). */
+        get: operations["orders_print_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/payments/": {
         parameters: {
             query?: never;
@@ -7098,6 +7115,7 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["OrdersPricePreviewCreateError"][];
         };
+        OrdersPrintRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         OrdersQuotationPdfRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         OrdersRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         OrdersUpdateAddVatErrorComponent: {
@@ -17584,6 +17602,97 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrdersPricePreviewCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    orders_print_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Only this customer's orders */
+                customer?: number;
+                export?: "pdf" | "xlsx";
+                /** @description First order date (AD, YYYY-MM-DD) */
+                from?: string;
+                /** @description Last order date (AD, YYYY-MM-DD) */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrdersPrintRetrieveErrorResponse400"];
                 };
             };
             401: {

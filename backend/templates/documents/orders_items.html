@@ -1,0 +1,96 @@
+{% extends "documents/base.html" %}
+{% load docs %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_size %}A4 landscape{% endblock %}
+{% block page_margin %}12mm 10mm 14mm 10mm{% endblock %}
+{% block extra_style %}
+  table.items { font-size: 9pt; }
+  table.items th, table.items td { padding: 3pt 4pt; }
+  table.items tbody tr.first td { border-top: 0.75pt solid #CBD5E1; }
+  table.items td.details, table.items span.details { color: #1E293B; font-size: 8.5pt; }
+  table.items tr.charge td.particular, table.items tr.addon td.particular { padding-left: 12pt; }
+  table.items tr.charge td.particular { color: #1E293B; font-weight: 600; }
+  table.items td.order-total { font-weight: 700; }
+  table.items tr.total td { border-top: 1pt solid #0B1220; font-weight: 700; }
+{% endblock %}
+{% block content %}
+<div class="doc-header">
+  {% include "documents/_shop_header.html" %}
+  <div class="doc-title">
+    <h1>Orders</h1>
+    <div class="sub">{{ period }}</div>
+  </div>
+</div>
+
+<div class="info">
+  <div class="block">
+    {% if customer %}
+      <div class="label">Bill to</div>
+      <div class="strong">{{ customer.name }}</div>
+      {% if customer.address %}<div>{{ customer.address }}</div>{% endif %}
+      {% if customer.phone %}<div class="muted">Tel {{ customer.phone }}</div>{% endif %}
+    {% else %}
+      <div class="label">Customers</div>
+      <div class="strong">All customers</div>
+    {% endif %}
+  </div>
+  <div class="block">
+    <table class="kv">
+      <tr><td>Orders</td><td class="num">{{ data.totals.orders }}</td></tr>
+      <tr><td>Total sq ft</td><td class="num">{{ data.totals.sqft|qty }}</td></tr>
+      <tr><td><strong>Order value</strong></td><td class="num"><strong>Rs. {{ data.totals.total|amount }}</strong></td></tr>
+    </table>
+  </div>
+</div>
+
+<table class="lines items">
+  <thead>
+    <tr>
+      <th style="width: 7%">Date (BS)</th>
+      <th style="width: 8%">Order</th>
+      {% if not customer %}<th style="width: 12%">Customer</th>{% endif %}
+      <th style="width: 13%">Particular</th>
+      <th class="num" style="width: 5%">W</th>
+      <th class="num" style="width: 5%">H</th>
+      <th class="num" style="width: 6%">Sq ft</th>
+      <th class="num" style="width: 5%">Qty</th>
+      <th class="num" style="width: 7%">Rate</th>
+      <th class="num" style="width: 9%">Amount</th>
+      <th class="num" style="width: 9%">Order total</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for row in data.rows %}
+    {% for line in row.lines %}
+    <tr class="{{ line.kind }}{% if forloop.first %} first{% endif %}">
+      <td>{% if forloop.first %}{{ row.date_bs }}{% endif %}</td>
+      <td>{% if forloop.first %}{{ row.order_no }}{% endif %}</td>
+      {% if not customer %}<td>{% if forloop.first %}{{ row.customer }}{% endif %}</td>{% endif %}
+      <td class="particular">{{ line.particular }}</td>
+      <td class="num">{{ line.width }}</td>
+      <td class="num">{{ line.height }}</td>
+      <td class="num">{% if line.unit == "Piece" %}<span class="details">per piece</span>{% elif line.sqft %}{{ line.sqft|qty }}{% endif %}</td>
+      <td class="num">{% if line.quantity %}{{ line.quantity }}{% endif %}</td>
+      <td class="num">{% if line.rate %}{{ line.rate|amount }}{% endif %}</td>
+      <td class="num">{{ line.amount|amount }}</td>
+      <td class="num order-total">{% if forloop.last %}{{ row.total|amount }}{% endif %}</td>
+      <td class="details">{{ line.details }}</td>
+    </tr>
+    {% endfor %}
+  {% empty %}
+    <tr><td colspan="12" class="muted center">No orders in this period.</td></tr>
+  {% endfor %}
+    <tr class="total">
+      <td colspan="{% if customer %}4{% else %}5{% endif %}">Total ({{ data.totals.orders }} orders)</td>
+      <td></td>
+      <td class="num">{{ data.totals.sqft|qty }}</td>
+      <td colspan="3"></td>
+      <td class="num">{{ data.totals.total|amount }}</td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+{% include "documents/_signatures.html" with left_label="Checked by" %}
+<div class="footer-note">Confirmed orders (not quotations or cancelled) by order date. Generated {{ generated_at|date:"d M Y, H:i" }} ({{ generated_at_bs }} BS).</div>
+{% endblock %}

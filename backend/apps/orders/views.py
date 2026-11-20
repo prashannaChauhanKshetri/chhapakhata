@@ -4,22 +4,27 @@ import datetime as dt
 
 import django_filters
 from django.db.models import Count, OuterRef, Prefetch, Subquery
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from apps.billing.models import InvoiceOrder
-from apps.billing.selectors import order_paid_amount, paid_subquery
+from apps.billing.selectors import order_paid_amount, orders_for_print, paid_subquery
 from apps.billing.serializers import InvoiceDetailSerializer, PaymentSerializer
 from apps.catalog.pricing import discount_percent
 from apps.core.dates import local_today
-from apps.core.documents import pdf_response, render_pdf
+from apps.core.documents import pdf_response, render_pdf, xlsx_response
 from apps.core.exceptions import BusinessError
+from apps.core.params import output_format, parse_range
 from apps.core.permissions import Perm
 from apps.core.serializers import ReasonSerializer
+from apps.customers.models import Customer
 from apps.production.models import Job
 from apps.production.selectors import job_progress_annotations
+from apps.reports.exporters import report_to_xlsx
+from apps.reports.tables import Column, Metric, Report, Table, period_label
 
 from . import services
 from .models import Order, OrderItem, OrderStatus
@@ -70,6 +75,62 @@ def _order_input(data: dict) -> services.OrderInput:
     )
 
 
+def _orders_report(data: dict, title: str, period: str) -> Report:
+    rows = []
+    for row in data["rows"]:
+        lines = row["lines"]
+        for index, line in enumerate(lines):
+            first, last = index == 0, index == len(lines) - 1
+            rows.append(
+                {
+                    "date_bs": row["date_bs"] if first else "",
+                    "order_no": row["order_no"] if first else "",
+                    "customer": row["customer"] if first else "",
+                    "particular": line["particular"],
+                    "width": line.get("width", ""),
+                    "height": line.get("height", ""),
+                    "sqft": line.get("sqft"),
+                    "quantity": line.get("quantity"),
+                    "rate": line.get("rate"),
+                    "amount": line.get("amount"),
+                    "total": row["total"] if last else None,
+                    "details": line.get("details", ""),
+                }
+            )
+    totals = data["totals"]
+    return Report(
+        slug="orders",
+        title=title,
+        period=period,
+        summary=[
+            Metric("Orders", totals["orders"], "number"),
+            Metric("Sq ft", totals["sqft"], "number"),
+            Metric("Order value", totals["total"]),
+        ],
+        tables=[
+            Table(
+                title="Orders item by item",
+                columns=[
+                    Column("date_bs", "Date (BS)"),
+                    Column("order_no", "Order"),
+                    Column("customer", "Customer"),
+                    Column("particular", "Particular"),
+                    Column("width", "W"),
+                    Column("height", "H"),
+                    Column("sqft", "Sq ft", "number"),
+                    Column("quantity", "Qty", "number"),
+                    Column("rate", "Rate", "money"),
+                    Column("amount", "Amount", "money"),
+                    Column("total", "Order total", "money"),
+                    Column("details", "Details"),
+                ],
+                rows=rows,
+                totals={"particular": "Total", "sqft": totals["sqft"], "total": totals["total"]},
+            )
+        ],
+    )
+
+
 class OrderViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -93,6 +154,7 @@ class OrderViewSet(
         "cancel": Perm.ORDERS_MANAGE,
         "deliver": Perm.ORDERS_MANAGE,
         "details": Perm.ORDERS_MANAGE,
+        "print_orders": Perm.DOCUMENTS_ISSUE,
         "invoice": Perm.DOCUMENTS_ISSUE,
         "quotation_pdf": Perm.DOCUMENTS_ISSUE,
         "job_tickets_pdf": Perm.PRODUCTION_VIEW,
@@ -233,6 +295,39 @@ class OrderViewSet(
             "discount_limit": limit,
         }
         return Response(PricePreviewSerializer(payload).data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("from", str, description="First order date (AD, YYYY-MM-DD)"),
+            OpenApiParameter("to", str, description="Last order date (AD, YYYY-MM-DD)"),
+            OpenApiParameter("customer", int, description="Only this customer's orders"),
+            OpenApiParameter("export", str, enum=["pdf", "xlsx"]),
+        ],
+        responses={(200, "application/pdf"): bytes},
+    )
+    @action(detail=False, methods=["get"], url_path="print")
+    def print_orders(self, request):
+        """Orders from one date to another, item by item (PDF or Excel)."""
+        params = request.query_params
+        today = local_today()
+        date_from, date_to = parse_range(params, today, today)
+        customer = None
+        if params.get("customer"):
+            raw = params["customer"]
+            customer = Customer.objects.filter(pk=raw).first() if raw.isdigit() else None
+            if customer is None:
+                raise NotFound("Customer not found.")
+        data = orders_for_print(date_from, date_to, customer)
+        period = period_label(date_from, date_to)
+        title = f"Orders: {customer.name}" if customer else "Orders"
+        name = f"orders-{date_from}-to-{date_to}"
+        if output_format(params, ("pdf", "xlsx")) == "xlsx":
+            return xlsx_response(report_to_xlsx(_orders_report(data, title, period)), name)
+        pdf = render_pdf(
+            "documents/orders_items.html",
+            {"data": data, "customer": customer, "period": period, "title": title},
+        )
+        return pdf_response(pdf, name)
 
     @extend_schema(request=OrderDetailsEditSerializer, responses=OrderDetailSerializer)
     @action(detail=True, methods=["post"])

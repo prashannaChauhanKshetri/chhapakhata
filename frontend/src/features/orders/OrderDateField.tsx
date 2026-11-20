@@ -18,10 +18,15 @@ export function OrderDateField({
   value,
   onChange,
   error,
+  label,
+  showHint = true,
 }: {
   value: string;
   onChange: (ad: string) => void;
   error?: React.ReactNode;
+  /** e.g. "From"; the boxes read "From (Miti)" and "From (AD)". */
+  label?: string;
+  showHint?: boolean;
 }) {
   const { t } = useTranslation();
   // What is being typed; null shows the Miti of the chosen date.
@@ -61,7 +66,7 @@ export function OrderDateField({
   return (
     <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
       <TextInput
-        label={t('Order date (Miti)')}
+        label={label ? `${label} (Miti)` : t('Order date (Miti)')}
         placeholder="2083.08.04"
         value={bsText}
         onChange={(e) => setBsDraft(e.currentTarget.value)}
@@ -72,12 +77,18 @@ export function OrderDateField({
             void readBs();
           }
         }}
-        description={late ? t('Entered late: not today') : t('Today, or an earlier day')}
+        description={
+          !showHint
+            ? undefined
+            : late
+              ? t('Entered late: not today')
+              : t('Today, or an earlier day')
+        }
         inputWrapperOrder={['label', 'input', 'description', 'error']}
         error={bsError ?? error}
       />
       <DatePickerInput
-        label={t('Date (AD)')}
+        label={label ? `${label} (AD)` : t('Date (AD)')}
         valueFormat="D MMM YYYY"
         maxDate={todayISO()}
         value={value}

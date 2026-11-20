@@ -10,7 +10,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { IconFileSpreadsheet, IconSearch } from '@tabler/icons-react';
+import { IconFileSpreadsheet, IconPrinter, IconSearch } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { DataTable } from '@/components/DataTable';
 import { useTranslation } from 'react-i18next';
@@ -29,6 +29,8 @@ import { deadlineLabel } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
 import { ORDER_STATUS } from '@/lib/status';
 import { PAGE_SIZE, useListState } from '@/lib/useListState';
+
+import { openPrintOrders } from './PrintOrdersForm';
 
 const VIEWS = [
   { value: 'all', label: 'All' },
@@ -88,6 +90,15 @@ export default function OrdersPage() {
         description={t('Quotations, confirmed work and deliveries.')}
         actions={
           <>
+            <Can perm={Perm.DOCUMENTS_ISSUE}>
+              <Button
+                variant="default"
+                leftSection={<IconPrinter size={16} />}
+                onClick={openPrintOrders}
+              >
+                {t('Print orders')}
+              </Button>
+            </Can>
             <Can perm={Perm.REPORTS_ALL}>
               <Button
                 variant="default"
