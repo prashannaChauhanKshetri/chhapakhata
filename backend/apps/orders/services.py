@@ -160,6 +160,17 @@ def _item_lines(
                 {f"items.{index}.media_type": [f"{media.name} is no longer offered."]}
             )
         previous = existing.get(item.id) if item.id else None
+        # The size decides how a line is charged: with width and height, per sq ft;
+        # without, Qty × Rate. A saved line whose size is unchanged keeps its basis, so
+        # editing an older order never changes its amount.
+        unchanged = (
+            previous is not None
+            and media is not None
+            and previous.media_type_id == media.pk
+            and (previous.width, previous.height, previous.unit)
+            == (item.width, item.height, item.unit)
+        )
+        basis = previous.pricing_unit if unchanged else ("sqft" if sized else "piece")
         if media is None:
             # A new name typed on the order: the rate is the one entered, no minimum size.
             if item.rate is None:
@@ -195,8 +206,25 @@ def _item_lines(
             else:
                 source = RateSource.CUSTOM
 
-        if not sized:
-            pricing_unit = "piece"  # no size: Qty × Rate
+        pricing_unit = basis
+        if media is not None and not unchanged and basis != media.pricing_unit:
+            # The list rate is for the other basis (per piece vs per sq ft): it can be
+            # neither charged nor compared, so the rate is the one typed.
+            if item.rate is None:
+                wanted = "sq ft" if basis == "sqft" else "piece"
+                listed = "sq ft" if media.pricing_unit == "sqft" else "piece"
+                raise BusinessError(
+                    {
+                        f"items.{index}.rate": [
+                            f"Enter the rate per {wanted} ({media.name} is listed per {listed})."
+                        ]
+                    }
+                )
+            card_rate, min_sqft, changed = rate, ZERO, False
+            last = last_rates.get(media.pk)
+            source = (
+                RateSource.PREVIOUS if last is not None and rate == last.rate else RateSource.CUSTOM
+            )
 
         addon_lines = []
         for a in item.addons:

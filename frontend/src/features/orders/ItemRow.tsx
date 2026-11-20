@@ -66,7 +66,12 @@ export function ItemRow({
   );
   const last = item.media_type ? lastRates[item.media_type] : undefined;
   const noSize = !toNumber(item.width) && !toNumber(item.height);
-  const perUnit = item.per_piece || noSize ? t('piece') : t('sq ft');
+  // The size decides the basis (as on the server): per sq ft with a size, per piece
+  // without. A saved line whose size is unchanged keeps its basis, so trust its price.
+  const perPiece = noSize || (!!item.id && result?.pricing_unit === 'piece');
+  const perUnit = perPiece ? t('piece') : t('sq ft');
+  // The list rate only applies when the item is listed on the same basis.
+  const listedFits = !!media && (media.pricing_unit === 'piece') === perPiece;
   const rateSource = result?.rate_source;
 
   const applyMedia = (chosen: MediaType | undefined) => {
@@ -209,29 +214,36 @@ export function ItemRow({
             prefix="Rs. "
             min={0}
             decimalScale={2}
-            placeholder={media ? formatAmount(media.rate) : undefined}
+            placeholder={listedFits ? formatAmount(media.rate) : undefined}
             description={
               rateSource === 'previous'
                 ? t("Customer's last rate")
-                : rateSource === 'custom'
-                  ? t('Custom rate')
-                  : media
-                    ? t('Rate card')
-                    : undefined
+                : media && !listedFits && item.rate === ''
+                  ? t('Listed per {{listed}}: type the rate per {{unit}}', {
+                      listed: media.pricing_unit === 'piece' ? t('piece') : t('sq ft'),
+                      unit: perUnit,
+                    })
+                  : rateSource === 'custom'
+                    ? t('Custom rate')
+                    : listedFits
+                      ? t('Rate card')
+                      : undefined
             }
             inputWrapperOrder={['label', 'input', 'description', 'error']}
             {...form.getInputProps(path('rate'))}
           />
           {media && (
             <Group gap={6} mt={6}>
-              <Chip
-                size="xs"
-                variant="outline"
-                checked={rateSource === 'card' || item.rate === ''}
-                onChange={() => form.setFieldValue(path('rate'), '')}
-              >
-                {t('Card Rs {{rate}}', { rate: formatQty(result?.card_rate ?? media.rate) })}
-              </Chip>
+              {listedFits && (
+                <Chip
+                  size="xs"
+                  variant="outline"
+                  checked={rateSource === 'card' || item.rate === ''}
+                  onChange={() => form.setFieldValue(path('rate'), '')}
+                >
+                  {t('Card Rs {{rate}}', { rate: formatQty(result?.card_rate ?? media.rate) })}
+                </Chip>
+              )}
               {last && (
                 <Tooltip
                   label={t('{{order}} on {{date}} BS · bought {{n}} times', {
@@ -359,11 +371,11 @@ export function ItemRow({
           </Group>
         ) : (
           <Text size="sm" c="dimmed">
-            {!media
-              ? t('Choose a media to start.')
-              : item.per_piece
-                ? t('Enter the quantity to see the price.')
-                : t('Enter width and height to see the price.')}
+            {!media && !item.media_name.trim()
+              ? t('Type or choose a media to start.')
+              : item.rate === '' && !listedFits
+                ? t('Enter the rate to see the price.')
+                : t('Enter the quantity (and width and height for sq ft) to see the price.')}
           </Text>
         )}
       </Box>

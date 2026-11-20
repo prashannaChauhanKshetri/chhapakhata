@@ -60,3 +60,31 @@ def test_preview_prices_a_typed_media_without_saving_it(api, desk, shop, custome
     assert preview.status_code == 200
     assert preview.json()["totals"]["subtotal"] == "1200.00"
     assert not MediaType.objects.filter(name="Mug print").exists()
+
+
+def test_the_size_decides_per_sq_ft_or_per_piece(api, desk, shop, customer):
+    """OM Traders: Forex was per piece in the list, yet 3 × 3 ft must be charged per sq ft."""
+    forex = MediaType.objects.create(name="Forex", pricing_unit="piece", rate=D("350"))
+    sized = _item(media_type=forex.pk, width="3", height="3", rate="150")
+    response = _order(api, desk, customer, sized)
+    assert response.status_code == 201, response.json()
+    line = response.json()["items"][0]
+    assert (line["pricing_unit"], line["line_total"]) == ("sqft", "1350.00")  # 9 × 150
+    plain = _item(media_type=forex.pk, quantity=2, rate="150")
+    line = _order(api, desk, customer, plain).json()["items"][0]
+    assert (line["pricing_unit"], line["line_total"]) == ("piece", "300.00")
+
+
+def test_editing_an_old_order_keeps_its_amount(api, desk, shop, customer, make_order):
+    from apps.orders.models import OrderItem
+
+    order = make_order(items=[(D("3"), D("3"), 1)])
+    item = order.items.get()
+    OrderItem.objects.filter(pk=item.pk).update(pricing_unit="piece", line_total=D("350"))
+    body = {
+        "customer": customer.pk,
+        "items": [_item(id=item.pk, media_type=item.media_type_id, width="3", height="3")],
+    }
+    response = api(desk).put(f"/api/v1/orders/{order.pk}/", body, format="json")
+    assert response.status_code == 200
+    assert response.json()["items"][0]["pricing_unit"] == "piece"  # size unchanged: kept
