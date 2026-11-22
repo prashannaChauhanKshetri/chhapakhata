@@ -53,9 +53,11 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--mantine-spacing-sm);
+    /* Down to the screen edge, with the buttons kept above the iPhone home bar. */
     margin: var(--mantine-spacing-md) calc(var(--ck-gutter) * -1)
-      calc(var(--mantine-spacing-xl) * -1);
-    padding: var(--mantine-spacing-sm) var(--ck-gutter);
+      calc((var(--mantine-spacing-xl) + env(safe-area-inset-bottom, 0px)) * -1);
+    padding: var(--mantine-spacing-sm) var(--ck-gutter)
+      calc(var(--mantine-spacing-sm) + env(safe-area-inset-bottom, 0px));
     background: var(--ck-surface);
     border-top: 1px solid var(--ck-border);
     box-shadow: 0 -4px 12px rgba(15, 23, 42, 0.06);

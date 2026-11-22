@@ -9,7 +9,14 @@
   --ck-text-strong: #334155;
   --ck-text: #0f172a;
   --ck-sidebar: #0f172a;
-  --ck-gutter: var(--mantine-spacing-lg);
+  /* Page side margin; wider where an iPhone's notch needs it (on its side). */
+  --ck-gutter: max(
+    var(--mantine-spacing-lg),
+    env(safe-area-inset-left, 0px),
+    env(safe-area-inset-right, 0px)
+  );
+  /* Inner padding of cards: roomy on a computer, tighter on a phone. */
+  --ck-card-pad: var(--mantine-spacing-lg);
 }
 
 html,
@@ -43,9 +50,37 @@ body {
   letter-spacing: 0.03em;
 }
 
+/* A phone list in place of a wide table: rows separated by thin lines. */
+.ck-rows {
+  border-top: 1px solid var(--ck-border);
+}
+
+.ck-row {
+  padding: 12px var(--ck-card-pad);
+
+  & + & {
+    border-top: 1px solid var(--ck-border);
+  }
+}
+
 @mixin smaller-than $mantine-breakpoint-sm {
   :root {
-    --ck-gutter: var(--mantine-spacing-md);
+    --ck-gutter: max(
+      var(--mantine-spacing-md),
+      env(safe-area-inset-left, 0px),
+      env(safe-area-inset-right, 0px)
+    );
+    --ck-card-pad: var(--mantine-spacing-md);
+  }
+
+  /* Choices meant to fit the width (payment mode and the like) wrap long
+     labels such as "Bank transfer" instead of running off the screen. */
+  .mantine-SegmentedControl-root[data-full-width] {
+    & .mantine-SegmentedControl-label {
+      white-space: normal;
+      line-height: 1.2;
+      padding-inline: 4px;
+    }
   }
 
   /* 16px inputs on phones stop iOS from zooming into fields. */

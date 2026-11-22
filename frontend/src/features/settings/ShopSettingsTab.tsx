@@ -138,7 +138,7 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
             <Grid.Col span={{ base: 12, md: 6 }}>
               <TextInput label={t('Address')} {...form.getInputProps('address')} />
             </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 3 }}>
+            <Grid.Col span={{ base: 12, xs: 6, md: 3 }}>
               <TextInput
                 label={t('Phone')}
                 description={t(
@@ -147,7 +147,7 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
                 {...form.getInputProps('phone')}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 3 }}>
+            <Grid.Col span={{ base: 12, xs: 6, md: 3 }}>
               <TextInput label={t('Email')} {...form.getInputProps('email')} />
             </Grid.Col>
           </Grid>
@@ -162,15 +162,15 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
                 {...form.getInputProps('pan_vat_number')}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 4 }}>
+            <Grid.Col span={{ base: 12, xs: 6, md: 4 }}>
               <Switch
-                mt={{ base: 0, md: 30 }}
+                mt={{ base: 0, xs: 30 }}
                 label={t('VAT registered')}
                 description={t('Adds VAT to quotations and invoices')}
                 {...form.getInputProps('is_vat_registered', { type: 'checkbox' })}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 4 }}>
+            <Grid.Col span={{ base: 12, xs: 6, md: 4 }}>
               <NumberInput
                 label={t('VAT rate %')}
                 min={0}
@@ -180,7 +180,7 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
                 {...form.getInputProps('vat_rate')}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 4 }}>
+            <Grid.Col span={{ base: 12, xs: 6, md: 4 }}>
               <NumberInput
                 label={t('Default minimum sq ft')}
                 description={t('Smaller items are charged as this size')}
@@ -189,7 +189,7 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
                 {...form.getInputProps('default_min_sqft')}
               />
             </Grid.Col>
-            <Grid.Col span={{ base: 6, md: 4 }}>
+            <Grid.Col span={{ base: 12, xs: 6, md: 4 }}>
               <NumberInput
                 label={t('Front desk discount limit %')}
                 min={0}
@@ -200,7 +200,7 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
             </Grid.Col>
             <Grid.Col span={{ base: 12, md: 4 }}>
               <Switch
-                mt={{ base: 0, md: 30 }}
+                mt={{ base: 0, xs: 30 }}
                 label={t('Round totals to the rupee')}
                 {...form.getInputProps('round_total_to_rupee', { type: 'checkbox' })}
               />

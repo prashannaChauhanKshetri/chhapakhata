@@ -13,12 +13,12 @@ interface SectionCardProps {
 
 export function SectionCard({ title, description, actions, children, flush }: SectionCardProps) {
   return (
-    <Card padding={flush ? 0 : 'lg'}>
+    <Card padding={flush ? 0 : 'var(--ck-card-pad)'}>
       {(title || actions) && (
         <Group
           justify="space-between"
           gap="sm"
-          px={flush ? 'lg' : 0}
+          px={flush ? 'var(--ck-card-pad)' : 0}
           pt={flush ? 'md' : 0}
           pb={flush ? 'sm' : 'md'}
           wrap="wrap"

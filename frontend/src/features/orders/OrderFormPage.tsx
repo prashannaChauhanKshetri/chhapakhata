@@ -172,6 +172,8 @@ function OrderFormInner({
       await client.invalidateQueries({ queryKey: ['orders'] });
       await client.invalidateQueries({ queryKey: ['order', saved.id] });
       await client.invalidateQueries({ queryKey: ['dashboard'] });
+      // A media typed by hand is added to the list on save; offer it on the next order.
+      await client.invalidateQueries({ queryKey: ['catalog', 'media-types'] });
       notifySuccess(
         isEdit
           ? t('Order {{no}} updated', { no: saved.order_no })
@@ -388,13 +390,6 @@ function OrderFormInner({
                   form.clearFieldError('customer');
                 }}
               />
-              <Box mt="sm">
-                <OrderDateField
-                  value={form.values.order_date}
-                  onChange={(ad) => form.setFieldValue('order_date', ad)}
-                  error={form.errors.order_date}
-                />
-              </Box>
               {customer && toNumber(customer.balance) > 0 && (
                 <Text size="xs" c="red.7" mt={6}>
                   {t('This customer already owes {{amount}}.', {
@@ -402,6 +397,13 @@ function OrderFormInner({
                   })}
                 </Text>
               )}
+              <Box mt="sm">
+                <OrderDateField
+                  value={form.values.order_date}
+                  onChange={(ad) => form.setFieldValue('order_date', ad)}
+                  error={form.errors.order_date}
+                />
+              </Box>
             </Card>
 
             <Stack gap="sm">

@@ -26,6 +26,14 @@ export default defineConfig({
     {
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+      testIgnore: /mobile\.spec\.ts/,
+    },
+    {
+      // The client's phone: Safari's engine at iPhone 13 size.
+      // Needs `npx playwright install webkit` once.
+      name: 'iphone',
+      use: { ...devices['iPhone 13'] },
+      testMatch: /mobile\.spec\.ts/,
     },
   ],
 });

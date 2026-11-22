@@ -2,6 +2,7 @@ import {
   Alert,
   Anchor,
   Badge,
+  Box,
   Button,
   Card,
   Grid,
@@ -281,7 +282,56 @@ export default function OrderDetailPage() {
               </Card>
             )}
             <SectionCard title={t('Items')} flush>
-              <Table.ScrollContainer minWidth={640}>
+              <Box hiddenFrom="sm" className="ck-rows">
+                {order.items.map((item) => (
+                  <div key={item.id} className="ck-row">
+                    <Group justify="space-between" align="flex-start" wrap="nowrap" gap="sm">
+                      <Text size="sm" fw={500} miw={0}>
+                        {item.line_no}. {item.media_name}
+                        {item.description ? ` · ${item.description}` : ''}
+                      </Text>
+                      <Text size="sm" fw={600} className="num">
+                        {formatAmount(item.line_total)}
+                      </Text>
+                    </Group>
+                    <Text size="xs" c="dimmed" className="num">
+                      {item.size_label
+                        ? `${item.size_label} × ${item.quantity}`
+                        : t('{{n}} pcs', { n: item.quantity })}
+                      {item.pricing_unit === 'piece'
+                        ? ` · ${formatAmount(item.rate)} ${t('per piece')}`
+                        : ` · ${formatQty(item.total_billable_sqft)} sq ft × ${formatAmount(item.rate)}`}
+                    </Text>
+                    {item.min_applied && (
+                      <Text size="xs" c="amber.8">
+                        {t('Min. {{min}} sq ft each', { min: formatQty(item.min_sqft) })}
+                      </Text>
+                    )}
+                    {item.addons.length > 0 && (
+                      <Text size="xs" c="dimmed">
+                        +{' '}
+                        {item.addons
+                          .map((ad) => `${ad.name} (${formatAmount(ad.amount)})`)
+                          .join(', ')}
+                      </Text>
+                    )}
+                    {item.finishing && (
+                      <Text size="xs" c="dimmed">
+                        {t('Finishing')}: {item.finishing}
+                      </Text>
+                    )}
+                    {item.job && (
+                      <Group gap={6} mt={4}>
+                        <Text size="xs" c="dimmed">
+                          {item.job.job_no}
+                        </Text>
+                        <StageBadge stage={item.job.stage} />
+                      </Group>
+                    )}
+                  </div>
+                ))}
+              </Box>
+              <Table.ScrollContainer minWidth={640} visibleFrom="sm">
                 <Table verticalSpacing="sm" highlightOnHover={false}>
                   <Table.Thead>
                     <Table.Tr>
@@ -363,7 +413,7 @@ export default function OrderDetailPage() {
                   </Table.Tbody>
                 </Table>
               </Table.ScrollContainer>
-              <Stack gap={4} p="lg" pt="sm" align="flex-end">
+              <Stack gap={4} p="var(--ck-card-pad)" pt="sm" align="flex-end">
                 {(
                   [
                     [t('Sub-total'), order.subtotal, true],

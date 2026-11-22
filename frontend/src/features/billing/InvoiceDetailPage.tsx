@@ -1,4 +1,16 @@
-import { Alert, Anchor, Button, Card, Grid, Group, Menu, Stack, Table, Text } from '@mantine/core';
+import {
+  Alert,
+  Anchor,
+  Box,
+  Button,
+  Card,
+  Grid,
+  Group,
+  Menu,
+  Stack,
+  Table,
+  Text,
+} from '@mantine/core';
 import { IconBan, IconChevronDown, IconPrinter, IconReceipt2 } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -150,7 +162,29 @@ export default function InvoiceDetailPage() {
       <Grid gap="lg">
         <Grid.Col span={{ base: 12, lg: 8 }}>
           <SectionCard title={t('Particulars')} flush>
-            <Table.ScrollContainer minWidth={560}>
+            <Box hiddenFrom="sm" className="ck-rows">
+              {invoice.lines.map((line) => (
+                <div key={line.line_no} className="ck-row">
+                  <Group justify="space-between" align="flex-start" wrap="nowrap" gap="sm">
+                    <Text size="sm" fw={500} miw={0}>
+                      {line.line_no}. {line.description}
+                    </Text>
+                    <Text size="sm" fw={600} className="num">
+                      {formatAmount(line.amount)}
+                    </Text>
+                  </Group>
+                  <Text size="xs" c="dimmed" className="num">
+                    {formatQty(line.quantity)} {line.unit} × {formatAmount(line.rate)}
+                  </Text>
+                  {line.details && (
+                    <Text size="xs" c="dimmed">
+                      {line.details}
+                    </Text>
+                  )}
+                </div>
+              ))}
+            </Box>
+            <Table.ScrollContainer minWidth={560} visibleFrom="sm">
               <Table verticalSpacing="sm">
                 <Table.Thead>
                   <Table.Tr>
@@ -189,7 +223,7 @@ export default function InvoiceDetailPage() {
                 </Table.Tbody>
               </Table>
             </Table.ScrollContainer>
-            <Stack gap={4} p="lg" pt="sm" align="flex-end">
+            <Stack gap={4} p="var(--ck-card-pad)" pt="sm" align="flex-end">
               {(
                 [
                   [t('Sub-total'), invoice.subtotal, true],

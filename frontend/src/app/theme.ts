@@ -189,7 +189,12 @@ export const theme = createTheme({
     }),
     Textarea: Textarea.extend({ defaultProps: { size: 'sm', autosize: true, minRows: 2 } }),
     Card: Card.extend({
-      defaultProps: { withBorder: true, radius: 'lg', padding: 'lg', shadow: 'none' },
+      defaultProps: {
+        withBorder: true,
+        radius: 'lg',
+        padding: 'var(--ck-card-pad)',
+        shadow: 'none',
+      },
     }),
     Paper: Paper.extend({ defaultProps: { radius: 'lg' } }),
     Badge: Badge.extend({

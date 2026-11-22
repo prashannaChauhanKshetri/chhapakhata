@@ -1,0 +1,16 @@
+.title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* On a phone the page's buttons share the full width in even rows. */
+@mixin smaller-than $mantine-breakpoint-xs {
+  .actions {
+    width: 100%;
+
+    & > :global(.mantine-Button-root) {
+      flex: 1 1 calc(50% - var(--mantine-spacing-xs));
+      min-width: 0;
+    }
+  }
+}

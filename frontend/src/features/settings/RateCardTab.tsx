@@ -310,7 +310,7 @@ export function RateCardTab() {
             },
           ]}
         />
-        <Text size="xs" c="dimmed" px="lg" py="sm">
+        <Text size="xs" c="dimmed" px="var(--ck-card-pad)" py="sm">
           * {t('Uses the shop default minimum (Shop settings).')}
         </Text>
       </SectionCard>

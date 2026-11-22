@@ -23,7 +23,13 @@ export default defineConfig({
       // A new version waits until the user chooses to reload (see UpdatePrompt).
       registerType: 'prompt',
       injectRegister: false,
-      includeAssets: ['favicon.svg', 'icons/apple-touch-icon-180.png'],
+      includeAssets: [
+        'favicon.svg',
+        'favicon.ico',
+        'apple-touch-icon.png',
+        'icons/apple-touch-icon-180.png',
+        'icons/favicon-32.png',
+      ],
       manifest: {
         id: '/',
         name: 'ChhapaKhata · OM Traders',
@@ -46,9 +52,18 @@ export default defineConfig({
             purpose: 'maskable',
           },
         ],
+        // Long-press on the installed app's icon offers these.
         shortcuts: [
-          { name: 'New order', url: '/orders/new' },
-          { name: 'Production board', url: '/production' },
+          {
+            name: 'New order',
+            url: '/orders/new',
+            icons: [{ src: '/icons/icon-96.png', sizes: '96x96', type: 'image/png' }],
+          },
+          {
+            name: 'Production board',
+            url: '/production',
+            icons: [{ src: '/icons/icon-96.png', sizes: '96x96', type: 'image/png' }],
+          },
         ],
       },
       workbox: {

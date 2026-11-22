@@ -159,7 +159,7 @@ export function MakeBillForm({ customerId, preselect = [], onDone }: MakeBillPro
       </SimpleGrid>
 
       <ScrollArea.Autosize mah={300} type="auto">
-        <Table striped highlightOnHover verticalSpacing={6} fz="sm">
+        <Table striped highlightOnHover verticalSpacing={6} horizontalSpacing="xs" fz="sm">
           <Table.Thead>
             <Table.Tr>
               <Table.Th w={36}>
@@ -173,10 +173,12 @@ export function MakeBillForm({ customerId, preselect = [], onDone }: MakeBillPro
                 />
               </Table.Th>
               <Table.Th>{t('Order')}</Table.Th>
-              <Table.Th>{t('Date (BS)')}</Table.Th>
-              <Table.Th>{t('Items')}</Table.Th>
+              <Table.Th visibleFrom="sm">{t('Date (BS)')}</Table.Th>
+              <Table.Th visibleFrom="sm">{t('Items')}</Table.Th>
               <Table.Th ta="right">{t('Before VAT')}</Table.Th>
-              <Table.Th ta="right">{t('Paid')}</Table.Th>
+              <Table.Th ta="right" visibleFrom="sm">
+                {t('Paid')}
+              </Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -196,8 +198,8 @@ export function MakeBillForm({ customerId, preselect = [], onDone }: MakeBillPro
                   />
                 </Table.Td>
                 <Table.Td>
-                  <Group gap={6} wrap="nowrap">
-                    <Text size="sm" fw={500}>
+                  <Group gap={6} style={{ rowGap: 2 }}>
+                    <Text size="sm" fw={500} style={{ whiteSpace: 'nowrap' }}>
                       {o.order_no}
                     </Text>
                     {o.source === 'import' && (
@@ -206,9 +208,13 @@ export function MakeBillForm({ customerId, preselect = [], onDone }: MakeBillPro
                       </Badge>
                     )}
                   </Group>
+                  {/* On a phone the date and items sit under the order number. */}
+                  <Text size="xs" c="dimmed" hiddenFrom="sm" lineClamp={2}>
+                    {o.order_date_bs} · {o.items}
+                  </Text>
                 </Table.Td>
-                <Table.Td>{o.order_date_bs}</Table.Td>
-                <Table.Td maw={220}>
+                <Table.Td visibleFrom="sm">{o.order_date_bs}</Table.Td>
+                <Table.Td maw={220} visibleFrom="sm">
                   <Text size="sm" truncate>
                     {o.items}
                   </Text>
@@ -216,7 +222,7 @@ export function MakeBillForm({ customerId, preselect = [], onDone }: MakeBillPro
                 <Table.Td ta="right" className="num">
                   {formatAmount(o.taxable_amount)}
                 </Table.Td>
-                <Table.Td ta="right" className="num">
+                <Table.Td ta="right" className="num" visibleFrom="sm">
                   {toNumber(o.paid_amount) > 0 ? formatAmount(o.paid_amount) : '—'}
                 </Table.Td>
               </Table.Tr>

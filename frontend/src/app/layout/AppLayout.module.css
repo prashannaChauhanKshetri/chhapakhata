@@ -1,12 +1,16 @@
 .header {
   background: var(--ck-surface);
   border-bottom: 1px solid var(--ck-border);
+  /* iPhone on its side: keep the menu button and account clear of the notch. */
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
 .navbar {
   background: var(--ck-sidebar);
   border-right: none;
   color: #e2e8f0;
+  padding-left: env(safe-area-inset-left, 0px);
 }
 
 .brand {
@@ -64,6 +68,8 @@
 
 .navFooter {
   border-top: 1px solid rgba(148, 163, 184, 0.16);
+  /* Above the iPhone home bar when installed on the Home Screen. */
+  padding-bottom: calc(var(--mantine-spacing-md) + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 .userButton {
@@ -83,7 +89,8 @@
 .content {
   max-width: 1440px;
   margin: 0 auto;
-  padding: var(--mantine-spacing-lg) var(--ck-gutter) var(--mantine-spacing-xl);
+  padding: var(--mantine-spacing-lg) var(--ck-gutter)
+    calc(var(--mantine-spacing-xl) + env(safe-area-inset-bottom, 0px));
 }
 
 .offline {

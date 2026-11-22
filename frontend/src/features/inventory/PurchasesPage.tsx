@@ -67,16 +67,22 @@ export default function PurchasesPage() {
             noRecordsText={t('No purchases recorded yet')}
             rowExpansion={{
               content: ({ record }) => (
-                <Stack gap={4} px="lg" py="sm" bg="slate.0">
+                <Stack gap={8} px="var(--ck-card-pad)" py="sm" bg="slate.0">
                   {record.lines.map((line) => (
-                    <Group key={line.id} justify="space-between">
-                      <Text size="sm">
+                    <Group
+                      key={line.id}
+                      justify="space-between"
+                      align="baseline"
+                      gap={0}
+                      style={{ columnGap: 'var(--mantine-spacing-md)' }}
+                    >
+                      <Text size="sm" fw={500}>
                         {line.stock_item_name}
                         {line.roll_count
                           ? ` · ${line.roll_count} × ${formatQty(line.roll_width_ft)} × ${formatQty(line.roll_length_ft)} ft rolls`
                           : ''}
                       </Text>
-                      <Text size="sm" className="num">
+                      <Text size="sm" c="dimmed" className="num">
                         {formatQty(line.quantity)} {line.unit} · Rs {formatQty(line.amount)}
                       </Text>
                     </Group>

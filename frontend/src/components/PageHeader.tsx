@@ -3,6 +3,8 @@ import { IconChevronLeft } from '@tabler/icons-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 
+import classes from './PageHeader.module.css';
+
 interface PageHeaderProps {
   title: ReactNode;
   description?: ReactNode;
@@ -25,8 +27,8 @@ export function PageHeader({ title, description, actions, back, badge }: PageHea
       )}
       <Group justify="space-between" align="flex-start" gap="md" wrap="wrap">
         <Stack gap={4} miw={0} style={{ flex: '1 1 320px' }}>
-          <Group gap="sm" wrap="nowrap">
-            <Title order={1} lineClamp={1}>
+          <Group gap="xs" wrap="wrap" align="center" style={{ rowGap: 4 }}>
+            <Title order={1} lineClamp={2} className={classes.title}>
               {title}
             </Title>
             {badge}
@@ -38,7 +40,7 @@ export function PageHeader({ title, description, actions, back, badge }: PageHea
           )}
         </Stack>
         {actions && (
-          <Group gap="xs" wrap="wrap">
+          <Group gap="xs" wrap="wrap" className={classes.actions}>
             {actions}
           </Group>
         )}
