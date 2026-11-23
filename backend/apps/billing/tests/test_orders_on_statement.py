@@ -120,3 +120,47 @@ def test_orders_confirmed_before_this_change_are_brought_on_the_account(make_ord
     # Running it again changes nothing.
     migration.charge(django_apps, None)
     assert customer_balance(customer) == order.total + billed.total
+
+
+# -- Totals and ageing: a moved or cancelled charge is not money received -------------
+
+
+def test_billed_and_received_totals_do_not_double_count(make_order, customer, owner, desk):
+    from apps.billing.selectors import ledger_summary
+
+    order = make_order()
+    invoice = services.issue_bill(customer=customer, orders=[order], user=owner)
+    services.receive_payment(user=desk, customer=customer, amount=D("100"), mode="cash")
+    today = dt.date.today()
+    statement = customer_statement(customer, today - dt.timedelta(days=30), today)
+    assert statement["total_debit"] == invoice.total  # not order + invoice
+    assert statement["total_credit"] == D("100")  # only the money received
+    row = ledger_summary(today - dt.timedelta(days=30), today)["rows"][0]
+    assert (row["debit"], row["credit"]) == (invoice.total, D("100.00"))
+    assert row["closing_balance"] == invoice.total - D("100")
+
+
+def test_a_moved_order_does_not_age_older_unpaid_bills(make_order, customer, owner):
+    from freezegun import freeze_time
+
+    from apps.billing.selectors import outstanding_by_customer
+
+    with freeze_time("2026-09-01 10:00:00+05:45"):
+        old = make_order()
+        services.issue_invoice(order=old, user=owner)  # unpaid since 1 Sep
+    with freeze_time("2026-10-01 10:00:00+05:45"):
+        new = make_order()
+    with freeze_time("2026-10-05 10:00:00+05:45"):
+        services.issue_invoice(order=new, user=owner)
+    result = outstanding_by_customer(dt.date(2026, 10, 10))[customer.pk]
+    assert result.oldest_due_date == dt.date(2026, 9, 1)
+    assert result.balance == customer_balance(customer)
+
+
+def test_cancelling_a_bill_made_before_this_change_puts_the_order_back(make_order, customer, owner):
+    order = make_order()
+    LedgerEntry.objects.filter(order=order).delete()  # confirmed under the old rule
+    invoice = services.issue_invoice(order=order, user=owner)  # moves nothing
+    assert customer_balance(customer) == invoice.total
+    services.cancel_invoice(invoice=invoice, user=owner, reason="Wrong amount")
+    assert customer_balance(customer) == order.total  # still a confirmed order, owed

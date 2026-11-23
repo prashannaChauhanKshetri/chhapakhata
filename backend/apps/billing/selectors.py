@@ -82,6 +82,17 @@ def unbilled_orders(customer: Any):
     )
 
 
+#: Credits that undo a charge rather than bring money in: an order moved onto a bill,
+#: an order changed down or cancelled, a bill cancelled. In "billed" and "received"
+#: totals they reduce what was billed; they are not money received.
+REVERSAL_TYPES = (
+    LedgerEntryType.WORK_BILLED,
+    LedgerEntryType.ORDER_CHARGE,
+    LedgerEntryType.IMPORTED_WORK,
+    LedgerEntryType.INVOICE_CANCEL,
+)
+
+
 def customer_statement(
     customer: Any, date_from: dt.date | None = None, date_to: dt.date | None = None
 ) -> dict[str, Any]:
@@ -103,7 +114,10 @@ def customer_statement(
     for entry in entries.select_related("invoice", "payment", "order").order_by("entry_date", "id"):
         running = q2(running + entry.debit - entry.credit)
         total_debit += entry.debit
-        total_credit += entry.credit
+        if entry.entry_type in REVERSAL_TYPES:
+            total_debit -= entry.credit  # undoes a charge; not money received
+        else:
+            total_credit += entry.credit
         reference = ""
         if entry.invoice_id:
             reference = entry.invoice.invoice_no
@@ -187,6 +201,7 @@ def ledger_summary(
     start = date_from or dt.date.min  # no start date: everything is in the period
     in_period = Q(entry_date__gte=start)
     before = Q(entry_date__lt=start)
+    reversal = Q(entry_type__in=REVERSAL_TYPES)
     entries = LedgerEntry.objects.filter(entry_date__lte=date_to)
     if search:
         entries = entries.filter(
@@ -196,8 +211,21 @@ def ledger_summary(
         entries.values("customer_id")
         .annotate(
             opening=_money(Case(When(before, then=F("debit") - F("credit")), default=Value(ZERO))),
-            debit=_money(Case(When(in_period, then=F("debit")), default=Value(ZERO))),
-            credit=_money(Case(When(in_period, then=F("credit")), default=Value(ZERO))),
+            # Reversals (an order moved to a bill, a cancelled bill …) reduce what was
+            # billed; only the other credits count as received.
+            debit=_money(
+                Case(
+                    When(in_period & reversal, then=F("debit") - F("credit")),
+                    When(in_period, then=F("debit")),
+                    default=Value(ZERO),
+                )
+            ),
+            credit=_money(
+                Case(
+                    When(in_period & ~reversal, then=F("credit")),
+                    default=Value(ZERO),
+                )
+            ),
             last_entry=Max("entry_date"),
             last_payment=Max("entry_date", filter=Q(entry_type=LedgerEntryType.PAYMENT)),
         )
@@ -287,19 +315,49 @@ def outstanding_by_customer(
     if customer_id is not None:
         entries = entries.filter(customer_id=customer_id)
     rows = entries.order_by("customer_id", "entry_date", "id").values_list(
-        "customer_id", "entry_date", "debit", "credit"
+        "customer_id", "entry_date", "entry_type", "order_id", "invoice_id", "debit", "credit"
     )
-    for customer_id, entry_date, debit, credit in rows:
+
+    def key(entry_type: str, order_id: int | None, invoice_id: int | None) -> tuple | None:
+        """What a charge or its reversal refers to: an order's work, or a bill."""
+        if entry_type == LedgerEntryType.INVOICE or entry_type == LedgerEntryType.INVOICE_CANCEL:
+            return ("invoice", invoice_id) if invoice_id else None
+        if entry_type in (
+            LedgerEntryType.ORDER_CHARGE,
+            LedgerEntryType.IMPORTED_WORK,
+            LedgerEntryType.WORK_BILLED,
+        ):
+            return ("order", order_id) if order_id else None
+        return None
+
+    reversals: list[tuple[int, tuple, Decimal]] = []
+    for customer_id, entry_date, entry_type, order_id, invoice_id, debit, credit in rows:
         if debit:
-            debits[customer_id].append([entry_date, debit])
+            debits[customer_id].append([entry_date, debit, key(entry_type, order_id, invoice_id)])
         if credit:
-            credits[customer_id] += credit
+            ref = key(entry_type, order_id, invoice_id)
+            if entry_type in REVERSAL_TYPES and ref is not None:
+                # Undoes its own charge (keeps that charge's date from being aged wrongly).
+                reversals.append((customer_id, ref, credit))
+            else:
+                credits[customer_id] += credit
+    for customer_id, ref, amount in reversals:
+        for item in debits[customer_id]:
+            if amount <= 0:
+                break
+            if item[2] == ref and item[1] > 0:
+                taken = min(item[1], amount)
+                item[1] -= taken
+                amount -= taken
+        credits[customer_id] += amount  # anything left over counts as an ordinary credit
 
     result: dict[int, Outstanding] = {}
     for customer_id in set(debits) | set(credits):
         remaining_credit = credits[customer_id]
         open_items = []
-        for entry_date, amount in debits[customer_id]:
+        for entry_date, amount, _ref in debits[customer_id]:
+            if amount <= 0:
+                continue
             applied = min(amount, remaining_credit)
             remaining_credit -= applied
             if amount - applied > 0:

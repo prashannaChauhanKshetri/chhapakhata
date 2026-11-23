@@ -439,6 +439,10 @@ def cancel_invoice(*, invoice: Invoice, user: Any, reason: str, request: Any = N
             f"{invoice.invoice_no} cancelled"[:255],
             created_by=user,
         )
+    # Bills made before confirmed orders counted on the account moved nothing; their
+    # orders go back on the account here (for newer bills this changes nothing).
+    for order in invoice.orders.all():
+        sync_order_charge(order, user, why=f"bill {invoice.invoice_no} cancelled")
     log_activity(user, "invoice.cancelled", invoice, message=reason, request=request)
     return invoice
 
