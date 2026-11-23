@@ -1,0 +1,84 @@
+/* The dashboard reads like the shop's day book: one strip of today's figures,
+   then the work and money lists as plain tables. */
+
+.today {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  background: var(--ck-surface);
+  border: 1px solid var(--ck-border);
+  border-radius: var(--mantine-radius-lg);
+  overflow: hidden;
+}
+
+.figure {
+  display: block;
+  padding: 14px var(--ck-card-pad);
+  color: inherit;
+  text-decoration: none;
+  border-right: 1px solid var(--ck-border);
+  margin-right: -1px;
+  border-bottom: 1px solid var(--ck-border);
+  margin-bottom: -1px;
+
+  &[href]:hover {
+    background: var(--ck-bg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mantine-color-orange-6);
+    outline-offset: -2px;
+  }
+}
+
+.label {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ck-text-muted);
+}
+
+.value {
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  color: var(--ck-text);
+}
+
+.sub {
+  margin-top: 2px;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--ck-text-muted);
+}
+
+/* Production: stage, then how many jobs are in it. */
+.stage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-sm);
+  padding: 9px var(--ck-card-pad);
+  color: inherit;
+  text-decoration: none;
+
+  & + & {
+    border-top: 1px solid var(--ck-border);
+  }
+
+  & strong {
+    font-variant-numeric: tabular-nums;
+    font-size: var(--mantine-font-size-md);
+  }
+}
+
+@mixin smaller-than $mantine-breakpoint-xs {
+  .today {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .value {
+    font-size: 20px;
+  }
+}

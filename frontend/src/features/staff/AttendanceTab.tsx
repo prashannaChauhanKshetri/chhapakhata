@@ -1,10 +1,8 @@
 import {
   ActionIcon,
-  Badge,
   Button,
   Card,
   Group,
-  ScrollArea,
   SegmentedControl,
   Stack,
   Text,
@@ -17,14 +15,12 @@ import {
   IconLock,
 } from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
 import { api, unwrap } from '@/api/client';
 import { apiGet } from '@/api/http';
-import type { components } from '@/api/schema';
 import type { DateConversion, DayRegister, DayRow, DayStatus } from '@/api/types';
 import { QueryError } from '@/components/QueryError';
 import { notifyError } from '@/lib/forms';
@@ -32,9 +28,8 @@ import { formatDate, todayISO } from '@/lib/format';
 
 import { OrderDateField } from '../orders/OrderDateField';
 import { openAttendanceCalendar } from './AttendanceCalendar';
+import { AttendanceRegister } from './AttendanceRegister';
 import classes from './AttendanceTab.module.css';
-
-type MonthRegister = components['schemas']['MonthRegister'];
 
 const WEEKDAY_NAMES = [
   'Sunday',
@@ -45,31 +40,6 @@ const WEEKDAY_NAMES = [
   'Friday',
   'Saturday',
 ];
-const WEEKDAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-/** What a box in the register shows. */
-const LETTER: Record<string, string> = {
-  present: 'P',
-  absent: 'A',
-  worked: 'W',
-  settled: '·',
-  off: '',
-  not_working: '',
-};
-const STATUS_NAME: Record<string, string> = {
-  present: 'Present',
-  absent: 'Absent',
-  worked: 'Worked',
-  off: 'Off',
-  settled: 'Before the opening balance',
-  not_working: 'Not working here',
-};
-/** A tap switches between the two states a day can have. */
-const NEXT: Record<string, DayStatus> = {
-  present: 'absent',
-  absent: 'present',
-  off: 'worked',
-  worked: 'off',
-};
 
 function shiftDay(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00`);
@@ -78,15 +48,11 @@ function shiftDay(iso: string, days: number): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-const monthParam = (m: { year: number; month: number }) =>
-  `${m.year}-${String(m.month).padStart(2, '0')}`;
-
 /** Mark one day for everyone at the top; see and correct the whole month below. */
 export function AttendanceTab() {
   const { t } = useTranslation();
   const client = useQueryClient();
   const [day, setDay] = useState(todayISO());
-  const [month, setMonth] = useState<string | null>(null); // null: this month
   const [saving, setSaving] = useState<string | null>(null);
 
   const dayKey = ['staff', 'attendance', day];
@@ -99,13 +65,6 @@ export function AttendanceTab() {
     queryFn: () => apiGet<DateConversion>('/api/v1/utils/date/', { ad: day }),
     staleTime: Infinity,
   });
-  const registerKey = ['staff', 'register', month];
-  const { data: register } = useQuery({
-    queryKey: registerKey,
-    queryFn: () =>
-      apiGet<MonthRegister>('/api/v1/attendance/month/', month ? { month } : undefined),
-  });
-
   const save = async (staffId: number, date: string, status: DayStatus) => {
     setSaving(`${staffId}:${date}`);
     try {
@@ -130,37 +89,6 @@ export function AttendanceTab() {
     );
     void save(row.staff.id, day, status);
   };
-
-  const markCell = (rowIndex: number, dayIndex: number) => {
-    if (!register) return;
-    const row = register.rows[rowIndex];
-    const status = NEXT[row.cells[dayIndex].status];
-    if (!status) return;
-    client.setQueryData<MonthRegister>(
-      registerKey,
-      (old) =>
-        old && {
-          ...old,
-          rows: old.rows.map((r, i) =>
-            i === rowIndex
-              ? { ...r, cells: r.cells.map((c, j) => (j === dayIndex ? { ...c, status } : c)) }
-              : r,
-          ),
-        },
-    );
-    void save(row.staff.id, register.days[dayIndex].date, status);
-  };
-
-  // Open the register at today's column (late in the month it is off to the right).
-  const registerView = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const view = registerView.current;
-    const todayHead = view?.querySelector<HTMLElement>('[data-today]');
-    const nameHead = view?.querySelector<HTMLElement>('thead th');
-    if (view && todayHead && nameHead) {
-      view.scrollLeft = Math.max(todayHead.offsetLeft - nameHead.offsetWidth - 4 * 30, 0);
-    }
-  }, [register?.label]);
 
   const holiday = data?.is_holiday ?? false;
   const rows = data?.rows ?? [];
@@ -329,143 +257,7 @@ export function AttendanceTab() {
         </Card>
       )}
 
-      {/* -- The month's register --------------------------------------------------- */}
-      {register && register.rows.length > 0 && (
-        <Card padding={0}>
-          <Group justify="space-between" p="var(--ck-card-pad)" pb="sm" gap="sm">
-            <div>
-              <Text fw={600}>{t('Attendance register')}</Text>
-              <Text size="xs" c="dimmed">
-                {t('Tap a box to change it. Tap a date to open that day above.')}
-              </Text>
-            </div>
-            <Group gap={6} wrap="nowrap">
-              <ActionIcon
-                variant="default"
-                size={32}
-                onClick={() => setMonth(monthParam(register.previous))}
-                aria-label={t('Previous month')}
-              >
-                <IconChevronLeft size={16} />
-              </ActionIcon>
-              <Text fw={600} miw={110} ta="center">
-                {register.label}
-              </Text>
-              <ActionIcon
-                variant="default"
-                size={32}
-                disabled={!register.next}
-                onClick={() => register.next && setMonth(monthParam(register.next))}
-                aria-label={t('Next month')}
-              >
-                <IconChevronRight size={16} />
-              </ActionIcon>
-            </Group>
-          </Group>
-          <ScrollArea type="auto" scrollbarSize={8} offsetScrollbars="x" viewportRef={registerView}>
-            <table className={classes.register}>
-              <thead>
-                <tr>
-                  <th className={classes.name}>{t('Staff')}</th>
-                  {register.days.map((d) => (
-                    <th
-                      key={d.date}
-                      className={clsx(
-                        classes.dayHead,
-                        d.is_holiday && classes.satHead,
-                        d.date === register.today && classes.todayHead,
-                        d.date === day && classes.picked,
-                      )}
-                      data-today={d.date === register.today || undefined}
-                      onClick={() => d.date <= register.today && setDay(d.date)}
-                      title={formatDate(d.date)}
-                    >
-                      {d.bs_day}
-                      <small>{WEEKDAY_LETTERS[d.weekday]}</small>
-                    </th>
-                  ))}
-                  <th className={classes.total} title={t('Days absent')}>
-                    A
-                  </th>
-                  <th className={classes.total} title={t('Saturdays worked')}>
-                    W
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {register.rows.map((row, i) => (
-                  <tr key={row.staff.id}>
-                    <td className={classes.name}>
-                      <Text size="sm" fw={500} truncate>
-                        {row.staff.name}
-                      </Text>
-                      {row.paid && (
-                        <Badge size="xs" color="green" variant="light">
-                          {t('Paid')}
-                        </Badge>
-                      )}
-                    </td>
-                    {row.cells.map((c, j) => {
-                      const d = register.days[j];
-                      const future = d.date > register.today;
-                      return (
-                        <td key={d.date} className={clsx(d.is_holiday && classes.satCol)}>
-                          <button
-                            type="button"
-                            className={clsx(classes.cell, !future && classes[c.status])}
-                            disabled={!c.editable || saving === `${row.staff.id}:${d.date}`}
-                            onClick={() => markCell(i, j)}
-                            aria-label={`${row.staff.name}, ${d.bs_day} ${register.label}: ${t(future ? 'Still to come' : STATUS_NAME[c.status])}`}
-                          >
-                            {future ? '' : LETTER[c.status]}
-                          </button>
-                        </td>
-                      );
-                    })}
-                    <td
-                      className={classes.total}
-                      style={{ color: row.absent ? 'var(--mantine-color-red-7)' : undefined }}
-                    >
-                      {row.absent || '–'}
-                    </td>
-                    <td
-                      className={classes.total}
-                      style={{ color: row.worked ? 'var(--mantine-color-blue-7)' : undefined }}
-                    >
-                      {row.worked || '–'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </ScrollArea>
-          <div
-            className={classes.legend}
-            style={{ padding: 'var(--mantine-spacing-sm) var(--ck-card-pad) var(--ck-card-pad)' }}
-          >
-            <span>
-              <b className={classes.present}>P</b>
-              {t('Present')}
-            </span>
-            <span>
-              <b className={classes.absent}>A</b>
-              {t('Absent')}
-            </span>
-            <span>
-              <b className={classes.satCol} />
-              {t('Saturday off')}
-            </span>
-            <span>
-              <b className={classes.worked}>W</b>
-              {t('Worked on Saturday')}
-            </span>
-            <span>
-              <b className={classes.settled}>·</b>
-              {t('Before the opening balance')}
-            </span>
-          </div>
-        </Card>
-      )}
+      <AttendanceRegister pickedDay={day} onPickDay={setDay} />
     </Stack>
   );
 }
