@@ -5,6 +5,7 @@ from rest_framework import serializers
 from apps.billing.models import PaymentMode
 from apps.core.dates import bs_string
 
+from . import services
 from .models import SalaryPayment, Staff, StaffAdvance
 from .services import DAY_STATUSES
 
@@ -12,6 +13,7 @@ from .services import DAY_STATUSES
 class StaffSerializer(serializers.ModelSerializer):
     joined_on_bs = serializers.SerializerMethodField()
     left_on_bs = serializers.SerializerMethodField()
+    balance_label = serializers.SerializerMethodField()
 
     class Meta:
         model = Staff
@@ -22,6 +24,10 @@ class StaffSerializer(serializers.ModelSerializer):
             "job_title",
             "monthly_salary",
             "saturday_pay",
+            "balance_year",
+            "balance_month",
+            "balance_label",
+            "opening_balance",
             "joined_on",
             "joined_on_bs",
             "left_on",
@@ -36,12 +42,41 @@ class StaffSerializer(serializers.ModelSerializer):
     def get_left_on_bs(self, obj: Staff) -> str | None:
         return bs_string(obj.left_on)
 
+    def get_balance_label(self, obj: Staff) -> str:
+        return services.balance_label(obj)
+
     def validate(self, attrs):
         joined = attrs.get("joined_on", getattr(self.instance, "joined_on", None))
         left = attrs.get("left_on", getattr(self.instance, "left_on", None))
         active = attrs.get("is_active", getattr(self.instance, "is_active", True))
         if joined and left and left < joined:
             raise serializers.ValidationError({"left_on": "The last day cannot be before joining."})
+        year = attrs.get("balance_year", getattr(self.instance, "balance_year", None))
+        month = attrs.get("balance_month", getattr(self.instance, "balance_month", None))
+        amount = attrs.get("opening_balance", getattr(self.instance, "opening_balance", 0))
+        if bool(year) != bool(month):
+            raise serializers.ValidationError(
+                {"balance_month": "Choose the month the balance is up to."}
+            )
+        if year:
+            services.month_bounds(year, month)
+            if (year, month) > services.month_of(services.local_today()):
+                raise serializers.ValidationError(
+                    {"balance_month": "The balance cannot be up to a month still to come."}
+                )
+        elif amount:
+            raise serializers.ValidationError(
+                {"balance_month": "Choose the month the balance is up to."}
+            )
+        if self.instance is not None and (
+            (year, month, amount)
+            != (
+                self.instance.balance_year,
+                self.instance.balance_month,
+                self.instance.opening_balance,
+            )
+        ):
+            services.check_balance_change(self.instance, year, month)
         if not active and not left:
             # Without it, a worker switched off would still be counted in every month.
             raise serializers.ValidationError(
@@ -153,6 +188,8 @@ class MonthSheetSerializer(serializers.Serializer):
     earned = serializers.DecimalField(max_digits=10, decimal_places=2)
     advances = StaffAdvanceSerializer(many=True)
     advances_total = serializers.DecimalField(max_digits=10, decimal_places=2)
+    opening_balance = serializers.DecimalField(max_digits=10, decimal_places=2)
+    opening_label = serializers.CharField()
     net = serializers.DecimalField(max_digits=10, decimal_places=2)
     carry_forward = serializers.DecimalField(max_digits=10, decimal_places=2)
     notes = serializers.ListField(child=serializers.CharField())
@@ -180,7 +217,7 @@ class MonthDaySerializer(serializers.Serializer):
     bs_day = serializers.IntegerField()
     weekday = serializers.IntegerField(help_text="0 = Sunday … 6 = Saturday")
     is_holiday = serializers.BooleanField()
-    status = serializers.ChoiceField(choices=[*DAY_STATUSES, "not_working"])
+    status = serializers.ChoiceField(choices=[*DAY_STATUSES, "not_working", "settled"])
     editable = serializers.BooleanField()
 
 
@@ -195,6 +232,11 @@ class StaffMonthSerializer(serializers.Serializer):
     next = MonthRefSerializer(allow_null=True)
     paid = serializers.BooleanField()
     days = MonthDaySerializer(many=True)
+
+
+class MonthRangeSerializer(MonthRefSerializer):
+    start = serializers.DateField()
+    end = serializers.DateField()
 
 
 class PayrollSerializer(serializers.Serializer):

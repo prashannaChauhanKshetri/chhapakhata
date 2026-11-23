@@ -31,6 +31,7 @@ test('owner adds a worker, marks a day, gives an advance, pays and undoes the sa
 
   // Salary: the mark shows; give an advance and pay.
   await owner.getByRole('tab', { name: 'Salary' }).click();
+  await expect(owner.getByText('Salary month (BS)')).toBeVisible();
   const row = owner.getByRole('row').filter({ hasText: name }).first();
   await expect(row.getByText('Not paid')).toBeVisible();
   await row.getByRole('button', { name: `Actions for ${name}` }).click();
@@ -82,4 +83,36 @@ test('front desk cannot open staff and salary', async ({ browser }) => {
   await expect(desk.getByRole('link', { name: 'Staff & salary' })).toHaveCount(0);
   await desk.goto('/staff/salary');
   await expect(desk.getByText('You do not have access to this page')).toBeVisible();
+});
+
+test('a worker already here starts from a balance up to last month', async ({ browser }) => {
+  const name = `Sita ${Date.now() % 100000}`;
+  const owner = await signIn(browser, 'owner');
+  await owner.goto('/staff/list');
+  await owner.getByRole('button', { name: 'Add staff' }).click();
+  const form = owner.getByRole('dialog');
+  await form.getByText('Already working here').click();
+  await expect(form.getByRole('textbox', { name: 'Joined on' })).toHaveCount(0);
+  await form.getByRole('textbox', { name: 'Name' }).fill(name);
+  await form.getByRole('textbox', { name: 'Monthly salary (Rs)' }).fill('12000');
+  const month = await form.getByRole('combobox', { name: 'Up to the end of' }).inputValue();
+  expect(month).toMatch(/^[A-Z][a-z]+ \d{4}$/); // last month, e.g. "Kartik 2083"
+  await form.getByRole('textbox', { name: 'Amount (Rs)' }).fill('2000');
+  await form.getByText('Worker owes the shop').click();
+  await form.getByRole('button', { name: 'Add staff' }).click();
+  await expect(form).toBeHidden();
+  await expect(
+    owner.getByRole('row').filter({ hasText: name }).getByText(`owes the shop, to ${month}`),
+  ).toBeVisible();
+
+  // This month: the old advance comes off; last month: nothing to pay.
+  await owner.getByRole('tab', { name: 'Salary' }).click();
+  await expect(owner.getByText('Salary month (BS)')).toBeVisible();
+  const row = owner.getByRole('row').filter({ hasText: name }).first();
+  await row.click();
+  await expect(owner.getByText(`Balance up to ${month}`)).toBeVisible();
+  await expect(owner.getByText('Owed by the worker from before (old advance)')).toBeVisible();
+  await owner.getByRole('button', { name: 'Previous month' }).click();
+  await expect(owner.getByText(month, { exact: true })).toBeVisible();
+  await expect(owner.getByRole('row').filter({ hasText: name })).toHaveCount(0);
 });

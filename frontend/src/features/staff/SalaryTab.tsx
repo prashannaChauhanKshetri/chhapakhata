@@ -98,6 +98,16 @@ function Breakdown({
           `+ ${formatAmount(sheet.holiday_pay)}`,
           `${sheet.worked_dates.map((d) => d.bs).join(', ')} · ${t('{{rate}} each', { rate: formatNPR(sheet.holiday_rate) })}`,
         )}
+      {toNumber(sheet.opening_balance) !== 0 &&
+        line(
+          t('Balance up to {{month}}', { month: sheet.opening_label }),
+          toNumber(sheet.opening_balance) > 0
+            ? `+ ${formatAmount(sheet.opening_balance)}`
+            : `− ${formatAmount(Math.abs(toNumber(sheet.opening_balance)))}`,
+          toNumber(sheet.opening_balance) > 0
+            ? t('Owed to the worker from before')
+            : t('Owed by the worker from before (old advance)'),
+        )}
       {sheet.advances.map((a) => (
         <Group key={a.id} justify="space-between" wrap="nowrap" gap="md">
           <div style={{ minWidth: 0 }}>

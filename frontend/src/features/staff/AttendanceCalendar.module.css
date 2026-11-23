@@ -100,6 +100,17 @@
   color: var(--mantine-color-slate-4);
 }
 
+/* Covered by the opening balance entered for the worker. */
+.settled {
+  background: var(--mantine-color-slate-0);
+  border-style: dashed;
+  color: var(--mantine-color-slate-5);
+
+  & .mark {
+    color: var(--mantine-color-slate-5);
+  }
+}
+
 /* A paid month: shown as it was, but not changeable. */
 .locked {
   opacity: 0.75;

@@ -8,6 +8,7 @@ import type { Staff } from '@/api/types';
 import { DataTable } from '@/components/DataTable';
 import { Money } from '@/components/Money';
 import { QueryError } from '@/components/QueryError';
+import { toNumber } from '@/lib/format';
 
 import { openStaffForm } from './StaffForms';
 
@@ -80,6 +81,29 @@ export function StaffListTab() {
               ) : (
                 <Text size="sm" c="dimmed">
                   {t('One day')}
+                </Text>
+              ),
+          },
+          {
+            accessor: 'opening_balance',
+            title: t('Balance'),
+            render: (s) =>
+              s.balance_label ? (
+                <div>
+                  <Money
+                    value={Math.abs(toNumber(s.opening_balance))}
+                    size="sm"
+                    c={toNumber(s.opening_balance) < 0 ? 'red.7' : undefined}
+                  />
+                  <Text size="xs" c="dimmed">
+                    {toNumber(s.opening_balance) < 0
+                      ? t('owes the shop, to {{month}}', { month: s.balance_label })
+                      : t('owed to them, to {{month}}', { month: s.balance_label })}
+                  </Text>
+                </div>
+              ) : (
+                <Text size="sm" c="dimmed">
+                  —
                 </Text>
               ),
           },

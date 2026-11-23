@@ -62,6 +62,15 @@
       <td class="num">+ {{ payment.holiday_pay|amount }}</td>
     </tr>
     {% endif %}
+    {% if payment.opening_balance %}
+    <tr>
+      <td>Balance up to {{ sheet.opening_label }}
+        <div class="days">{% if payment.opening_balance > 0 %}Owed to {{ payment.staff.name }} from before{% else %}Owed by {{ payment.staff.name }} from before (old advance){% endif %}</div>
+      </td>
+      <td class="num"></td>
+      <td class="num">{% if payment.opening_balance > 0 %}+ {{ payment.opening_balance|amount }}{% else %}− {{ payment.opening_balance|amount|cut:"-" }}{% endif %}</td>
+    </tr>
+    {% endif %}
     {% for a in sheet.advances %}
     <tr>
       <td>Advance on {{ a.date|bs }}{% if a.note %}<div class="days">{{ a.note }}</div>{% endif %}</td>
@@ -83,6 +92,7 @@
   </div>
   <table class="totals">
     <tr><td>Earned</td><td>{{ payment.earned|amount }}</td></tr>
+    {% if payment.opening_balance %}<tr><td>Balance up to {{ sheet.opening_label }}</td><td>{% if payment.opening_balance > 0 %}+ {{ payment.opening_balance|amount }}{% else %}− {{ payment.opening_balance|amount|cut:"-" }}{% endif %}</td></tr>{% endif %}
     {% if payment.advances %}<tr><td>Advances</td><td>− {{ payment.advances|amount }}</td></tr>{% endif %}
     <tr class="gap"><td></td><td></td></tr>
     <tr class="due"><td>Net paid</td><td>Rs. {{ payment.net_paid|amount }}</td></tr>

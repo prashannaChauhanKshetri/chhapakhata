@@ -171,7 +171,11 @@ export function AttendanceTab() {
                 </Group>
                 <Group gap={6} wrap="nowrap">
                   {row.locked && (
-                    <Tooltip label={t('This month is paid. Undo the payment to change it.')}>
+                    <Tooltip
+                      label={t(
+                        'Locked: this month is paid, or the day is covered by the opening balance.',
+                      )}
+                    >
                       <IconLock size={16} color="var(--mantine-color-slate-5)" />
                     </Tooltip>
                   )}

@@ -315,3 +315,90 @@ def test_days_before_joining_and_still_to_come_are_not_editable(api, owner):
     this_month = api(owner).get(f"/api/v1/staff/{newcomer.pk}/days/").json()
     today = local_today().isoformat()
     assert all(not d["editable"] for d in this_month["days"] if d["date"] > today)
+
+
+# -- Balance up to a month, entered when the shop starts using the app ---------------
+
+
+def with_balance(staff, amount, year=2083, month=3):  # up to Asar 2083
+    staff.balance_year, staff.balance_month, staff.opening_balance = year, month, D(amount)
+    staff.save()
+    return staff
+
+
+def test_a_balance_owed_to_the_worker_is_paid_in_the_next_month(ram, owner):
+    with_balance(ram, "5000")
+    s = sheet(ram)
+    assert (s.opening_balance, s.opening_label) == (D("5000"), "Asar 2083")
+    assert s.net == D("20500")  # 15,500 + 5,000
+    payment = services.pay_salary(
+        staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+    )
+    assert (payment.opening_balance, payment.net_paid) == (D("5000"), D("20500"))
+    # Only once: the month after has no balance.
+    assert services.month_sheet(ram, 2083, 5).opening_balance == 0
+
+
+def test_an_old_advance_owed_by_the_worker_is_taken_off(ram, owner):
+    with_balance(ram, "-2000")
+    assert sheet(ram).net == D("13500")
+    with_balance(ram, "-20000")
+    s = sheet(ram)
+    assert (s.net, s.carry_forward) == (D("0"), D("4500"))
+
+
+def test_months_up_to_the_balance_are_settled_and_locked(api, ram, owner):
+    with_balance(ram, "0", year=2083, month=4)  # up to Shrawan: counting starts in Bhadra
+    assert ram not in services.staff_for_month(YEAR, MONTH)
+    assert ram in services.staff_for_month(2083, 5)
+    with pytest.raises(ValidationError, match="settled by"):
+        mark(ram, TUESDAY, "absent", owner)
+    with pytest.raises(ValidationError, match="settled by"):
+        services.give_advance(staff=ram, day=TUESDAY, amount=D("100"), note="", user=owner)
+    days = api(owner).get(f"/api/v1/staff/{ram.pk}/days/", {"month": "2083-04"}).json()["days"]
+    assert {d["status"] for d in days} == {"settled"}
+    assert not any(d["editable"] for d in days)
+
+
+def test_the_balance_is_set_through_the_staff_form(api, owner, ram):
+    client = api(owner)
+    response = client.patch(
+        f"/api/v1/staff/{ram.pk}/",
+        {"balance_year": 2083, "balance_month": 3, "opening_balance": "-1500"},
+        format="json",
+    )
+    assert response.status_code == 200, response.content
+    assert response.json()["balance_label"] == "Asar 2083"
+    month = client.get("/api/v1/salary/", {"month": "2083-04"}).json()["rows"][0]
+    assert (month["opening_balance"], month["net"]) == ("-1500.00", "14000.00")
+
+    # An amount needs its month; a month still to come is refused.
+    bad = client.patch(
+        f"/api/v1/staff/{ram.pk}/",
+        {"balance_year": None, "balance_month": None, "opening_balance": "100"},
+        format="json",
+    )
+    assert bad.status_code == 400
+    year, month = services.next_month(*services.month_of(local_today()))
+    bad = client.patch(
+        f"/api/v1/staff/{ram.pk}/", {"balance_year": year, "balance_month": month}, format="json"
+    )
+    assert bad.status_code == 400
+    months = client.get("/api/v1/salary/months/").json()
+    assert len(months) == 12 and months[0]["label"].endswith(
+        str(services.month_of(local_today())[0])
+    )
+
+
+def test_the_balance_cannot_change_once_a_month_after_it_is_paid(api, owner, ram):
+    with_balance(ram, "5000")
+    services.pay_salary(
+        staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+    )
+    response = api(owner).patch(
+        f"/api/v1/staff/{ram.pk}/", {"opening_balance": "6000"}, format="json"
+    )
+    assert response.status_code == 400
+    assert "already paid" in str(response.json())
+    # Other details still change.
+    assert api(owner).patch(f"/api/v1/staff/{ram.pk}/", {"phone": "9800000000"}).status_code == 200

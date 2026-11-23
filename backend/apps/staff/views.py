@@ -21,6 +21,7 @@ from .models import SalaryPayment, Staff, StaffAdvance
 from .serializers import (
     DayRegisterSerializer,
     MarkAttendanceSerializer,
+    MonthRangeSerializer,
     PayrollSerializer,
     PaySalarySerializer,
     SalaryPaymentSerializer,
@@ -206,6 +207,28 @@ class SalaryView(APIView):
             "total_paid": sum((r.net for r in rows if r.payment), Decimal("0")),
         }
         return Response(PayrollSerializer(data).data)
+
+
+class SalaryMonthsView(APIView):
+    """This BS month and the 11 before it, for choosing a balance month."""
+
+    required_perms = Perm.STAFF_MANAGE
+
+    @extend_schema(responses=MonthRangeSerializer(many=True))
+    def get(self, request):
+        months = []
+        for y, m in services.recent_months():
+            start, end = services.month_bounds(y, m)
+            months.append(
+                {
+                    "year": y,
+                    "month": m,
+                    "label": services.month_label(y, m),
+                    "start": start,
+                    "end": end,
+                }
+            )
+        return Response(MonthRangeSerializer(months, many=True).data)
 
 
 class PaySalaryView(APIView):

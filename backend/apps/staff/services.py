@@ -61,6 +61,62 @@ def employed_on(staff: Staff, day: dt.date) -> bool:
     return staff.joined_on <= day and (staff.left_on is None or day <= staff.left_on)
 
 
+def balance_label(staff: Staff) -> str:
+    if not (staff.balance_year and staff.balance_month):
+        return ""
+    return month_label(staff.balance_year, staff.balance_month)
+
+
+def settled_until(staff: Staff) -> dt.date | None:
+    """The last day covered by the worker's opening balance, if one was entered."""
+    if not (staff.balance_year and staff.balance_month):
+        return None
+    return month_bounds(staff.balance_year, staff.balance_month)[1]
+
+
+def counted_on(staff: Staff, day: dt.date) -> bool:
+    """Working here that day, and the day is not already settled by the opening balance."""
+    settled = settled_until(staff)
+    return employed_on(staff, day) and (settled is None or day > settled)
+
+
+def opening_month(staff: Staff) -> tuple[int, int] | None:
+    """The BS month in which the opening balance is settled: the one after it."""
+    if not (staff.balance_year and staff.balance_month):
+        return None
+    return next_month(staff.balance_year, staff.balance_month)
+
+
+def recent_months(count: int = 12) -> list[tuple[int, int]]:
+    """This BS month and the ones before it, newest first (choices for the balance month)."""
+    year, month = month_of(local_today())
+    months = []
+    for _ in range(count):
+        months.append((year, month))
+        year, month = previous_month(year, month)
+    return months
+
+
+def check_balance_change(staff: Staff, year: int | None, month: int | None) -> None:
+    """A balance cannot move once a month it affects is paid."""
+    old = (staff.balance_year, staff.balance_month) if staff.balance_year else None
+    new = (year, month) if year else None
+    affected = [m for m in (old, new) if m]
+    if not affected:
+        return
+    earliest = min(affected)
+    paid = SalaryPayment.objects.filter(staff=staff).filter(
+        Q(bs_year__gt=earliest[0]) | Q(bs_year=earliest[0], bs_month__gt=earliest[1])
+    )
+    if paid.exists():
+        raise ValidationError(
+            {
+                "opening_balance": "A month after the balance is already paid. "
+                "Undo that payment first to change the balance."
+            }
+        )
+
+
 # -- The month's salary ---------------------------------------------------------------
 
 
@@ -90,6 +146,10 @@ class MonthSheet:
     net: Decimal
     carry_forward: Decimal
     payment: SalaryPayment | None = None
+    #: Brought in from before the app (+ the shop owed it, − the worker owed it).
+    opening_balance: Decimal = ZERO
+    #: The month the opening balance covers, e.g. "Kartik 2083".
+    opening_label: str = ""
     #: Days of the month still to come (their attendance is not known yet).
     days_ahead: int = 0
     notes: list[str] = field(default_factory=list)
@@ -102,7 +162,8 @@ class MonthSheet:
 def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
     start, end = month_bounds(bs_year, bs_month)
     days = (end - start).days + 1
-    first = max(start, staff.joined_on)
+    settled = settled_until(staff)
+    first = max(start, staff.joined_on, settled + dt.timedelta(days=1) if settled else start)
     last = min(end, staff.left_on) if staff.left_on else end
     employed = max((last - first).days + 1, 0)
 
@@ -145,6 +206,8 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
             net=payment.net_paid,
             carry_forward=payment.carried_forward,
             payment=payment,
+            opening_balance=payment.opening_balance,
+            opening_label=balance_label(staff) if payment.opening_balance else "",
         )
 
     salary = staff.monthly_salary
@@ -159,7 +222,8 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
         holiday_rate = day_rate
         extra = q2(salary * len(worked) / days)
     earned = base - deduction + extra
-    net = earned - advances_total
+    opening = staff.opening_balance if opening_month(staff) == (bs_year, bs_month) else ZERO
+    net = earned - advances_total + opening
     carry = ZERO
     if net < 0:
         carry, net = -net, ZERO
@@ -185,6 +249,8 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
         net=net,
         carry_forward=carry,
         days_ahead=days_ahead,
+        opening_balance=opening,
+        opening_label=balance_label(staff) if opening else "",
     )
     if carry:
         sheet.notes.append(
@@ -199,7 +265,13 @@ def staff_for_month(bs_year: int, bs_month: int) -> list[Staff]:
     start, end = month_bounds(bs_year, bs_month)
     paid = SalaryPayment.objects.filter(bs_year=bs_year, bs_month=bs_month).values("staff")
     working = Q(joined_on__lte=end) & (Q(left_on__isnull=True) | Q(left_on__gte=start))
-    return list(Staff.objects.filter(working | Q(pk__in=paid)).order_by("name"))
+    paid_ids = set(paid.values_list("staff", flat=True))
+    return [
+        staff
+        for staff in Staff.objects.filter(working | Q(pk__in=paid)).order_by("name")
+        # A month wholly covered by the opening balance has nothing to pay.
+        if staff.pk in paid_ids or not ((settled := settled_until(staff)) and settled >= end)
+    ]
 
 
 def payroll(bs_year: int, bs_month: int) -> list[MonthSheet]:
@@ -230,11 +302,22 @@ def _not_working(staff: Staff, day: dt.date) -> str:
     return f"{staff.name} was not working here on {bs_string(day)} BS."
 
 
+def _ensure_counted(staff: Staff, day: dt.date) -> None:
+    if not employed_on(staff, day):
+        raise ValidationError({"date": _not_working(staff, day)})
+    if not counted_on(staff, day):
+        raise ValidationError(
+            {
+                "date": f"{bs_string(day)} BS is settled by {staff.name}'s balance up to "
+                f"{balance_label(staff)}. Change the balance instead."
+            }
+        )
+
+
 def _ensure_working(staff: Staff, day: dt.date) -> None:
     if day > local_today():
         raise ValidationError({"date": "Attendance cannot be marked for a day still to come."})
-    if not employed_on(staff, day):
-        raise ValidationError({"date": _not_working(staff, day)})
+    _ensure_counted(staff, day)
 
 
 # -- Attendance -----------------------------------------------------------------------
@@ -299,6 +382,7 @@ def month_days(staff: Staff, bs_year: int, bs_month: int) -> list[dict[str, Any]
     day = start
     while day <= end:
         working = employed_on(staff, day)
+        counted = counted_on(staff, day)
         days.append(
             {
                 "date": day,
@@ -306,8 +390,12 @@ def month_days(staff: Staff, bs_year: int, bs_month: int) -> list[dict[str, Any]
                 # Nepali calendars start the week on Sunday.
                 "weekday": (day.weekday() + 1) % 7,
                 "is_holiday": is_holiday(day),
-                "status": day_status(day, marks.get(day)) if working else "not_working",
-                "editable": working and day <= today and not paid,
+                "status": (
+                    day_status(day, marks.get(day))
+                    if counted
+                    else ("settled" if working else "not_working")
+                ),
+                "editable": counted and day <= today and not paid,
             }
         )
         day += dt.timedelta(days=1)
@@ -331,7 +419,11 @@ def day_register(day: dt.date) -> list[dict[str, Any]]:
         )
     )
     return [
-        {"staff": s, "status": day_status(day, marks.get(s.pk)), "locked": s.pk in paid}
+        {
+            "staff": s,
+            "status": day_status(day, marks.get(s.pk)),
+            "locked": s.pk in paid or not counted_on(s, day),
+        }
         for s in staff
     ]
 
@@ -347,8 +439,7 @@ def give_advance(
         raise ValidationError({"amount": "The advance must be more than zero."})
     if day > local_today():
         raise ValidationError({"date": "An advance cannot be dated in the future."})
-    if not employed_on(staff, day):
-        raise ValidationError({"date": _not_working(staff, day)})
+    _ensure_counted(staff, day)
     _ensure_open(staff, day)
     advance = StaffAdvance.objects.create(
         staff=staff, date=day, amount=q2(amount), note=note.strip(), given_by=user
@@ -413,7 +504,7 @@ def pay_salary(
             }
         )
     sheet = month_sheet(staff, bs_year, bs_month)
-    if sheet.days_employed == 0:
+    if sheet.days_employed == 0 and not sheet.opening_balance:
         raise ValidationError(
             {"month": f"{staff.name} did not work here in {month_label(bs_year, bs_month)}."}
         )
@@ -443,6 +534,7 @@ def pay_salary(
         holiday_rate=sheet.holiday_rate,
         earned=sheet.earned,
         advances=sheet.advances_total,
+        opening_balance=sheet.opening_balance,
         net_paid=sheet.net,
         carried_forward=sheet.carry_forward,
         paid_on=paid_on,

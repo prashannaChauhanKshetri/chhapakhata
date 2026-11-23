@@ -8,6 +8,9 @@ export function useMediaTypes() {
     queryKey: ['catalog', 'media-types'],
     queryFn: () => apiGet<MediaType[]>('/api/v1/media-types/'),
     staleTime: 60_000,
+    // A media typed on an order is added to the list when saved; a copy kept for
+    // offline use (e.g. after reopening the app) must not hide it from the next order.
+    refetchOnMount: 'always',
   });
 }
 

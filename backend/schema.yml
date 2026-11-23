@@ -11807,6 +11807,134 @@ paths:
           description: ''
         '204':
           description: No response body
+  /api/v1/salary/months/:
+    get:
+      operationId: salary_months_list
+      description: This BS month and the 11 before it, for choosing a balance month.
+      tags:
+      - salary
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryMonthsListErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MonthRange'
+          description: ''
   /api/v1/salary/pay/:
     post:
       operationId: salary_pay_create
@@ -27238,6 +27366,7 @@ components:
       - 'off'
       - worked
       - not_working
+      - settled
       type: string
       description: |-
         * `present` - present
@@ -27245,6 +27374,28 @@ components:
         * `off` - off
         * `worked` - worked
         * `not_working` - not_working
+        * `settled` - settled
+    MonthRange:
+      type: object
+      properties:
+        year:
+          type: integer
+        month:
+          type: integer
+        label:
+          type: string
+        start:
+          type: string
+          format: date
+        end:
+          type: string
+          format: date
+      required:
+      - end
+      - label
+      - month
+      - start
+      - year
     MonthRef:
       type: object
       properties:
@@ -27317,6 +27468,12 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        opening_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        opening_label:
+          type: string
         net:
           type: string
           format: decimal
@@ -27350,6 +27507,8 @@ components:
       - monthly_salary
       - net
       - notes
+      - opening_balance
+      - opening_label
       - payment
       - staff
       - worked_dates
@@ -32068,6 +32227,22 @@ components:
           nullable: true
           description: 'Extra pay for each Saturday worked. Empty: one day''s pay
             (double).'
+        balance_year:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        balance_month:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        opening_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: 'Up to the balance month: more than 0 the shop owes the worker;
+            less than 0 the worker owes the shop (an old advance).'
         joined_on:
           type: string
           format: date
@@ -34674,6 +34849,13 @@ components:
       - message
       - row
       - sheet
+    SalaryMonthsListErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
     SalaryPayCreateError:
       oneOf:
       - $ref: '#/components/schemas/SalaryPayCreateNonFieldErrorsErrorComponent'
@@ -36140,6 +36322,25 @@ components:
           nullable: true
           description: 'Extra pay for each Saturday worked. Empty: one day''s pay
             (double).'
+        balance_year:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        balance_month:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        balance_label:
+          type: string
+          readOnly: true
+        opening_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: 'Up to the balance month: more than 0 the shop owes the worker;
+            less than 0 the worker owes the shop (an old advance).'
         joined_on:
           type: string
           format: date
@@ -36162,6 +36363,9 @@ components:
         notes:
           type: string
       required:
+      - balance_label
+      - balance_month
+      - balance_year
       - id
       - is_active
       - job_title
@@ -36172,6 +36376,7 @@ components:
       - monthly_salary
       - name
       - notes
+      - opening_balance
       - phone
       - saturday_pay
     StaffAdvance:
@@ -36420,6 +36625,58 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    StaffCreateBalanceMonthErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - balance_month
+          type: string
+          description: '* `balance_month` - balance_month'
+        code:
+          enum:
+          - invalid
+          - max_string_length
+          - max_value
+          - min_value
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_string_length` - max_string_length
+            * `max_value` - max_value
+            * `min_value` - min_value
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffCreateBalanceYearErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - balance_year
+          type: string
+          description: '* `balance_year` - balance_year'
+        code:
+          enum:
+          - invalid
+          - max_string_length
+          - max_value
+          - min_value
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_string_length` - max_string_length
+            * `max_value` - max_value
+            * `min_value` - min_value
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     StaffCreateError:
       oneOf:
       - $ref: '#/components/schemas/StaffCreateNonFieldErrorsErrorComponent'
@@ -36428,6 +36685,9 @@ components:
       - $ref: '#/components/schemas/StaffCreateJobTitleErrorComponent'
       - $ref: '#/components/schemas/StaffCreateMonthlySalaryErrorComponent'
       - $ref: '#/components/schemas/StaffCreateSaturdayPayErrorComponent'
+      - $ref: '#/components/schemas/StaffCreateBalanceYearErrorComponent'
+      - $ref: '#/components/schemas/StaffCreateBalanceMonthErrorComponent'
+      - $ref: '#/components/schemas/StaffCreateOpeningBalanceErrorComponent'
       - $ref: '#/components/schemas/StaffCreateJoinedOnErrorComponent'
       - $ref: '#/components/schemas/StaffCreateLeftOnErrorComponent'
       - $ref: '#/components/schemas/StaffCreateIsActiveErrorComponent'
@@ -36441,6 +36701,9 @@ components:
           job_title: '#/components/schemas/StaffCreateJobTitleErrorComponent'
           monthly_salary: '#/components/schemas/StaffCreateMonthlySalaryErrorComponent'
           saturday_pay: '#/components/schemas/StaffCreateSaturdayPayErrorComponent'
+          balance_year: '#/components/schemas/StaffCreateBalanceYearErrorComponent'
+          balance_month: '#/components/schemas/StaffCreateBalanceMonthErrorComponent'
+          opening_balance: '#/components/schemas/StaffCreateOpeningBalanceErrorComponent'
           joined_on: '#/components/schemas/StaffCreateJoinedOnErrorComponent'
           left_on: '#/components/schemas/StaffCreateLeftOnErrorComponent'
           is_active: '#/components/schemas/StaffCreateIsActiveErrorComponent'
@@ -36666,6 +36929,36 @@ components:
       - attr
       - code
       - detail
+    StaffCreateOpeningBalanceErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - opening_balance
+          type: string
+          description: '* `opening_balance` - opening_balance'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     StaffCreatePhoneErrorComponent:
       type: object
       properties:
@@ -36783,6 +37076,58 @@ components:
       - previous
       - staff
       - year
+    StaffPartialUpdateBalanceMonthErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - balance_month
+          type: string
+          description: '* `balance_month` - balance_month'
+        code:
+          enum:
+          - invalid
+          - max_string_length
+          - max_value
+          - min_value
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_string_length` - max_string_length
+            * `max_value` - max_value
+            * `min_value` - min_value
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffPartialUpdateBalanceYearErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - balance_year
+          type: string
+          description: '* `balance_year` - balance_year'
+        code:
+          enum:
+          - invalid
+          - max_string_length
+          - max_value
+          - min_value
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_string_length` - max_string_length
+            * `max_value` - max_value
+            * `min_value` - min_value
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     StaffPartialUpdateError:
       oneOf:
       - $ref: '#/components/schemas/StaffPartialUpdateNonFieldErrorsErrorComponent'
@@ -36791,6 +37136,9 @@ components:
       - $ref: '#/components/schemas/StaffPartialUpdateJobTitleErrorComponent'
       - $ref: '#/components/schemas/StaffPartialUpdateMonthlySalaryErrorComponent'
       - $ref: '#/components/schemas/StaffPartialUpdateSaturdayPayErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdateBalanceYearErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdateBalanceMonthErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdateOpeningBalanceErrorComponent'
       - $ref: '#/components/schemas/StaffPartialUpdateJoinedOnErrorComponent'
       - $ref: '#/components/schemas/StaffPartialUpdateLeftOnErrorComponent'
       - $ref: '#/components/schemas/StaffPartialUpdateIsActiveErrorComponent'
@@ -36804,6 +37152,9 @@ components:
           job_title: '#/components/schemas/StaffPartialUpdateJobTitleErrorComponent'
           monthly_salary: '#/components/schemas/StaffPartialUpdateMonthlySalaryErrorComponent'
           saturday_pay: '#/components/schemas/StaffPartialUpdateSaturdayPayErrorComponent'
+          balance_year: '#/components/schemas/StaffPartialUpdateBalanceYearErrorComponent'
+          balance_month: '#/components/schemas/StaffPartialUpdateBalanceMonthErrorComponent'
+          opening_balance: '#/components/schemas/StaffPartialUpdateOpeningBalanceErrorComponent'
           joined_on: '#/components/schemas/StaffPartialUpdateJoinedOnErrorComponent'
           left_on: '#/components/schemas/StaffPartialUpdateLeftOnErrorComponent'
           is_active: '#/components/schemas/StaffPartialUpdateIsActiveErrorComponent'
@@ -37029,6 +37380,36 @@ components:
       - attr
       - code
       - detail
+    StaffPartialUpdateOpeningBalanceErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - opening_balance
+          type: string
+          description: '* `opening_balance` - opening_balance'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     StaffPartialUpdatePhoneErrorComponent:
       type: object
       properties:
@@ -37145,6 +37526,22 @@ components:
           nullable: true
           description: 'Extra pay for each Saturday worked. Empty: one day''s pay
             (double).'
+        balance_year:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        balance_month:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          nullable: true
+        opening_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          description: 'Up to the balance month: more than 0 the shop owes the worker;
+            less than 0 the worker owes the shop (an old advance).'
         joined_on:
           type: string
           format: date
@@ -37169,6 +37566,58 @@ components:
         propertyName: type
         mapping:
           client_error: '#/components/schemas/ParseErrorResponse'
+    StaffUpdateBalanceMonthErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - balance_month
+          type: string
+          description: '* `balance_month` - balance_month'
+        code:
+          enum:
+          - invalid
+          - max_string_length
+          - max_value
+          - min_value
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_string_length` - max_string_length
+            * `max_value` - max_value
+            * `min_value` - min_value
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdateBalanceYearErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - balance_year
+          type: string
+          description: '* `balance_year` - balance_year'
+        code:
+          enum:
+          - invalid
+          - max_string_length
+          - max_value
+          - min_value
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_string_length` - max_string_length
+            * `max_value` - max_value
+            * `min_value` - min_value
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     StaffUpdateError:
       oneOf:
       - $ref: '#/components/schemas/StaffUpdateNonFieldErrorsErrorComponent'
@@ -37177,6 +37626,9 @@ components:
       - $ref: '#/components/schemas/StaffUpdateJobTitleErrorComponent'
       - $ref: '#/components/schemas/StaffUpdateMonthlySalaryErrorComponent'
       - $ref: '#/components/schemas/StaffUpdateSaturdayPayErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdateBalanceYearErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdateBalanceMonthErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdateOpeningBalanceErrorComponent'
       - $ref: '#/components/schemas/StaffUpdateJoinedOnErrorComponent'
       - $ref: '#/components/schemas/StaffUpdateLeftOnErrorComponent'
       - $ref: '#/components/schemas/StaffUpdateIsActiveErrorComponent'
@@ -37190,6 +37642,9 @@ components:
           job_title: '#/components/schemas/StaffUpdateJobTitleErrorComponent'
           monthly_salary: '#/components/schemas/StaffUpdateMonthlySalaryErrorComponent'
           saturday_pay: '#/components/schemas/StaffUpdateSaturdayPayErrorComponent'
+          balance_year: '#/components/schemas/StaffUpdateBalanceYearErrorComponent'
+          balance_month: '#/components/schemas/StaffUpdateBalanceMonthErrorComponent'
+          opening_balance: '#/components/schemas/StaffUpdateOpeningBalanceErrorComponent'
           joined_on: '#/components/schemas/StaffUpdateJoinedOnErrorComponent'
           left_on: '#/components/schemas/StaffUpdateLeftOnErrorComponent'
           is_active: '#/components/schemas/StaffUpdateIsActiveErrorComponent'
@@ -37409,6 +37864,36 @@ components:
             * `null` - null
             * `null_characters_not_allowed` - null_characters_not_allowed
             * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdateOpeningBalanceErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - opening_balance
+          type: string
+          description: '* `opening_balance` - opening_balance'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `null` - null
         detail:
           type: string
       required:

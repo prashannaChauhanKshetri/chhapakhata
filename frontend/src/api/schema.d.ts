@@ -1087,6 +1087,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/salary/months/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description This BS month and the 11 before it, for choosing a balance month. */
+        get: operations["salary_months_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/salary/pay/": {
         parameters: {
             query?: never;
@@ -5723,9 +5740,19 @@ export interface components {
          *     * `off` - off
          *     * `worked` - worked
          *     * `not_working` - not_working
+         *     * `settled` - settled
          * @enum {string}
          */
-        MonthDayStatusEnum: "present" | "absent" | "off" | "worked" | "not_working";
+        MonthDayStatusEnum: "present" | "absent" | "off" | "worked" | "not_working" | "settled";
+        MonthRange: {
+            year: number;
+            month: number;
+            label: string;
+            /** Format: date */
+            start: string;
+            /** Format: date */
+            end: string;
+        };
         MonthRef: {
             year: number;
             month: number;
@@ -5759,6 +5786,9 @@ export interface components {
             advances: components["schemas"]["StaffAdvance"][];
             /** Format: decimal */
             advances_total: string;
+            /** Format: decimal */
+            opening_balance: string;
+            opening_label: string;
             /** Format: decimal */
             net: string;
             /** Format: decimal */
@@ -8271,6 +8301,13 @@ export interface components {
              * @description Extra pay for each Saturday worked. Empty: one day's pay (double).
              */
             saturday_pay?: string | null;
+            balance_year?: number | null;
+            balance_month?: number | null;
+            /**
+             * Format: decimal
+             * @description Up to the balance month: more than 0 the shop owes the worker; less than 0 the worker owes the shop (an old advance).
+             */
+            opening_balance?: string;
             /**
              * Format: date
              * @description No pay is counted before this day.
@@ -9566,6 +9603,7 @@ export interface components {
             /** @description Sheet name when the file has several */
             sheet: string;
         };
+        SalaryMonthsListErrorResponse400: components["schemas"]["ParseErrorResponse"];
         SalaryPayCreateError: components["schemas"]["SalaryPayCreateNonFieldErrorsErrorComponent"] | components["schemas"]["SalaryPayCreateStaffErrorComponent"] | components["schemas"]["SalaryPayCreateYearErrorComponent"] | components["schemas"]["SalaryPayCreateMonthErrorComponent"] | components["schemas"]["SalaryPayCreatePaidOnErrorComponent"] | components["schemas"]["SalaryPayCreateModeErrorComponent"] | components["schemas"]["SalaryPayCreateNoteErrorComponent"];
         SalaryPayCreateErrorResponse400: components["schemas"]["SalaryPayCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         SalaryPayCreateModeErrorComponent: {
@@ -10340,6 +10378,14 @@ export interface components {
              * @description Extra pay for each Saturday worked. Empty: one day's pay (double).
              */
             saturday_pay: string | null;
+            balance_year: number | null;
+            balance_month: number | null;
+            readonly balance_label: string;
+            /**
+             * Format: decimal
+             * @description Up to the balance month: more than 0 the shop owes the worker; less than 0 the worker owes the shop (an old advance).
+             */
+            opening_balance: string;
             /**
              * Format: date
              * @description No pay is counted before this day.
@@ -10471,7 +10517,39 @@ export interface components {
         };
         StaffAdvancesDestroyErrorResponse400: components["schemas"]["ParseErrorResponse"];
         StaffAdvancesListErrorResponse400: components["schemas"]["ParseErrorResponse"];
-        StaffCreateError: components["schemas"]["StaffCreateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffCreateNameErrorComponent"] | components["schemas"]["StaffCreatePhoneErrorComponent"] | components["schemas"]["StaffCreateJobTitleErrorComponent"] | components["schemas"]["StaffCreateMonthlySalaryErrorComponent"] | components["schemas"]["StaffCreateSaturdayPayErrorComponent"] | components["schemas"]["StaffCreateJoinedOnErrorComponent"] | components["schemas"]["StaffCreateLeftOnErrorComponent"] | components["schemas"]["StaffCreateIsActiveErrorComponent"] | components["schemas"]["StaffCreateNotesErrorComponent"];
+        StaffCreateBalanceMonthErrorComponent: {
+            /**
+             * @description * `balance_month` - balance_month (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "balance_month";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_string_length` - max_string_length
+             *     * `max_value` - max_value
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_string_length" | "max_value" | "min_value";
+            detail: string;
+        };
+        StaffCreateBalanceYearErrorComponent: {
+            /**
+             * @description * `balance_year` - balance_year (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "balance_year";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_string_length` - max_string_length
+             *     * `max_value` - max_value
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_string_length" | "max_value" | "min_value";
+            detail: string;
+        };
+        StaffCreateError: components["schemas"]["StaffCreateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffCreateNameErrorComponent"] | components["schemas"]["StaffCreatePhoneErrorComponent"] | components["schemas"]["StaffCreateJobTitleErrorComponent"] | components["schemas"]["StaffCreateMonthlySalaryErrorComponent"] | components["schemas"]["StaffCreateSaturdayPayErrorComponent"] | components["schemas"]["StaffCreateBalanceYearErrorComponent"] | components["schemas"]["StaffCreateBalanceMonthErrorComponent"] | components["schemas"]["StaffCreateOpeningBalanceErrorComponent"] | components["schemas"]["StaffCreateJoinedOnErrorComponent"] | components["schemas"]["StaffCreateLeftOnErrorComponent"] | components["schemas"]["StaffCreateIsActiveErrorComponent"] | components["schemas"]["StaffCreateNotesErrorComponent"];
         StaffCreateErrorResponse400: components["schemas"]["StaffCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         StaffCreateIsActiveErrorComponent: {
             /**
@@ -10603,6 +10681,24 @@ export interface components {
             code: "invalid" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
+        StaffCreateOpeningBalanceErrorComponent: {
+            /**
+             * @description * `opening_balance` - opening_balance (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "opening_balance";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "null";
+            detail: string;
+        };
         StaffCreatePhoneErrorComponent: {
             /**
              * @description * `phone` - phone (enum property replaced by openapi-typescript)
@@ -10659,7 +10755,39 @@ export interface components {
             paid: boolean;
             days: components["schemas"]["MonthDay"][];
         };
-        StaffPartialUpdateError: components["schemas"]["StaffPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffPartialUpdateNameErrorComponent"] | components["schemas"]["StaffPartialUpdatePhoneErrorComponent"] | components["schemas"]["StaffPartialUpdateJobTitleErrorComponent"] | components["schemas"]["StaffPartialUpdateMonthlySalaryErrorComponent"] | components["schemas"]["StaffPartialUpdateSaturdayPayErrorComponent"] | components["schemas"]["StaffPartialUpdateJoinedOnErrorComponent"] | components["schemas"]["StaffPartialUpdateLeftOnErrorComponent"] | components["schemas"]["StaffPartialUpdateIsActiveErrorComponent"] | components["schemas"]["StaffPartialUpdateNotesErrorComponent"];
+        StaffPartialUpdateBalanceMonthErrorComponent: {
+            /**
+             * @description * `balance_month` - balance_month (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "balance_month";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_string_length` - max_string_length
+             *     * `max_value` - max_value
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_string_length" | "max_value" | "min_value";
+            detail: string;
+        };
+        StaffPartialUpdateBalanceYearErrorComponent: {
+            /**
+             * @description * `balance_year` - balance_year (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "balance_year";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_string_length` - max_string_length
+             *     * `max_value` - max_value
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_string_length" | "max_value" | "min_value";
+            detail: string;
+        };
+        StaffPartialUpdateError: components["schemas"]["StaffPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffPartialUpdateNameErrorComponent"] | components["schemas"]["StaffPartialUpdatePhoneErrorComponent"] | components["schemas"]["StaffPartialUpdateJobTitleErrorComponent"] | components["schemas"]["StaffPartialUpdateMonthlySalaryErrorComponent"] | components["schemas"]["StaffPartialUpdateSaturdayPayErrorComponent"] | components["schemas"]["StaffPartialUpdateBalanceYearErrorComponent"] | components["schemas"]["StaffPartialUpdateBalanceMonthErrorComponent"] | components["schemas"]["StaffPartialUpdateOpeningBalanceErrorComponent"] | components["schemas"]["StaffPartialUpdateJoinedOnErrorComponent"] | components["schemas"]["StaffPartialUpdateLeftOnErrorComponent"] | components["schemas"]["StaffPartialUpdateIsActiveErrorComponent"] | components["schemas"]["StaffPartialUpdateNotesErrorComponent"];
         StaffPartialUpdateErrorResponse400: components["schemas"]["StaffPartialUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         StaffPartialUpdateIsActiveErrorComponent: {
             /**
@@ -10791,6 +10919,24 @@ export interface components {
             code: "invalid" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
+        StaffPartialUpdateOpeningBalanceErrorComponent: {
+            /**
+             * @description * `opening_balance` - opening_balance (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "opening_balance";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "null";
+            detail: string;
+        };
         StaffPartialUpdatePhoneErrorComponent: {
             /**
              * @description * `phone` - phone (enum property replaced by openapi-typescript)
@@ -10852,6 +10998,13 @@ export interface components {
              * @description Extra pay for each Saturday worked. Empty: one day's pay (double).
              */
             saturday_pay?: string | null;
+            balance_year?: number | null;
+            balance_month?: number | null;
+            /**
+             * Format: decimal
+             * @description Up to the balance month: more than 0 the shop owes the worker; less than 0 the worker owes the shop (an old advance).
+             */
+            opening_balance?: string;
             /**
              * Format: date
              * @description No pay is counted before this day.
@@ -10866,7 +11019,39 @@ export interface components {
             notes?: string;
         };
         StaffRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
-        StaffUpdateError: components["schemas"]["StaffUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffUpdateNameErrorComponent"] | components["schemas"]["StaffUpdatePhoneErrorComponent"] | components["schemas"]["StaffUpdateJobTitleErrorComponent"] | components["schemas"]["StaffUpdateMonthlySalaryErrorComponent"] | components["schemas"]["StaffUpdateSaturdayPayErrorComponent"] | components["schemas"]["StaffUpdateJoinedOnErrorComponent"] | components["schemas"]["StaffUpdateLeftOnErrorComponent"] | components["schemas"]["StaffUpdateIsActiveErrorComponent"] | components["schemas"]["StaffUpdateNotesErrorComponent"];
+        StaffUpdateBalanceMonthErrorComponent: {
+            /**
+             * @description * `balance_month` - balance_month (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "balance_month";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_string_length` - max_string_length
+             *     * `max_value` - max_value
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_string_length" | "max_value" | "min_value";
+            detail: string;
+        };
+        StaffUpdateBalanceYearErrorComponent: {
+            /**
+             * @description * `balance_year` - balance_year (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "balance_year";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_string_length` - max_string_length
+             *     * `max_value` - max_value
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_string_length" | "max_value" | "min_value";
+            detail: string;
+        };
+        StaffUpdateError: components["schemas"]["StaffUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffUpdateNameErrorComponent"] | components["schemas"]["StaffUpdatePhoneErrorComponent"] | components["schemas"]["StaffUpdateJobTitleErrorComponent"] | components["schemas"]["StaffUpdateMonthlySalaryErrorComponent"] | components["schemas"]["StaffUpdateSaturdayPayErrorComponent"] | components["schemas"]["StaffUpdateBalanceYearErrorComponent"] | components["schemas"]["StaffUpdateBalanceMonthErrorComponent"] | components["schemas"]["StaffUpdateOpeningBalanceErrorComponent"] | components["schemas"]["StaffUpdateJoinedOnErrorComponent"] | components["schemas"]["StaffUpdateLeftOnErrorComponent"] | components["schemas"]["StaffUpdateIsActiveErrorComponent"] | components["schemas"]["StaffUpdateNotesErrorComponent"];
         StaffUpdateErrorResponse400: components["schemas"]["StaffUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         StaffUpdateIsActiveErrorComponent: {
             /**
@@ -10996,6 +11181,24 @@ export interface components {
              * @enum {string}
              */
             code: "invalid" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffUpdateOpeningBalanceErrorComponent: {
+            /**
+             * @description * `opening_balance` - opening_balance (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "opening_balance";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "null";
             detail: string;
         };
         StaffUpdatePhoneErrorComponent: {
@@ -20714,6 +20917,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SalaryPaymentsUndoCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    salary_months_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthRange"][];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryMonthsListErrorResponse400"];
                 };
             };
             401: {

@@ -6,7 +6,9 @@ Salary is counted per Nepali (BS) month:
 * a working day marked **absent** takes off one day's pay;
 * **Saturday** is the paid weekly holiday; working it adds one day's pay, or
   the worker's own Saturday pay when the owner has set one;
-* advances given during the month are taken off that month's salary.
+* advances given during the month are taken off that month's salary;
+* a balance from before the app (to the end of a BS month) is settled in the
+  first month after it.
 
 Only the exceptions are stored (absent days, Saturdays worked): every other
 working day counts as present.
@@ -48,6 +50,18 @@ class Staff(BusinessOwned, TimeStampedModel):
         help_text="Extra pay for each Saturday worked. Empty: one day's pay (double).",
     )
     joined_on = models.DateField(help_text="No pay is counted before this day.")
+    # What stood between the shop and the worker when the app was started, up to
+    # the end of a BS month. Pay is counted only after that month; the balance is
+    # settled in the first month counted.
+    balance_year = models.PositiveSmallIntegerField(null=True, blank=True)
+    balance_month = models.PositiveSmallIntegerField(null=True, blank=True)
+    opening_balance = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text="Up to the balance month: more than 0 the shop owes the worker; "
+        "less than 0 the worker owes the shop (an old advance).",
+    )
     left_on = models.DateField(null=True, blank=True, help_text="No pay is counted after this day.")
     is_active = models.BooleanField(default=True)
     notes = models.TextField(blank=True)
@@ -138,6 +152,12 @@ class SalaryPayment(BusinessOwned, TimeStampedModel):
     holiday_pay = models.DecimalField(max_digits=10, decimal_places=2)
     earned = models.DecimalField(max_digits=10, decimal_places=2)
     advances = models.DecimalField(max_digits=10, decimal_places=2)
+    opening_balance = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text="The balance brought in from before the app, settled in this month.",
+    )
     net_paid = models.DecimalField(max_digits=10, decimal_places=2)
     carried_forward = models.DecimalField(
         max_digits=10,

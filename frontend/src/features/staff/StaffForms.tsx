@@ -3,7 +3,9 @@ import {
   Button,
   Group,
   NumberInput,
+  Paper,
   SegmentedControl,
+  Select,
   SimpleGrid,
   Stack,
   Switch,
@@ -14,12 +16,13 @@ import {
 import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { modals } from '@mantine/modals';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { api, unwrap } from '@/api/client';
 import { openFile } from '@/api/files';
+import { apiGet } from '@/api/http';
 import type { components } from '@/api/schema';
 import type { MonthSheet, Staff } from '@/api/types';
 import { Money } from '@/components/Money';
@@ -31,10 +34,23 @@ const day = (v: unknown) => (v ? String(v).slice(0, 10) : null);
 
 // -- Add or edit a worker -------------------------------------------------------------
 
+type MonthRange = components['schemas']['MonthRange'];
+const monthKey = (m: { year: number; month: number }) =>
+  `${m.year}-${String(m.month).padStart(2, '0')}`;
+
+/** Who owes whom up to the balance month. */
+type Direction = 'to_worker' | 'to_shop';
+
 function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
   const { t } = useTranslation();
   const client = useQueryClient();
   const [busy, setBusy] = useState(false);
+  const { data: months } = useQuery({
+    queryKey: ['staff', 'months'],
+    queryFn: () => apiGet<MonthRange[]>('/api/v1/salary/months/'),
+    staleTime: 10 * 60_000,
+  });
+  const opening = staff ? toNumber(staff.opening_balance) : 0;
   const form = useForm({
     initialValues: {
       name: staff?.name ?? '',
@@ -48,6 +64,16 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
       is_active: staff?.is_active ?? true,
       left_on: (staff?.left_on ?? null) as string | null,
       notes: staff?.notes ?? '',
+      // New staff: someone already working here starts from a balance (to last month).
+      already: false,
+      // null: not chosen yet, so the form offers last month.
+      balance: (staff?.balance_year
+        ? monthKey({ year: staff.balance_year, month: staff.balance_month! })
+        : staff
+          ? ''
+          : null) as string | null,
+      balance_amount: (opening ? Math.abs(opening) : '') as number | string,
+      direction: (opening < 0 ? 'to_shop' : 'to_worker') as Direction,
     },
     validate: {
       name: (v) => (v.trim() ? null : t('Enter the name')),
@@ -56,14 +82,32 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
     },
   });
 
+  const lastMonth = months?.[1] ? monthKey(months[1]) : '';
+  const withBalance = !!staff || form.values.already;
+  const balance = form.values.balance ?? (withBalance ? lastMonth : '');
+  const chosen = months?.find((m) => monthKey(m) === balance);
+  const after = chosen ? months?.[months.indexOf(chosen) - 1] : undefined;
+
   const submit = form.onSubmit(async (values) => {
     setBusy(true);
+    const [year, month] = balance ? balance.split('-').map(Number) : [null, null];
+    const amount = toNumber(values.balance_amount);
     const body = {
-      ...values,
+      name: values.name,
+      job_title: values.job_title,
+      phone: values.phone,
+      notes: values.notes,
+      is_active: values.is_active,
       monthly_salary: String(values.monthly_salary),
       // Empty: one day's pay for each Saturday worked.
       saturday_pay: values.saturday_pay === '' ? null : String(values.saturday_pay),
       left_on: values.is_active ? values.left_on || null : values.left_on,
+      balance_year: year,
+      balance_month: month,
+      opening_balance: String(balance ? (values.direction === 'to_shop' ? -amount : amount) : 0),
+      // Already working here: pay counts from the day after the balance month.
+      joined_on:
+        !staff && values.already && chosen ? (after?.start ?? todayISO()) : values.joined_on,
     };
     try {
       await unwrap(
@@ -81,9 +125,22 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
     }
   });
 
+  const monthOptions = (months ?? []).map((m) => ({ value: monthKey(m), label: m.label }));
+
   return (
     <form onSubmit={submit} noValidate>
       <Stack gap="sm">
+        {!staff && (
+          <SegmentedControl
+            fullWidth
+            data={[
+              { value: 'new', label: t('New worker') },
+              { value: 'already', label: t('Already working here') },
+            ]}
+            value={form.values.already ? 'already' : 'new'}
+            onChange={(v) => form.setFieldValue('already', v === 'already')}
+          />
+        )}
         <TextInput label={t('Name')} required data-autofocus {...form.getInputProps('name')} />
         <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
           <TextInput
@@ -102,12 +159,14 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
             decimalScale={2}
             {...form.getInputProps('monthly_salary')}
           />
-          <DatePickerInput
-            label={t('Joined on')}
-            valueFormat="D MMM YYYY"
-            {...form.getInputProps('joined_on')}
-            onChange={(v) => form.setFieldValue('joined_on', day(v) ?? todayISO())}
-          />
+          {(staff || !form.values.already) && (
+            <DatePickerInput
+              label={t('Joined on')}
+              valueFormat="D MMM YYYY"
+              {...form.getInputProps('joined_on')}
+              onChange={(v) => form.setFieldValue('joined_on', day(v) ?? todayISO())}
+            />
+          )}
         </SimpleGrid>
         <NumberInput
           label={t('Saturday pay (Rs)')}
@@ -121,6 +180,57 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
           inputWrapperOrder={['label', 'input', 'description', 'error']}
           {...form.getInputProps('saturday_pay')}
         />
+
+        {withBalance && (
+          <Paper withBorder radius="md" p="sm" bg="slate.0">
+            <Stack gap="xs">
+              <Text size="sm" fw={600}>
+                {t('Balance up to now')}
+              </Text>
+              <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
+                <Select
+                  label={t('Up to the end of')}
+                  data={[
+                    ...(staff ? [{ value: '', label: t('No balance') }] : []),
+                    ...monthOptions,
+                  ]}
+                  value={balance}
+                  onChange={(v) => form.setFieldValue('balance', v ?? '')}
+                  error={form.errors.balance_month}
+                />
+                <NumberInput
+                  label={t('Amount (Rs)')}
+                  placeholder="0"
+                  min={0}
+                  thousandSeparator=","
+                  decimalScale={2}
+                  disabled={!balance}
+                  {...form.getInputProps('balance_amount')}
+                  error={form.errors.opening_balance}
+                />
+              </SimpleGrid>
+              {balance && (
+                <SegmentedControl
+                  fullWidth
+                  data={[
+                    { value: 'to_worker', label: t('Shop owes the worker') },
+                    { value: 'to_shop', label: t('Worker owes the shop') },
+                  ]}
+                  {...form.getInputProps('direction')}
+                />
+              )}
+              <Text size="xs" c="dimmed">
+                {balance && chosen
+                  ? t(
+                      'Unpaid salary, or an old advance, up to the end of {{month}}. Pay is counted from {{next}}; this balance is settled in that month’s salary.',
+                      { month: chosen.label, next: after?.label ?? t('next month') },
+                    )
+                  : t('No balance: pay is counted from the joining date.')}
+              </Text>
+            </Stack>
+          </Paper>
+        )}
+
         {staff && (
           <Switch
             label={t('Still working here')}

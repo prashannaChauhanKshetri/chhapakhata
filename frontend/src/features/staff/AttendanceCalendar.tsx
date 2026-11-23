@@ -25,6 +25,7 @@ const MARK: Record<string, string> = {
   off: 'Off',
   worked: 'Worked',
   not_working: '',
+  settled: 'Balance',
 };
 /** A tap switches between the two states a day can have. */
 const NEXT: Record<string, DayStatus> = {
@@ -125,7 +126,8 @@ function AttendanceCalendar({ staffId, initialMonth }: { staffId: number; initia
           <div key={`lead-${i}`} />
         ))}
         {days.map((d) => {
-          const blank = d.status === 'not_working' || (!d.editable && !data?.paid);
+          const blank =
+            d.status === 'not_working' || (!d.editable && !data?.paid && d.status !== 'settled');
           return (
             <button
               key={d.date}
@@ -154,7 +156,7 @@ function AttendanceCalendar({ staffId, initialMonth }: { staffId: number; initia
       </Group>
       <Text size="xs" c="dimmed">
         {t(
-          'Tap a day to change it: a working day is present or absent; a Saturday is off or worked. Days still to come cannot be marked.',
+          'Tap a day to change it: a working day is present or absent; a Saturday is off or worked. Days still to come, and days covered by the opening balance, cannot be marked.',
         )}
       </Text>
     </Stack>
