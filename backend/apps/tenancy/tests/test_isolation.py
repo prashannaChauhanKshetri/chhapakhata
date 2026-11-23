@@ -8,6 +8,7 @@ check is made as B's owner against A's records.
 
 from __future__ import annotations
 
+import datetime as dt
 import io
 from decimal import Decimal as D
 
@@ -17,9 +18,12 @@ from django.db import DatabaseError, connection, transaction
 from openpyxl import load_workbook
 
 from apps.billing import services as billing
+from apps.core.dates import local_today
 from apps.core.permissions import Role
 from apps.customers.models import Customer
 from apps.orders.models import Order
+from apps.staff import services as staff_services
+from apps.staff.models import Staff
 from apps.tenancy.context import business_scope, use_business
 from apps.tenancy.models import Business
 from apps.tenancy.operations import POLICY
@@ -28,7 +32,14 @@ from conftest import make_user
 pytestmark = pytest.mark.django_db
 
 # Text that exists only in shop A's data.
-A_MARKERS = ["Hotel Kalpana", "9858020005", "Test Supplier", "Star Flex", "Eyelets"]
+A_MARKERS = [
+    "Hotel Kalpana",
+    "9858020005",
+    "Test Supplier",
+    "Star Flex",
+    "Eyelets",
+    "Bishnu Gurung",
+]
 
 LIST_URLS = [
     "/api/v1/customers/",
@@ -60,6 +71,10 @@ LIST_URLS = [
     "/api/v1/users/operators/",
     "/api/v1/settings/shop/",
     "/api/v1/auth/me/",
+    "/api/v1/staff/",
+    "/api/v1/attendance/",
+    "/api/v1/staff-advances/",
+    "/api/v1/salary/",
 ]
 
 
@@ -69,6 +84,12 @@ def shop_a(business, owner, desk, operator, star_flex_rolls, make_order, eyelets
     invoice = billing.issue_invoice(order=order, user=desk)
     payment = billing.receive_payment(
         user=desk, customer=order.customer, amount="500", mode="cash", order=order
+    )
+    worker = Staff.objects.create(
+        name="Bishnu Gurung", monthly_salary=D("18000"), joined_on=dt.date(2025, 1, 1)
+    )
+    staff_services.give_advance(
+        staff=worker, day=local_today(), amount=D("1000"), note="", user=owner
     )
     return {"business": business, "order": order, "invoice": invoice, "payment": payment}
 

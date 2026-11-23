@@ -1,0 +1,242 @@
+"""Attendance and salary, as the client asked:
+
+* attendance is marked by hand; an absent day takes off one day's pay;
+* working on Saturday (the weekly holiday) pays one day extra ("double");
+* one day's pay = monthly salary ÷ days in that Nepali month;
+* advances come off the month's salary; a paid month is locked.
+
+Shrawan 2083 has 31 days (17 Jul – 16 Aug 2026), so Rs 15,500 a month is Rs 500 a day.
+"""
+
+import datetime as dt
+from decimal import Decimal as D
+
+import pytest
+from rest_framework.exceptions import ValidationError
+
+from apps.core.dates import local_today
+from apps.core.models import ActivityLog
+from apps.staff import services
+from apps.staff.models import Attendance, SalaryPayment, Staff, StaffAdvance
+
+pytestmark = pytest.mark.django_db
+
+YEAR, MONTH = 2083, 4  # Shrawan 2083
+FIRST = dt.date(2026, 7, 17)
+LAST = dt.date(2026, 8, 16)
+TUESDAY = dt.date(2026, 7, 21)
+WEDNESDAY = dt.date(2026, 7, 22)
+SATURDAY = dt.date(2026, 7, 25)
+
+
+@pytest.fixture
+def ram(db) -> Staff:
+    return Staff.objects.create(
+        name="Ram Thapa",
+        job_title="Fitter",
+        monthly_salary=D("15500"),
+        joined_on=dt.date(2026, 1, 1),
+    )
+
+
+def sheet(staff):
+    return services.month_sheet(staff, YEAR, MONTH)
+
+
+def mark(staff, day, status, user=None):
+    return services.set_attendance(staff=staff, day=day, status=status, user=user)
+
+
+def test_a_month_with_no_marks_pays_the_full_salary(ram):
+    s = sheet(ram)
+    assert (s.days_in_month, s.days_employed, s.day_rate) == (31, 31, D("500.00"))
+    assert s.earned == s.net == D("15500")
+
+
+def test_an_absent_day_takes_off_one_day_and_a_saturday_worked_adds_one(ram, owner):
+    mark(ram, TUESDAY, "absent", owner)
+    mark(ram, WEDNESDAY, "absent", owner)
+    mark(ram, SATURDAY, "worked", owner)
+    s = sheet(ram)
+    assert s.absent_dates == [TUESDAY, WEDNESDAY]
+    assert s.worked_dates == [SATURDAY]
+    assert (s.absent_deduction, s.holiday_pay) == (D("1000.00"), D("500.00"))
+    assert s.net == D("15000.00")
+
+    # Marking present again (or off on Saturday) clears the mark.
+    mark(ram, WEDNESDAY, "present", owner)
+    mark(ram, SATURDAY, "off", owner)
+    assert sheet(ram).net == D("15000.00")  # 15,500 − one absent day
+    assert Attendance.objects.count() == 1
+
+
+def test_one_day_pay_follows_the_length_of_the_nepali_month(ram):
+    # Bhadra 2083 has 31 days too; Kartik 2083 has 30: the same salary, a different day rate.
+    kartik = services.month_sheet(ram, 2083, 7)
+    assert kartik.days_in_month == 30
+    assert kartik.day_rate == D("516.67")
+
+
+def test_saturday_is_off_or_worked_and_a_working_day_present_or_absent(ram, owner):
+    with pytest.raises(ValidationError):
+        mark(ram, SATURDAY, "absent", owner)
+    with pytest.raises(ValidationError):
+        mark(ram, TUESDAY, "worked", owner)
+
+
+def test_days_to_come_and_days_before_joining_cannot_be_marked(ram, owner):
+    with pytest.raises(ValidationError, match="still to come"):
+        mark(ram, local_today() + dt.timedelta(days=1), "absent", owner)
+    with pytest.raises(ValidationError, match="not working here"):
+        mark(ram, dt.date(2025, 12, 30), "absent", owner)
+
+
+def test_a_worker_who_joins_mid_month_is_paid_for_the_days_from_joining(owner):
+    sita = Staff.objects.create(
+        name="Sita", monthly_salary=D("15500"), joined_on=dt.date(2026, 8, 1)
+    )
+    s = sheet(sita)
+    assert s.days_employed == 16  # 1 – 16 Aug
+    assert s.base_pay == D("8000.00")
+
+
+def test_advances_come_off_the_salary(ram, owner):
+    services.give_advance(staff=ram, day=TUESDAY, amount=D("3000"), note="Festival", user=owner)
+    s = sheet(ram)
+    assert s.advances_total == D("3000")
+    assert s.net == D("12500")
+
+
+def test_paying_locks_the_month_and_undoing_unlocks_it(ram, owner):
+    mark(ram, TUESDAY, "absent", owner)
+    payment = services.pay_salary(
+        staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+    )
+    assert payment.net_paid == D("15000.00")
+    assert payment.absent_days == 1
+    assert ActivityLog.objects.filter(action="staff.salary_paid").exists()
+
+    with pytest.raises(ValidationError, match="already paid"):
+        mark(ram, WEDNESDAY, "absent", owner)
+    with pytest.raises(ValidationError, match="already paid"):
+        services.give_advance(staff=ram, day=TUESDAY, amount=D("100"), note="", user=owner)
+    with pytest.raises(ValidationError, match="already paid"):
+        services.pay_salary(
+            staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+        )
+
+    # A raise later does not change what was paid.
+    ram.monthly_salary = D("20000")
+    ram.save()
+    assert sheet(ram).net == D("15000.00")
+
+    services.undo_salary(payment=payment, user=owner, reason="Entered twice")
+    assert not SalaryPayment.objects.exists()
+    mark(ram, WEDNESDAY, "absent", owner)  # open again
+
+
+def test_advances_more_than_the_pay_move_to_next_month(ram, owner):
+    services.give_advance(staff=ram, day=TUESDAY, amount=D("16000"), note="", user=owner)
+    payment = services.pay_salary(
+        staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+    )
+    assert payment.net_paid == D("0")
+    assert payment.carried_forward == D("500")
+    carried = StaffAdvance.objects.get(carried_from=payment)
+    assert carried.date == LAST + dt.timedelta(days=1)  # 1 Bhadra
+    assert services.month_sheet(ram, 2083, 5).advances_total == D("500")
+
+    # It goes away with the payment, and cannot be removed on its own.
+    with pytest.raises(ValidationError, match="carried"):
+        services.delete_advance(advance=carried, user=owner)
+    services.undo_salary(payment=payment, user=owner, reason="Mistake")
+    assert not StaffAdvance.objects.filter(pk=carried.pk).exists()
+
+
+def test_a_worker_who_left_needs_a_last_day_and_drops_off_later_months(api, owner, ram):
+    response = api(owner).patch(f"/api/v1/staff/{ram.pk}/", {"is_active": False}, format="json")
+    assert response.status_code == 400
+    assert "left_on" in response.json()["errors"][0]["attr"]
+
+    response = api(owner).patch(
+        f"/api/v1/staff/{ram.pk}/", {"is_active": False, "left_on": "2026-07-31"}, format="json"
+    )
+    assert response.status_code == 200
+    assert services.month_sheet(Staff.objects.get(pk=ram.pk), YEAR, MONTH).days_employed == 15
+    assert ram not in services.staff_for_month(2083, 6)
+
+
+# -- The API ------------------------------------------------------------------------
+
+
+def test_daily_register_and_marking_through_the_api(api, owner, ram):
+    client = api(owner)
+    register = client.get("/api/v1/attendance/", {"date": TUESDAY.isoformat()}).json()
+    assert register["is_holiday"] is False
+    assert register["rows"][0]["status"] == "present"
+
+    response = client.post(
+        "/api/v1/attendance/",
+        {"staff": ram.pk, "date": TUESDAY.isoformat(), "status": "absent"},
+        format="json",
+    )
+    assert response.status_code == 200, response.content
+    register = client.get("/api/v1/attendance/", {"date": TUESDAY.isoformat()}).json()
+    assert register["rows"][0]["status"] == "absent"
+
+    saturday = client.get("/api/v1/attendance/", {"date": SATURDAY.isoformat()}).json()
+    assert saturday["is_holiday"] is True
+    assert saturday["rows"][0]["status"] == "off"
+
+
+def test_salary_month_pay_and_slip_through_the_api(api, owner, ram, shop):
+    client = api(owner)
+    client.post(
+        "/api/v1/staff-advances/",
+        {"staff": ram.pk, "date": TUESDAY.isoformat(), "amount": "2000", "note": "Rent"},
+        format="json",
+    )
+    month = client.get("/api/v1/salary/", {"month": "2083-04"}).json()
+    assert month["label"] == "Shrawan 2083"
+    row = month["rows"][0]
+    assert (row["earned"], row["advances_total"], row["net"]) == ("15500.00", "2000.00", "13500.00")
+    assert row["payment"] is None
+
+    response = client.post(
+        "/api/v1/salary/pay/",
+        {"staff": ram.pk, "year": 2083, "month": 4, "paid_on": LAST.isoformat(), "mode": "cash"},
+        format="json",
+    )
+    assert response.status_code == 201, response.content
+    payment_id = response.json()["id"]
+    assert client.get("/api/v1/salary/", {"month": "2083-04"}).json()["total_paid"] == "13500.00"
+
+    slip = client.get(f"/api/v1/salary-payments/{payment_id}/slip/")
+    assert slip.status_code == 200
+    assert slip["Content-Type"] == "application/pdf"
+    assert slip.content.startswith(b"%PDF")
+
+    response = client.post(
+        f"/api/v1/salary-payments/{payment_id}/undo/", {"reason": "Wrong month"}, format="json"
+    )
+    assert response.status_code == 204
+
+
+def test_front_desk_and_operators_cannot_see_or_change_salaries(api, desk, operator, ram):
+    for user in (desk, operator):
+        client = api(user)
+        assert client.get("/api/v1/salary/").status_code == 403
+        assert (
+            client.post(
+                "/api/v1/attendance/",
+                {"staff": ram.pk, "date": TUESDAY.isoformat(), "status": "absent"},
+                format="json",
+            ).status_code
+            == 403
+        )
+        assert client.patch(f"/api/v1/staff/{ram.pk}/", {"monthly_salary": "1"}).status_code == 403
+
+
+def test_a_bad_month_is_refused(api, owner):
+    assert api(owner).get("/api/v1/salary/", {"month": "2083-13"}).status_code == 400
+    assert api(owner).get("/api/v1/salary/", {"month": "june"}).status_code == 400

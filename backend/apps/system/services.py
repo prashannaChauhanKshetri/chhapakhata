@@ -240,6 +240,10 @@ EXPORT_MODELS = [
     ("inventory", "Purchase", []),
     ("inventory", "PurchaseLine", []),
     ("inventory", "StockMovement", []),
+    ("staff", "Staff", []),
+    ("staff", "Attendance", []),
+    ("staff", "StaffAdvance", []),
+    ("staff", "SalaryPayment", []),
     ("core", "ActivityLog", []),
 ]
 

@@ -51,7 +51,7 @@ export function OrderDateField({
     try {
       const converted = await apiGet<DateConversion>('/api/v1/utils/date/', { bs });
       if (converted.ad > todayISO()) {
-        setBsError(t('An order cannot be dated in the future.'));
+        setBsError(t('The date cannot be in the future.'));
         return;
       }
       setBsError(null);

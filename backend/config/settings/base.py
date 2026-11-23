@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "apps.billing",
     "apps.reports",
     "apps.system",
+    "apps.staff",
 ]
 
 MIDDLEWARE = [
@@ -191,6 +192,7 @@ SPECTACULAR_SETTINGS = {
         "ErrorCode429Enum": "drf_standardized_errors.openapi_serializers.ErrorCode429Enum.choices",
         "ErrorCode500Enum": "drf_standardized_errors.openapi_serializers.ErrorCode500Enum.choices",
         "JobStageEnum": "apps.production.models.Stage.choices",
+        "DayStatusEnum": "apps.staff.services.DAY_STATUSES",
         "OrderStatusEnum": "apps.orders.models.OrderStatus.choices",
         "InvoiceStatusEnum": "apps.billing.models.InvoiceStatus.choices",
         "PaymentStatusEnum": "apps.billing.models.PaymentStatus.choices",

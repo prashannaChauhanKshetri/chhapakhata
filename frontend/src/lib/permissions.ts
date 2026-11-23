@@ -28,6 +28,7 @@ export const Perm = {
   SETTINGS_MANAGE: 'settings.manage',
   AUDIT_VIEW: 'audit.view',
   SYSTEM_BACKUP: 'system.backup',
+  STAFF_MANAGE: 'staff.manage',
 } as const;
 
 export type PermName = (typeof Perm)[keyof typeof Perm];

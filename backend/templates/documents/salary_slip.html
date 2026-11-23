@@ -1,0 +1,96 @@
+{% extends "documents/base.html" %}
+{% load docs %}
+{% block title %}Salary slip · {{ payment.staff.name }} · {{ sheet.label }}{% endblock %}
+{% block page_size %}A4{% endblock %}
+{% block extra_style %}
+  .days { font-size: 8.5pt; color: #334155; margin-top: 1pt; }
+  .kv td:first-child { white-space: nowrap; padding-right: 6pt; }
+{% endblock %}
+{% block content %}
+<div class="doc-header">
+  {% include "documents/_shop_header.html" %}
+  <div class="doc-title">
+    <h1>Salary Slip</h1>
+    <div class="sub"><strong>{{ sheet.label }}</strong></div>
+  </div>
+</div>
+
+<div class="info">
+  <div class="block">
+    <div class="label">Paid to</div>
+    <div class="strong">{{ payment.staff.name }}</div>
+    {% if payment.staff.job_title %}<div class="muted">{{ payment.staff.job_title }}</div>{% endif %}
+    {% if payment.staff.phone %}<div class="muted">Tel {{ payment.staff.phone }}</div>{% endif %}
+  </div>
+  <div class="block">
+    <table class="kv">
+      <tr><td>Paid on</td><td><strong>{{ payment.paid_on|bs }}</strong> BS</td></tr>
+      <tr><td>Mode</td><td>{{ payment.get_mode_display }}</td></tr>
+      <tr><td>Monthly salary</td><td>{{ payment.monthly_salary|amount }}</td></tr>
+      <tr><td>One day's pay</td><td>{{ payment.day_rate|amount }} <span class="muted">({{ payment.days_in_month }} days)</span></td></tr>
+    </table>
+  </div>
+</div>
+
+<table class="lines">
+  <thead>
+    <tr><th>Particulars</th><th class="num">Days</th><th class="num">Amount</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Salary for {{ sheet.label }}
+        {% if payment.days_employed != payment.days_in_month %}<div class="days">Worked here {{ payment.days_employed }} of {{ payment.days_in_month }} days</div>{% endif %}
+      </td>
+      <td class="num">{{ payment.days_employed }}</td>
+      <td class="num">{{ payment.base_pay|amount }}</td>
+    </tr>
+    {% if payment.absent_days %}
+    <tr>
+      <td>Absent (cut)
+        <div class="days">{% for d in sheet.absent_dates %}{{ d|bs }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+      </td>
+      <td class="num">{{ payment.absent_days }}</td>
+      <td class="num">− {{ payment.absent_deduction|amount }}</td>
+    </tr>
+    {% endif %}
+    {% if payment.holidays_worked %}
+    <tr>
+      <td>Worked on Saturday (extra)
+        <div class="days">{% for d in sheet.worked_dates %}{{ d|bs }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+      </td>
+      <td class="num">{{ payment.holidays_worked }}</td>
+      <td class="num">+ {{ payment.holiday_pay|amount }}</td>
+    </tr>
+    {% endif %}
+    {% for a in sheet.advances %}
+    <tr>
+      <td>Advance on {{ a.date|bs }}{% if a.note %}<div class="days">{{ a.note }}</div>{% endif %}</td>
+      <td class="num"></td>
+      <td class="num">− {{ a.amount|amount }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="totals-wrap">
+  <div class="words">
+    <div class="label">Amount in words</div>
+    <div class="strong">{{ payment.net_paid|words }}</div>
+    {% if payment.carried_forward %}
+      <div style="margin-top: 6pt">Advances were {{ payment.carried_forward|amount }} more than this month's pay; that is taken from next month.</div>
+    {% endif %}
+    {% if payment.note %}<div style="margin-top: 6pt"><span class="label">Note</span><br>{{ payment.note }}</div>{% endif %}
+  </div>
+  <table class="totals">
+    <tr><td>Earned</td><td>{{ payment.earned|amount }}</td></tr>
+    {% if payment.advances %}<tr><td>Advances</td><td>− {{ payment.advances|amount }}</td></tr>{% endif %}
+    <tr class="gap"><td></td><td></td></tr>
+    <tr class="due"><td>Net paid</td><td>Rs. {{ payment.net_paid|amount }}</td></tr>
+  </table>
+</div>
+
+<div class="doc-end-space"></div>
+<div class="doc-end">
+  {% include "documents/_signatures.html" with left_label="Received by "|add:payment.staff.name %}
+</div>
+{% endblock %}

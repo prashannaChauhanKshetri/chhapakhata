@@ -10,6 +10,7 @@ import {
   IconReceipt2,
   IconSettings,
   IconTruckDelivery,
+  IconUserCheck,
   IconUsers,
   type Icon,
 } from '@tabler/icons-react';
@@ -70,6 +71,17 @@ export const NAV: NavSection[] = [
         to: '/purchases',
         icon: IconTruckDelivery,
         perms: [Perm.INVENTORY_MANAGE],
+      },
+    ],
+  },
+  {
+    label: 'People',
+    items: [
+      {
+        label: 'Staff & salary',
+        to: '/staff',
+        icon: IconUserCheck,
+        perms: [Perm.STAFF_MANAGE],
       },
     ],
   },

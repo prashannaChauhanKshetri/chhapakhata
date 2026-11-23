@@ -61,6 +61,15 @@ export type TableImportResult = S['TableImportResult'];
 export type ImportMessage = S['RowMessage'];
 export type ImportField = S['ImportField'];
 
+export type Staff = S['Staff'];
+export type DayRegister = S['DayRegister'];
+export type DayRow = S['DayRow'];
+export type DayStatus = S['DayStatusEnum'];
+export type StaffAdvance = S['StaffAdvance'];
+export type MonthSheet = S['MonthSheet'];
+export type Payroll = S['Payroll'];
+export type SalaryPayment = S['SalaryPayment'];
+
 export interface Paginated<T> {
   count: number;
   next: string | null;

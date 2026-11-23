@@ -26,6 +26,7 @@ const InsightsPage = lazy(() => import('@/features/insights/InsightsPage'));
 const ReportsPage = lazy(() => import('@/features/reports/ReportsPage'));
 const ReportPage = lazy(() => import('@/features/reports/ReportPage'));
 const SettingsPage = lazy(() => import('@/features/settings/SettingsPage'));
+const StaffPage = lazy(() => import('@/features/staff/StaffPage'));
 const NotFoundPage = lazy(() => import('@/features/errors/NotFoundPage'));
 
 const guard = (perm: PermName | PermName[], element: ReactNode) => (
@@ -66,6 +67,8 @@ export const router = createBrowserRouter([
       { path: 'insights', element: guard(Perm.REPORTS_ALL, <InsightsPage />) },
       { path: 'reports', element: guard(REPORT_PERMS, <ReportsPage />) },
       { path: 'reports/:slug', element: guard(REPORT_PERMS, <ReportPage />) },
+      { path: 'staff', element: <Navigate to="/staff/attendance" replace /> },
+      { path: 'staff/:tab', element: guard(Perm.STAFF_MANAGE, <StaffPage />) },
       { path: 'settings', element: <Navigate to="/settings/shop" replace /> },
       { path: 'settings/:tab', element: guard(SETTINGS_PERMS, <SettingsPage />) },
       { path: '*', element: <NotFoundPage /> },

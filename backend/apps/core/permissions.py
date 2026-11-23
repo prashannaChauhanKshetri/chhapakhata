@@ -61,6 +61,7 @@ class Perm:
     SETTINGS_MANAGE = "settings.manage"
     AUDIT_VIEW = "audit.view"
     SYSTEM_BACKUP = "system.backup"
+    STAFF_MANAGE = "staff.manage"  # staff list, attendance, advances, salary
 
     @classmethod
     def all(cls) -> frozenset[str]:

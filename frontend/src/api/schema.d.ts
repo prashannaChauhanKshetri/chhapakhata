@@ -76,6 +76,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attendance/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The daily register: everyone working that day, present or absent. */
+        get: operations["attendance_retrieve"];
+        put?: never;
+        /** @description The daily register: everyone working that day, present or absent. */
+        post: operations["attendance_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/change-password/": {
         parameters: {
             query?: never;
@@ -1019,6 +1037,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/salary/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description One BS month's salary for everyone who worked in it. */
+        get: operations["salary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/salary-payments/{id}/slip/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The salary slip, A5, with signature lines. */
+        get: operations["salary_payments_slip_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/salary-payments/{id}/undo/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["salary_payments_undo_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/salary/pay/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["salary_pay_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings/shop/": {
         parameters: {
             query?: never;
@@ -1074,6 +1158,78 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Workers on the payroll. Never deleted: set the last working day instead. */
+        get: operations["staff_list"];
+        put?: never;
+        /** @description Workers on the payroll. Never deleted: set the last working day instead. */
+        post: operations["staff_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff-advances/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Advances on salary. Taken off the salary of the BS month they are given in. */
+        get: operations["staff_advances_list"];
+        put?: never;
+        /** @description Advances on salary. Taken off the salary of the BS month they are given in. */
+        post: operations["staff_advances_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff-advances/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** @description Advances on salary. Taken off the salary of the BS month they are given in. */
+        delete: operations["staff_advances_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/staff/{id}/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Workers on the payroll. Never deleted: set the last working day instead. */
+        get: operations["staff_retrieve"];
+        /** @description Workers on the payroll. Never deleted: set the last working day instead. */
+        put: operations["staff_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Workers on the payroll. Never deleted: set the last working day instead. */
+        patch: operations["staff_partial_update"];
         trace?: never;
     };
     "/api/v1/stock-items/": {
@@ -2174,6 +2330,78 @@ export interface components {
             /** Format: decimal */
             amount: string;
         };
+        AttendanceCreateDateErrorComponent: {
+            /**
+             * @description * `date` - date (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "date";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "datetime" | "invalid" | "null" | "required";
+            detail: string;
+        };
+        AttendanceCreateError: components["schemas"]["AttendanceCreateNonFieldErrorsErrorComponent"] | components["schemas"]["AttendanceCreateStaffErrorComponent"] | components["schemas"]["AttendanceCreateDateErrorComponent"] | components["schemas"]["AttendanceCreateStatusErrorComponent"];
+        AttendanceCreateErrorResponse400: components["schemas"]["AttendanceCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        AttendanceCreateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        AttendanceCreateStaffErrorComponent: {
+            /**
+             * @description * `staff` - staff (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "staff";
+            /**
+             * @description * `does_not_exist` - does_not_exist
+             *     * `incorrect_type` - incorrect_type
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "does_not_exist" | "incorrect_type" | "null" | "required";
+            detail: string;
+        };
+        AttendanceCreateStatusErrorComponent: {
+            /**
+             * @description * `status` - status (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "status";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null" | "required";
+            detail: string;
+        };
+        AttendanceCreateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["AttendanceCreateError"][];
+        };
+        AttendanceRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         AuthChangePasswordCreateCurrentPasswordErrorComponent: {
             /**
              * @description * `current_password` - current_password (enum property replaced by openapi-typescript)
@@ -3318,6 +3546,27 @@ export interface components {
             /** Format: date */
             bs_month_end: string;
         };
+        DayRegister: {
+            /** Format: date */
+            date: string;
+            date_bs: string;
+            is_holiday: boolean;
+            rows: components["schemas"]["DayRow"][];
+        };
+        DayRow: {
+            staff: components["schemas"]["StaffRef"];
+            status: components["schemas"]["DayStatusEnum"];
+            /** @description The month is paid, so the day cannot change. */
+            locked: boolean;
+        };
+        /**
+         * @description * `present` - present
+         *     * `absent` - absent
+         *     * `off` - off
+         *     * `worked` - worked
+         * @enum {string}
+         */
+        DayStatusEnum: "present" | "absent" | "off" | "worked";
         DeliverRequest: {
             /** @default true */
             issue_invoice?: boolean;
@@ -4845,6 +5094,18 @@ export interface components {
             username: string;
             password: string;
         };
+        MarkAttendance: {
+            staff: number;
+            /** Format: date */
+            date: string;
+            status: components["schemas"]["DayStatusEnum"];
+        };
+        MarkAttendanceRequest: {
+            staff: number;
+            /** Format: date */
+            date: string;
+            status: components["schemas"]["DayStatusEnum"];
+        };
         MaterialInputRequest: {
             roll: number;
             /** Format: decimal */
@@ -5429,6 +5690,44 @@ export interface components {
          * @enum {string}
          */
         ModeEnum: "cash" | "bank" | "cheque" | "wallet";
+        MonthRef: {
+            year: number;
+            month: number;
+            label: string;
+        };
+        MonthSheet: {
+            staff: components["schemas"]["StaffRef"];
+            days_in_month: number;
+            days_employed: number;
+            days_ahead: number;
+            /** Format: decimal */
+            monthly_salary: string;
+            /** Format: decimal */
+            day_rate: string;
+            readonly absent_dates: {
+                [key: string]: unknown;
+            }[];
+            readonly worked_dates: {
+                [key: string]: unknown;
+            }[];
+            /** Format: decimal */
+            base_pay: string;
+            /** Format: decimal */
+            absent_deduction: string;
+            /** Format: decimal */
+            holiday_pay: string;
+            /** Format: decimal */
+            earned: string;
+            advances: components["schemas"]["StaffAdvance"][];
+            /** Format: decimal */
+            advances_total: string;
+            /** Format: decimal */
+            net: string;
+            /** Format: decimal */
+            carry_forward: string;
+            notes: string[];
+            payment: components["schemas"]["SalaryPayment"] | null;
+        };
         MoveJobRequest: {
             to_stage: components["schemas"]["MoveJobToStageEnum"];
             /** @default  */
@@ -7719,6 +8018,21 @@ export interface components {
             previous: string | null;
             results: components["schemas"]["Roll"][];
         };
+        PaginatedStaffAdvanceList: {
+            /** @example 123 */
+            count: number;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=4
+             */
+            next: string | null;
+            /**
+             * Format: uri
+             * @example http://api.example.org/accounts/?page=2
+             */
+            previous: string | null;
+            results: components["schemas"]["StaffAdvance"][];
+        };
         PaginatedStockMovementList: {
             /** @example 123 */
             count: number;
@@ -7907,6 +8221,26 @@ export interface components {
             receipt_number_pattern?: string;
             purchase_number_pattern?: string;
         };
+        PatchedStaffRequest: {
+            name?: string;
+            phone?: string;
+            /** @description e.g. Designer, Fitter */
+            job_title?: string;
+            /** Format: decimal */
+            monthly_salary?: string;
+            /**
+             * Format: date
+             * @description No pay is counted before this day.
+             */
+            joined_on?: string;
+            /**
+             * Format: date
+             * @description No pay is counted after this day.
+             */
+            left_on?: string | null;
+            is_active?: boolean;
+            notes?: string;
+        };
         PatchedStockItemRequest: {
             name?: string;
             kind?: components["schemas"]["KindEnum"];
@@ -7944,6 +8278,17 @@ export interface components {
              */
             is_active?: boolean;
             password?: string;
+        };
+        PaySalaryRequest: {
+            staff: number;
+            year: number;
+            month: number;
+            /** Format: date */
+            paid_on: string;
+            /** @default cash */
+            mode?: components["schemas"]["ModeEnum"];
+            /** @default  */
+            note?: string;
         };
         Payment: {
             readonly id: number;
@@ -8614,6 +8959,22 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["PaymentsVoidCreateError"][];
         };
+        Payroll: {
+            year: number;
+            month: number;
+            label: string;
+            /** Format: date */
+            start: string;
+            /** Format: date */
+            end: string;
+            previous: components["schemas"]["MonthRef"];
+            next: components["schemas"]["MonthRef"] | null;
+            rows: components["schemas"]["MonthSheet"][];
+            /** Format: decimal */
+            total_net: string;
+            /** Format: decimal */
+            total_paid: string;
+        };
         Period: {
             key: string;
             label: string;
@@ -9162,6 +9523,186 @@ export interface components {
             /** @description Sheet name when the file has several */
             sheet: string;
         };
+        SalaryPayCreateError: components["schemas"]["SalaryPayCreateNonFieldErrorsErrorComponent"] | components["schemas"]["SalaryPayCreateStaffErrorComponent"] | components["schemas"]["SalaryPayCreateYearErrorComponent"] | components["schemas"]["SalaryPayCreateMonthErrorComponent"] | components["schemas"]["SalaryPayCreatePaidOnErrorComponent"] | components["schemas"]["SalaryPayCreateModeErrorComponent"] | components["schemas"]["SalaryPayCreateNoteErrorComponent"];
+        SalaryPayCreateErrorResponse400: components["schemas"]["SalaryPayCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        SalaryPayCreateModeErrorComponent: {
+            /**
+             * @description * `mode` - mode (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "mode";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null";
+            detail: string;
+        };
+        SalaryPayCreateMonthErrorComponent: {
+            /**
+             * @description * `month` - month (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "month";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_string_length` - max_string_length
+             *     * `max_value` - max_value
+             *     * `min_value` - min_value
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid" | "max_string_length" | "max_value" | "min_value" | "null" | "required";
+            detail: string;
+        };
+        SalaryPayCreateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        SalaryPayCreateNoteErrorComponent: {
+            /**
+             * @description * `note` - note (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "note";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        SalaryPayCreatePaidOnErrorComponent: {
+            /**
+             * @description * `paid_on` - paid_on (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "paid_on";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "datetime" | "invalid" | "null" | "required";
+            detail: string;
+        };
+        SalaryPayCreateStaffErrorComponent: {
+            /**
+             * @description * `staff` - staff (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "staff";
+            /**
+             * @description * `does_not_exist` - does_not_exist
+             *     * `incorrect_type` - incorrect_type
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "does_not_exist" | "incorrect_type" | "null" | "required";
+            detail: string;
+        };
+        SalaryPayCreateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["SalaryPayCreateError"][];
+        };
+        SalaryPayCreateYearErrorComponent: {
+            /**
+             * @description * `year` - year (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "year";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_string_length` - max_string_length
+             *     * `max_value` - max_value
+             *     * `min_value` - min_value
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid" | "max_string_length" | "max_value" | "min_value" | "null" | "required";
+            detail: string;
+        };
+        SalaryPayment: {
+            readonly id: number;
+            /** Format: date */
+            paid_on: string;
+            readonly paid_on_bs: string | null;
+            mode: components["schemas"]["ModeEnum"];
+            readonly mode_label: string;
+            note: string;
+            /** Format: decimal */
+            net_paid: string;
+            readonly paid_by_name: string;
+        };
+        SalaryPaymentsSlipRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        SalaryPaymentsUndoCreateError: components["schemas"]["SalaryPaymentsUndoCreateNonFieldErrorsErrorComponent"] | components["schemas"]["SalaryPaymentsUndoCreateReasonErrorComponent"];
+        SalaryPaymentsUndoCreateErrorResponse400: components["schemas"]["SalaryPaymentsUndoCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        SalaryPaymentsUndoCreateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        SalaryPaymentsUndoCreateReasonErrorComponent: {
+            /**
+             * @description * `reason` - reason (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "reason";
+            /**
+             * @description * `blank` - blank
+             *     * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `required` - required
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "blank" | "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "required" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        SalaryPaymentsUndoCreateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["SalaryPaymentsUndoCreateError"][];
+        };
+        SalaryRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         /**
          * @description * `server_error` - Server Error
          * @enum {string}
@@ -9743,6 +10284,644 @@ export interface components {
          * @enum {string}
          */
         SourceEnum: "counter" | "import";
+        Staff: {
+            readonly id: number;
+            name: string;
+            phone: string;
+            /** @description e.g. Designer, Fitter */
+            job_title: string;
+            /** Format: decimal */
+            monthly_salary: string;
+            /**
+             * Format: date
+             * @description No pay is counted before this day.
+             */
+            joined_on: string;
+            readonly joined_on_bs: string | null;
+            /**
+             * Format: date
+             * @description No pay is counted after this day.
+             */
+            left_on: string | null;
+            readonly left_on_bs: string | null;
+            is_active: boolean;
+            notes: string;
+        };
+        StaffAdvance: {
+            readonly id: number;
+            staff: number;
+            readonly staff_name: string;
+            /** Format: date */
+            date: string;
+            readonly date_bs: string | null;
+            /** Format: decimal */
+            amount: string;
+            note: string;
+            readonly carried: boolean;
+            readonly given_by_name: string;
+        };
+        StaffAdvanceRequest: {
+            staff: number;
+            /** Format: date */
+            date: string;
+            /** Format: decimal */
+            amount: string;
+            note?: string;
+        };
+        StaffAdvancesCreateAmountErrorComponent: {
+            /**
+             * @description * `amount` - amount (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "amount";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null" | "required";
+            detail: string;
+        };
+        StaffAdvancesCreateDateErrorComponent: {
+            /**
+             * @description * `date` - date (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "date";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "datetime" | "invalid" | "null" | "required";
+            detail: string;
+        };
+        StaffAdvancesCreateError: components["schemas"]["StaffAdvancesCreateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffAdvancesCreateStaffErrorComponent"] | components["schemas"]["StaffAdvancesCreateDateErrorComponent"] | components["schemas"]["StaffAdvancesCreateAmountErrorComponent"] | components["schemas"]["StaffAdvancesCreateNoteErrorComponent"];
+        StaffAdvancesCreateErrorResponse400: components["schemas"]["StaffAdvancesCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        StaffAdvancesCreateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        StaffAdvancesCreateNoteErrorComponent: {
+            /**
+             * @description * `note` - note (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "note";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffAdvancesCreateStaffErrorComponent: {
+            /**
+             * @description * `staff` - staff (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "staff";
+            /**
+             * @description * `does_not_exist` - does_not_exist
+             *     * `incorrect_type` - incorrect_type
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "does_not_exist" | "incorrect_type" | "null" | "required";
+            detail: string;
+        };
+        StaffAdvancesCreateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["StaffAdvancesCreateError"][];
+        };
+        StaffAdvancesDestroyErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        StaffAdvancesListErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        StaffCreateError: components["schemas"]["StaffCreateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffCreateNameErrorComponent"] | components["schemas"]["StaffCreatePhoneErrorComponent"] | components["schemas"]["StaffCreateJobTitleErrorComponent"] | components["schemas"]["StaffCreateMonthlySalaryErrorComponent"] | components["schemas"]["StaffCreateJoinedOnErrorComponent"] | components["schemas"]["StaffCreateLeftOnErrorComponent"] | components["schemas"]["StaffCreateIsActiveErrorComponent"] | components["schemas"]["StaffCreateNotesErrorComponent"];
+        StaffCreateErrorResponse400: components["schemas"]["StaffCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        StaffCreateIsActiveErrorComponent: {
+            /**
+             * @description * `is_active` - is_active (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "is_active";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        StaffCreateJobTitleErrorComponent: {
+            /**
+             * @description * `job_title` - job_title (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "job_title";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffCreateJoinedOnErrorComponent: {
+            /**
+             * @description * `joined_on` - joined_on (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "joined_on";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "datetime" | "invalid" | "null" | "required";
+            detail: string;
+        };
+        StaffCreateLeftOnErrorComponent: {
+            /**
+             * @description * `left_on` - left_on (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "left_on";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "datetime" | "invalid";
+            detail: string;
+        };
+        StaffCreateMonthlySalaryErrorComponent: {
+            /**
+             * @description * `monthly_salary` - monthly_salary (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "monthly_salary";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null" | "required";
+            detail: string;
+        };
+        StaffCreateNameErrorComponent: {
+            /**
+             * @description * `name` - name (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "name";
+            /**
+             * @description * `blank` - blank
+             *     * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `required` - required
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "blank" | "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "required" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffCreateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        StaffCreateNotesErrorComponent: {
+            /**
+             * @description * `notes` - notes (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "notes";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffCreatePhoneErrorComponent: {
+            /**
+             * @description * `phone` - phone (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "phone";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffCreateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["StaffCreateError"][];
+        };
+        StaffListErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        StaffPartialUpdateError: components["schemas"]["StaffPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffPartialUpdateNameErrorComponent"] | components["schemas"]["StaffPartialUpdatePhoneErrorComponent"] | components["schemas"]["StaffPartialUpdateJobTitleErrorComponent"] | components["schemas"]["StaffPartialUpdateMonthlySalaryErrorComponent"] | components["schemas"]["StaffPartialUpdateJoinedOnErrorComponent"] | components["schemas"]["StaffPartialUpdateLeftOnErrorComponent"] | components["schemas"]["StaffPartialUpdateIsActiveErrorComponent"] | components["schemas"]["StaffPartialUpdateNotesErrorComponent"];
+        StaffPartialUpdateErrorResponse400: components["schemas"]["StaffPartialUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        StaffPartialUpdateIsActiveErrorComponent: {
+            /**
+             * @description * `is_active` - is_active (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "is_active";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        StaffPartialUpdateJobTitleErrorComponent: {
+            /**
+             * @description * `job_title` - job_title (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "job_title";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffPartialUpdateJoinedOnErrorComponent: {
+            /**
+             * @description * `joined_on` - joined_on (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "joined_on";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "datetime" | "invalid" | "null" | "required";
+            detail: string;
+        };
+        StaffPartialUpdateLeftOnErrorComponent: {
+            /**
+             * @description * `left_on` - left_on (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "left_on";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "datetime" | "invalid";
+            detail: string;
+        };
+        StaffPartialUpdateMonthlySalaryErrorComponent: {
+            /**
+             * @description * `monthly_salary` - monthly_salary (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "monthly_salary";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null" | "required";
+            detail: string;
+        };
+        StaffPartialUpdateNameErrorComponent: {
+            /**
+             * @description * `name` - name (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "name";
+            /**
+             * @description * `blank` - blank
+             *     * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `required` - required
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "blank" | "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "required" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffPartialUpdateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        StaffPartialUpdateNotesErrorComponent: {
+            /**
+             * @description * `notes` - notes (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "notes";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffPartialUpdatePhoneErrorComponent: {
+            /**
+             * @description * `phone` - phone (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "phone";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffPartialUpdateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["StaffPartialUpdateError"][];
+        };
+        StaffRef: {
+            readonly id: number;
+            name: string;
+            /** @description e.g. Designer, Fitter */
+            job_title: string;
+        };
+        StaffRequest: {
+            name: string;
+            phone?: string;
+            /** @description e.g. Designer, Fitter */
+            job_title?: string;
+            /** Format: decimal */
+            monthly_salary: string;
+            /**
+             * Format: date
+             * @description No pay is counted before this day.
+             */
+            joined_on: string;
+            /**
+             * Format: date
+             * @description No pay is counted after this day.
+             */
+            left_on?: string | null;
+            is_active?: boolean;
+            notes?: string;
+        };
+        StaffRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        StaffUpdateError: components["schemas"]["StaffUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffUpdateNameErrorComponent"] | components["schemas"]["StaffUpdatePhoneErrorComponent"] | components["schemas"]["StaffUpdateJobTitleErrorComponent"] | components["schemas"]["StaffUpdateMonthlySalaryErrorComponent"] | components["schemas"]["StaffUpdateJoinedOnErrorComponent"] | components["schemas"]["StaffUpdateLeftOnErrorComponent"] | components["schemas"]["StaffUpdateIsActiveErrorComponent"] | components["schemas"]["StaffUpdateNotesErrorComponent"];
+        StaffUpdateErrorResponse400: components["schemas"]["StaffUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        StaffUpdateIsActiveErrorComponent: {
+            /**
+             * @description * `is_active` - is_active (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "is_active";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        StaffUpdateJobTitleErrorComponent: {
+            /**
+             * @description * `job_title` - job_title (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "job_title";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffUpdateJoinedOnErrorComponent: {
+            /**
+             * @description * `joined_on` - joined_on (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "joined_on";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "datetime" | "invalid" | "null" | "required";
+            detail: string;
+        };
+        StaffUpdateLeftOnErrorComponent: {
+            /**
+             * @description * `left_on` - left_on (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "left_on";
+            /**
+             * @description * `datetime` - datetime
+             *     * `invalid` - invalid
+             * @enum {string}
+             */
+            code: "datetime" | "invalid";
+            detail: string;
+        };
+        StaffUpdateMonthlySalaryErrorComponent: {
+            /**
+             * @description * `monthly_salary` - monthly_salary (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "monthly_salary";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value" | "null" | "required";
+            detail: string;
+        };
+        StaffUpdateNameErrorComponent: {
+            /**
+             * @description * `name` - name (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "name";
+            /**
+             * @description * `blank` - blank
+             *     * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `required` - required
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "blank" | "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "required" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffUpdateNonFieldErrorsErrorComponent: {
+            /**
+             * @description * `non_field_errors` - non_field_errors (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "non_field_errors";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
+        StaffUpdateNotesErrorComponent: {
+            /**
+             * @description * `notes` - notes (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "notes";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffUpdatePhoneErrorComponent: {
+            /**
+             * @description * `phone` - phone (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "phone";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_length` - max_length
+             *     * `null` - null
+             *     * `null_characters_not_allowed` - null_characters_not_allowed
+             *     * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+             * @enum {string}
+             */
+            code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffUpdateValidationError: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "validation_error";
+            errors: components["schemas"]["StaffUpdateError"][];
+        };
         Statement: {
             customer_id: number;
             customer_name: string;
@@ -11312,6 +12491,9 @@ export interface components {
             /** Format: decimal */
             paid_amount: string;
         };
+        UndoSalaryRequest: {
+            reason: string;
+        };
         /**
          * @description * `in` - Inches
          *     * `ft` - Feet
@@ -12730,6 +13912,181 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AddonsHistoryListErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    attendance_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Default: today */
+                date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayRegister"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    attendance_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkAttendanceRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MarkAttendanceRequest"];
+                "multipart/form-data": components["schemas"]["MarkAttendanceRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkAttendance"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceCreateErrorResponse400"];
                 };
             };
             401: {
@@ -19035,6 +20392,358 @@ export interface operations {
             };
         };
     };
+    salary_retrieve: {
+        parameters: {
+            query?: {
+                /** @description BS month YYYY-MM; default: now */
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Payroll"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    salary_payments_slip_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this salary payment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryPaymentsSlipRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    salary_payments_undo_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this salary payment. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UndoSalaryRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["UndoSalaryRequest"];
+                "multipart/form-data": components["schemas"]["UndoSalaryRequest"];
+            };
+        };
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryPaymentsUndoCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    salary_pay_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaySalaryRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PaySalaryRequest"];
+                "multipart/form-data": components["schemas"]["PaySalaryRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryPayment"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalaryPayCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
     settings_shop_retrieve: {
         parameters: {
             query?: never;
@@ -19317,6 +21026,720 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SettingsShopPreviewRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    staff_list: {
+        parameters: {
+            query?: {
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A search term. */
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Staff"][];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffListErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    staff_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StaffRequest"];
+                "multipart/form-data": components["schemas"]["StaffRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Staff"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    staff_advances_list: {
+        parameters: {
+            query?: {
+                /** @description Which field to use when ordering the results. */
+                ordering?: string;
+                /** @description A page number within the paginated result set. */
+                page?: number;
+                /** @description Number of results to return per page. */
+                page_size?: number;
+                /** @description A search term. */
+                search?: string;
+                staff?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedStaffAdvanceList"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAdvancesListErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    staff_advances_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffAdvanceRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StaffAdvanceRequest"];
+                "multipart/form-data": components["schemas"]["StaffAdvanceRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAdvance"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAdvancesCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    staff_advances_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this staff advance. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffAdvancesDestroyErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    staff_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this staff. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Staff"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffRetrieveErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    staff_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this staff. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["StaffRequest"];
+                "multipart/form-data": components["schemas"]["StaffRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Staff"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffUpdateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    staff_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this staff. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedStaffRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedStaffRequest"];
+                "multipart/form-data": components["schemas"]["PatchedStaffRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Staff"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffPartialUpdateErrorResponse400"];
                 };
             };
             401: {

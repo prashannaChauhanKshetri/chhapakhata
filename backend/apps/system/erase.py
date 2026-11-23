@@ -38,6 +38,12 @@ class Table:
 
 # Children before parents, so every row's references are gone before it is.
 TABLES = [
+    # Advances point at salary payments (carried amounts), so they go first.
+    Table("staff.StaffAdvance", "Salary advances"),
+    Table("staff.SalaryPayment", "Salary payments"),
+    Table("staff.Attendance", ""),
+    Table("staff.Staff", "Staff"),
+    Table("staff.HistoricalStaff", ""),
     Table("billing.LedgerEntry", "Ledger entries"),
     Table("billing.Payment", "Payments"),
     Table("billing.InvoiceLine", ""),

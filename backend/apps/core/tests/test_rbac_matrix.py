@@ -36,6 +36,10 @@ READS = [
     ("/api/v1/reports/stock/", True, False, False),
     ("/api/v1/dashboard/", True, True, True),
     ("/api/v1/settings/shop/", True, True, True),
+    ("/api/v1/staff/", True, False, False),
+    ("/api/v1/attendance/", True, False, False),
+    ("/api/v1/staff-advances/", True, False, False),
+    ("/api/v1/salary/", True, False, False),
 ]
 
 
@@ -130,4 +134,5 @@ def test_matrix_matches_proposal_summary():
     assert Perm.LEDGER_VIEW in desk and Perm.LEDGER_MANAGE not in desk
     assert Perm.INVENTORY_RECORD_USAGE in op and Perm.INVENTORY_RECORD_USAGE not in desk
     assert Perm.USERS_MANAGE not in desk | op
+    assert Perm.STAFF_MANAGE not in desk | op  # salaries are the owner's alone
     assert ROLE_PERMISSIONS[Role.OWNER] == Perm.all()

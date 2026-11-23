@@ -19,16 +19,18 @@ const PHONE = '(max-width: 47.99em)';
 type AppDataTableProps<T> = DataTableProps<T> & {
   /** On phones, rows show as cards unless this is 'table' (for narrow tables that fit). */
   phone?: 'cards' | 'table';
+  /** The column shown top right of a phone card; default: the first right-aligned one. */
+  phoneAside?: string;
 };
 
 /**
  * The app's data table: skeleton rows, not a spinner, while records load. On a
  * phone each row becomes a card, so no column is cut off at the screen edge.
  */
-export function DataTable<T>({ phone = 'cards', ...props }: AppDataTableProps<T>) {
+export function DataTable<T>({ phone = 'cards', phoneAside, ...props }: AppDataTableProps<T>) {
   const isPhone = useMediaQuery(PHONE, false, { getInitialValueInEffect: false });
   if (isPhone && phone === 'cards' && props.columns) {
-    return <PhoneCards<T> {...props} />;
+    return <PhoneCards<T> {...props} aside={phoneAside} />;
   }
   // The props type is a union that forbids customLoader alongside spinner
   // options; the app never sets those, so replacing the loader is safe.
@@ -66,7 +68,7 @@ interface Paging {
  * column (usually an amount) sits beside it, and the other columns follow as
  * label and value. Columns without a title (row actions) end the top line.
  */
-function PhoneCards<T>(props: DataTableProps<T>) {
+function PhoneCards<T>({ aside: asideKey, ...props }: DataTableProps<T> & { aside?: string }) {
   const {
     columns = [],
     records = [],
@@ -88,7 +90,9 @@ function PhoneCards<T>(props: DataTableProps<T>) {
 
   const shown = columns.filter((column) => visible(column, theme));
   const [head, ...rest] = shown;
-  const aside = rest.find((c) => c.textAlign === 'right');
+  const aside = asideKey
+    ? rest.find((c) => c.accessor === asideKey)
+    : rest.find((c) => c.textAlign === 'right');
   const actions = rest.filter((c) => c.title === '');
   const fields = rest.filter((c) => c !== aside && !actions.includes(c));
 

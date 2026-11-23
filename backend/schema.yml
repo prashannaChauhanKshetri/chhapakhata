@@ -1169,6 +1169,276 @@ paths:
                 items:
                   $ref: '#/components/schemas/RateHistory'
           description: ''
+  /api/v1/attendance/:
+    get:
+      operationId: attendance_retrieve
+      description: 'The daily register: everyone working that day, present or absent.'
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+          format: date
+        description: 'Default: today'
+      tags:
+      - attendance
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DayRegister'
+          description: ''
+    post:
+      operationId: attendance_create
+      description: 'The daily register: everyone working that day, present or absent.'
+      tags:
+      - attendance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkAttendanceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MarkAttendanceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MarkAttendanceRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarkAttendance'
+          description: ''
   /api/v1/auth/change-password/:
     post:
       operationId: auth_change_password_create
@@ -11131,6 +11401,549 @@ paths:
               schema:
                 $ref: '#/components/schemas/Roll'
           description: ''
+  /api/v1/salary/:
+    get:
+      operationId: salary_retrieve
+      description: One BS month's salary for everyone who worked in it.
+      parameters:
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: 'BS month YYYY-MM; default: now'
+      tags:
+      - salary
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payroll'
+          description: ''
+  /api/v1/salary-payments/{id}/slip/:
+    get:
+      operationId: salary_payments_slip_retrieve
+      description: The salary slip, A5, with signature lines.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this salary payment.
+        required: true
+      tags:
+      - salary-payments
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryPaymentsSlipRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/salary-payments/{id}/undo/:
+    post:
+      operationId: salary_payments_undo_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this salary payment.
+        required: true
+      tags:
+      - salary-payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UndoSalaryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UndoSalaryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UndoSalaryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryPaymentsUndoCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '204':
+          description: No response body
+  /api/v1/salary/pay/:
+    post:
+      operationId: salary_pay_create
+      tags:
+      - salary
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaySalaryRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PaySalaryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PaySalaryRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryPayCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalaryPayment'
+          description: ''
   /api/v1/settings/shop/:
     get:
       operationId: settings_shop_retrieve
@@ -11667,6 +12480,1133 @@ paths:
               schema:
                 type: string
                 format: binary
+          description: ''
+  /api/v1/staff/:
+    get:
+      operationId: staff_list
+      description: 'Workers on the payroll. Never deleted: set the last working day
+        instead.'
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - staff
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffListErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Staff'
+          description: ''
+    post:
+      operationId: staff_create
+      description: 'Workers on the payroll. Never deleted: set the last working day
+        instead.'
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StaffRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StaffRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+          description: ''
+  /api/v1/staff-advances/:
+    get:
+      operationId: staff_advances_list
+      description: Advances on salary. Taken off the salary of the BS month they are
+        given in.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: staff
+        schema:
+          type: integer
+      tags:
+      - staff-advances
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffAdvancesListErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStaffAdvanceList'
+          description: ''
+    post:
+      operationId: staff_advances_create
+      description: Advances on salary. Taken off the salary of the BS month they are
+        given in.
+      tags:
+      - staff-advances
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffAdvanceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StaffAdvanceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StaffAdvanceRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffAdvancesCreateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffAdvance'
+          description: ''
+  /api/v1/staff-advances/{id}/:
+    delete:
+      operationId: staff_advances_destroy
+      description: Advances on salary. Taken off the salary of the BS month they are
+        given in.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this staff advance.
+        required: true
+      tags:
+      - staff-advances
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffAdvancesDestroyErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '204':
+          description: No response body
+  /api/v1/staff/{id}/:
+    get:
+      operationId: staff_retrieve
+      description: 'Workers on the payroll. Never deleted: set the last working day
+        instead.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this staff.
+        required: true
+      tags:
+      - staff
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+          description: ''
+    put:
+      operationId: staff_update
+      description: 'Workers on the payroll. Never deleted: set the last working day
+        instead.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this staff.
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StaffRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StaffRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffUpdateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+          description: ''
+    patch:
+      operationId: staff_partial_update
+      description: 'Workers on the payroll. Never deleted: set the last working day
+        instead.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this staff.
+        required: true
+      tags:
+      - staff
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStaffRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffPartialUpdateErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
           description: ''
   /api/v1/stock-items/:
     get:
@@ -18265,6 +20205,145 @@ components:
       required:
       - amount
       - label
+    AttendanceCreateDateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - date
+          type: string
+          description: '* `date` - date'
+        code:
+          enum:
+          - datetime
+          - invalid
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    AttendanceCreateError:
+      oneOf:
+      - $ref: '#/components/schemas/AttendanceCreateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/AttendanceCreateStaffErrorComponent'
+      - $ref: '#/components/schemas/AttendanceCreateDateErrorComponent'
+      - $ref: '#/components/schemas/AttendanceCreateStatusErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/AttendanceCreateNonFieldErrorsErrorComponent'
+          staff: '#/components/schemas/AttendanceCreateStaffErrorComponent'
+          date: '#/components/schemas/AttendanceCreateDateErrorComponent'
+          status: '#/components/schemas/AttendanceCreateStatusErrorComponent'
+    AttendanceCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/AttendanceCreateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/AttendanceCreateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    AttendanceCreateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    AttendanceCreateStaffErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - staff
+          type: string
+          description: '* `staff` - staff'
+        code:
+          enum:
+          - does_not_exist
+          - incorrect_type
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `does_not_exist` - does_not_exist
+            * `incorrect_type` - incorrect_type
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    AttendanceCreateStatusErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - status
+          type: string
+          description: '* `status` - status'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    AttendanceCreateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceCreateError'
+      required:
+      - errors
+      - type
+    AttendanceRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
     AuthChangePasswordCreateCurrentPasswordErrorComponent:
       type: object
       properties:
@@ -20536,6 +22615,51 @@ components:
       - bs_month_end
       - bs_month_start
       - fiscal_year
+    DayRegister:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        date_bs:
+          type: string
+        is_holiday:
+          type: boolean
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayRow'
+      required:
+      - date
+      - date_bs
+      - is_holiday
+      - rows
+    DayRow:
+      type: object
+      properties:
+        staff:
+          $ref: '#/components/schemas/StaffRef'
+        status:
+          $ref: '#/components/schemas/DayStatusEnum'
+        locked:
+          type: boolean
+          description: The month is paid, so the day cannot change.
+      required:
+      - locked
+      - staff
+      - status
+    DayStatusEnum:
+      enum:
+      - present
+      - absent
+      - 'off'
+      - worked
+      type: string
+      description: |-
+        * `present` - present
+        * `absent` - absent
+        * `off` - off
+        * `worked` - worked
     DeliverRequest:
       type: object
       properties:
@@ -23773,6 +25897,34 @@ components:
       required:
       - password
       - username
+    MarkAttendance:
+      type: object
+      properties:
+        staff:
+          type: integer
+        date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/DayStatusEnum'
+      required:
+      - date
+      - staff
+      - status
+    MarkAttendanceRequest:
+      type: object
+      properties:
+        staff:
+          type: integer
+        date:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/DayStatusEnum'
+      required:
+      - date
+      - staff
+      - status
     MaterialInputRequest:
       type: object
       properties:
@@ -24917,6 +27069,109 @@ components:
         * `bank` - Bank transfer
         * `cheque` - Cheque
         * `wallet` - QR / Wallet
+    MonthRef:
+      type: object
+      properties:
+        year:
+          type: integer
+        month:
+          type: integer
+        label:
+          type: string
+      required:
+      - label
+      - month
+      - year
+    MonthSheet:
+      type: object
+      properties:
+        staff:
+          $ref: '#/components/schemas/StaffRef'
+        days_in_month:
+          type: integer
+        days_employed:
+          type: integer
+        days_ahead:
+          type: integer
+        monthly_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        day_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        absent_dates:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        worked_dates:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        base_pay:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        absent_deduction:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        holiday_pay:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        earned:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        advances:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffAdvance'
+        advances_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        carry_forward:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        notes:
+          type: array
+          items:
+            type: string
+        payment:
+          allOf:
+          - $ref: '#/components/schemas/SalaryPayment'
+          nullable: true
+      required:
+      - absent_dates
+      - absent_deduction
+      - advances
+      - advances_total
+      - base_pay
+      - carry_forward
+      - day_rate
+      - days_ahead
+      - days_employed
+      - days_in_month
+      - earned
+      - holiday_pay
+      - monthly_salary
+      - net
+      - notes
+      - payment
+      - staff
+      - worked_dates
     MoveJobRequest:
       type: object
       properties:
@@ -29223,6 +31478,31 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Roll'
+    PaginatedStaffAdvanceList:
+      type: object
+      required:
+      - count
+      - next
+      - previous
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffAdvance'
     PaginatedStockMovementList:
       type: object
       required:
@@ -29578,6 +31858,41 @@ components:
           type: string
           minLength: 1
           maxLength: 40
+    PatchedStaffRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        phone:
+          oneOf:
+          - type: string
+            pattern: ^[0-9+\-\s]{6,20}$
+            maxLength: 20
+          - type: string
+            maxLength: 0
+        job_title:
+          type: string
+          description: e.g. Designer, Fitter
+          maxLength: 80
+        monthly_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        joined_on:
+          type: string
+          format: date
+          description: No pay is counted before this day.
+        left_on:
+          type: string
+          format: date
+          nullable: true
+          description: No pay is counted after this day.
+        is_active:
+          type: boolean
+        notes:
+          type: string
     PatchedStockItemRequest:
       type: object
       properties:
@@ -29661,6 +31976,35 @@ components:
           type: string
           writeOnly: true
           minLength: 8
+    PaySalaryRequest:
+      type: object
+      properties:
+        staff:
+          type: integer
+        year:
+          type: integer
+          maximum: 2200
+          minimum: 2000
+        month:
+          type: integer
+          maximum: 12
+          minimum: 1
+        paid_on:
+          type: string
+          format: date
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/ModeEnum'
+          default: cash
+        note:
+          type: string
+          default: ''
+          maxLength: 200
+      required:
+      - month
+      - paid_on
+      - staff
+      - year
     Payment:
       type: object
       properties:
@@ -30947,6 +33291,50 @@ components:
       required:
       - errors
       - type
+    Payroll:
+      type: object
+      properties:
+        year:
+          type: integer
+        month:
+          type: integer
+        label:
+          type: string
+        start:
+          type: string
+          format: date
+        end:
+          type: string
+          format: date
+        previous:
+          $ref: '#/components/schemas/MonthRef'
+        next:
+          allOf:
+          - $ref: '#/components/schemas/MonthRef'
+          nullable: true
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthSheet'
+        total_net:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        total_paid:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+      required:
+      - end
+      - label
+      - month
+      - next
+      - previous
+      - rows
+      - start
+      - total_net
+      - total_paid
+      - year
     Period:
       type: object
       properties:
@@ -32098,6 +34486,365 @@ components:
       - message
       - row
       - sheet
+    SalaryPayCreateError:
+      oneOf:
+      - $ref: '#/components/schemas/SalaryPayCreateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/SalaryPayCreateStaffErrorComponent'
+      - $ref: '#/components/schemas/SalaryPayCreateYearErrorComponent'
+      - $ref: '#/components/schemas/SalaryPayCreateMonthErrorComponent'
+      - $ref: '#/components/schemas/SalaryPayCreatePaidOnErrorComponent'
+      - $ref: '#/components/schemas/SalaryPayCreateModeErrorComponent'
+      - $ref: '#/components/schemas/SalaryPayCreateNoteErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/SalaryPayCreateNonFieldErrorsErrorComponent'
+          staff: '#/components/schemas/SalaryPayCreateStaffErrorComponent'
+          year: '#/components/schemas/SalaryPayCreateYearErrorComponent'
+          month: '#/components/schemas/SalaryPayCreateMonthErrorComponent'
+          paid_on: '#/components/schemas/SalaryPayCreatePaidOnErrorComponent'
+          mode: '#/components/schemas/SalaryPayCreateModeErrorComponent'
+          note: '#/components/schemas/SalaryPayCreateNoteErrorComponent'
+    SalaryPayCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/SalaryPayCreateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/SalaryPayCreateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    SalaryPayCreateModeErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - mode
+          type: string
+          description: '* `mode` - mode'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SalaryPayCreateMonthErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - month
+          type: string
+          description: '* `month` - month'
+        code:
+          enum:
+          - invalid
+          - max_string_length
+          - max_value
+          - min_value
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_string_length` - max_string_length
+            * `max_value` - max_value
+            * `min_value` - min_value
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SalaryPayCreateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SalaryPayCreateNoteErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - note
+          type: string
+          description: '* `note` - note'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SalaryPayCreatePaidOnErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - paid_on
+          type: string
+          description: '* `paid_on` - paid_on'
+        code:
+          enum:
+          - datetime
+          - invalid
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SalaryPayCreateStaffErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - staff
+          type: string
+          description: '* `staff` - staff'
+        code:
+          enum:
+          - does_not_exist
+          - incorrect_type
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `does_not_exist` - does_not_exist
+            * `incorrect_type` - incorrect_type
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SalaryPayCreateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalaryPayCreateError'
+      required:
+      - errors
+      - type
+    SalaryPayCreateYearErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - year
+          type: string
+          description: '* `year` - year'
+        code:
+          enum:
+          - invalid
+          - max_string_length
+          - max_value
+          - min_value
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_string_length` - max_string_length
+            * `max_value` - max_value
+            * `min_value` - min_value
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SalaryPayment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        paid_on:
+          type: string
+          format: date
+        paid_on_bs:
+          type: string
+          nullable: true
+          readOnly: true
+        mode:
+          $ref: '#/components/schemas/ModeEnum'
+        mode_label:
+          type: string
+          readOnly: true
+        note:
+          type: string
+          maxLength: 200
+        net_paid:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        paid_by_name:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - mode
+      - mode_label
+      - net_paid
+      - note
+      - paid_by_name
+      - paid_on
+      - paid_on_bs
+    SalaryPaymentsSlipRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    SalaryPaymentsUndoCreateError:
+      oneOf:
+      - $ref: '#/components/schemas/SalaryPaymentsUndoCreateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/SalaryPaymentsUndoCreateReasonErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/SalaryPaymentsUndoCreateNonFieldErrorsErrorComponent'
+          reason: '#/components/schemas/SalaryPaymentsUndoCreateReasonErrorComponent'
+    SalaryPaymentsUndoCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/SalaryPaymentsUndoCreateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/SalaryPaymentsUndoCreateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    SalaryPaymentsUndoCreateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SalaryPaymentsUndoCreateReasonErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - reason
+          type: string
+          description: '* `reason` - reason'
+        code:
+          enum:
+          - blank
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - required
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `blank` - blank
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `required` - required
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    SalaryPaymentsUndoCreateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalaryPaymentsUndoCreateError'
+      required:
+      - errors
+      - type
+    SalaryRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
     ServerErrorEnum:
       enum:
       - server_error
@@ -33174,6 +35921,1231 @@ components:
       description: |-
         * `counter` - Entered in ChhapaKhata
         * `import` - Imported work log
+    Staff:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        phone:
+          oneOf:
+          - type: string
+            pattern: ^[0-9+\-\s]{6,20}$
+            maxLength: 20
+          - type: string
+            maxLength: 0
+        job_title:
+          type: string
+          description: e.g. Designer, Fitter
+          maxLength: 80
+        monthly_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        joined_on:
+          type: string
+          format: date
+          description: No pay is counted before this day.
+        joined_on_bs:
+          type: string
+          nullable: true
+          readOnly: true
+        left_on:
+          type: string
+          format: date
+          nullable: true
+          description: No pay is counted after this day.
+        left_on_bs:
+          type: string
+          nullable: true
+          readOnly: true
+        is_active:
+          type: boolean
+        notes:
+          type: string
+      required:
+      - id
+      - is_active
+      - job_title
+      - joined_on
+      - joined_on_bs
+      - left_on
+      - left_on_bs
+      - monthly_salary
+      - name
+      - notes
+      - phone
+    StaffAdvance:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        staff:
+          type: integer
+        staff_name:
+          type: string
+          readOnly: true
+        date:
+          type: string
+          format: date
+        date_bs:
+          type: string
+          nullable: true
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        note:
+          type: string
+          maxLength: 200
+        carried:
+          type: boolean
+          readOnly: true
+        given_by_name:
+          type: string
+          readOnly: true
+      required:
+      - amount
+      - carried
+      - date
+      - date_bs
+      - given_by_name
+      - id
+      - note
+      - staff
+      - staff_name
+    StaffAdvanceRequest:
+      type: object
+      properties:
+        staff:
+          type: integer
+        date:
+          type: string
+          format: date
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        note:
+          type: string
+          maxLength: 200
+      required:
+      - amount
+      - date
+      - staff
+    StaffAdvancesCreateAmountErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - amount
+          type: string
+          description: '* `amount` - amount'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - min_value
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `min_value` - min_value
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffAdvancesCreateDateErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - date
+          type: string
+          description: '* `date` - date'
+        code:
+          enum:
+          - datetime
+          - invalid
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffAdvancesCreateError:
+      oneOf:
+      - $ref: '#/components/schemas/StaffAdvancesCreateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/StaffAdvancesCreateStaffErrorComponent'
+      - $ref: '#/components/schemas/StaffAdvancesCreateDateErrorComponent'
+      - $ref: '#/components/schemas/StaffAdvancesCreateAmountErrorComponent'
+      - $ref: '#/components/schemas/StaffAdvancesCreateNoteErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/StaffAdvancesCreateNonFieldErrorsErrorComponent'
+          staff: '#/components/schemas/StaffAdvancesCreateStaffErrorComponent'
+          date: '#/components/schemas/StaffAdvancesCreateDateErrorComponent'
+          amount: '#/components/schemas/StaffAdvancesCreateAmountErrorComponent'
+          note: '#/components/schemas/StaffAdvancesCreateNoteErrorComponent'
+    StaffAdvancesCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/StaffAdvancesCreateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/StaffAdvancesCreateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    StaffAdvancesCreateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffAdvancesCreateNoteErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - note
+          type: string
+          description: '* `note` - note'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffAdvancesCreateStaffErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - staff
+          type: string
+          description: '* `staff` - staff'
+        code:
+          enum:
+          - does_not_exist
+          - incorrect_type
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `does_not_exist` - does_not_exist
+            * `incorrect_type` - incorrect_type
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffAdvancesCreateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffAdvancesCreateError'
+      required:
+      - errors
+      - type
+    StaffAdvancesDestroyErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    StaffAdvancesListErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    StaffCreateError:
+      oneOf:
+      - $ref: '#/components/schemas/StaffCreateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/StaffCreateNameErrorComponent'
+      - $ref: '#/components/schemas/StaffCreatePhoneErrorComponent'
+      - $ref: '#/components/schemas/StaffCreateJobTitleErrorComponent'
+      - $ref: '#/components/schemas/StaffCreateMonthlySalaryErrorComponent'
+      - $ref: '#/components/schemas/StaffCreateJoinedOnErrorComponent'
+      - $ref: '#/components/schemas/StaffCreateLeftOnErrorComponent'
+      - $ref: '#/components/schemas/StaffCreateIsActiveErrorComponent'
+      - $ref: '#/components/schemas/StaffCreateNotesErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/StaffCreateNonFieldErrorsErrorComponent'
+          name: '#/components/schemas/StaffCreateNameErrorComponent'
+          phone: '#/components/schemas/StaffCreatePhoneErrorComponent'
+          job_title: '#/components/schemas/StaffCreateJobTitleErrorComponent'
+          monthly_salary: '#/components/schemas/StaffCreateMonthlySalaryErrorComponent'
+          joined_on: '#/components/schemas/StaffCreateJoinedOnErrorComponent'
+          left_on: '#/components/schemas/StaffCreateLeftOnErrorComponent'
+          is_active: '#/components/schemas/StaffCreateIsActiveErrorComponent'
+          notes: '#/components/schemas/StaffCreateNotesErrorComponent'
+    StaffCreateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/StaffCreateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/StaffCreateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    StaffCreateIsActiveErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - is_active
+          type: string
+          description: '* `is_active` - is_active'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffCreateJobTitleErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - job_title
+          type: string
+          description: '* `job_title` - job_title'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffCreateJoinedOnErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - joined_on
+          type: string
+          description: '* `joined_on` - joined_on'
+        code:
+          enum:
+          - datetime
+          - invalid
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffCreateLeftOnErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - left_on
+          type: string
+          description: '* `left_on` - left_on'
+        code:
+          enum:
+          - datetime
+          - invalid
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffCreateMonthlySalaryErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - monthly_salary
+          type: string
+          description: '* `monthly_salary` - monthly_salary'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - min_value
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `min_value` - min_value
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffCreateNameErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - name
+          type: string
+          description: '* `name` - name'
+        code:
+          enum:
+          - blank
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - required
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `blank` - blank
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `required` - required
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffCreateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffCreateNotesErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - notes
+          type: string
+          description: '* `notes` - notes'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffCreatePhoneErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - phone
+          type: string
+          description: '* `phone` - phone'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffCreateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffCreateError'
+      required:
+      - errors
+      - type
+    StaffListErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    StaffPartialUpdateError:
+      oneOf:
+      - $ref: '#/components/schemas/StaffPartialUpdateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdateNameErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdatePhoneErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdateJobTitleErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdateMonthlySalaryErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdateJoinedOnErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdateLeftOnErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdateIsActiveErrorComponent'
+      - $ref: '#/components/schemas/StaffPartialUpdateNotesErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/StaffPartialUpdateNonFieldErrorsErrorComponent'
+          name: '#/components/schemas/StaffPartialUpdateNameErrorComponent'
+          phone: '#/components/schemas/StaffPartialUpdatePhoneErrorComponent'
+          job_title: '#/components/schemas/StaffPartialUpdateJobTitleErrorComponent'
+          monthly_salary: '#/components/schemas/StaffPartialUpdateMonthlySalaryErrorComponent'
+          joined_on: '#/components/schemas/StaffPartialUpdateJoinedOnErrorComponent'
+          left_on: '#/components/schemas/StaffPartialUpdateLeftOnErrorComponent'
+          is_active: '#/components/schemas/StaffPartialUpdateIsActiveErrorComponent'
+          notes: '#/components/schemas/StaffPartialUpdateNotesErrorComponent'
+    StaffPartialUpdateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/StaffPartialUpdateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/StaffPartialUpdateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    StaffPartialUpdateIsActiveErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - is_active
+          type: string
+          description: '* `is_active` - is_active'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffPartialUpdateJobTitleErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - job_title
+          type: string
+          description: '* `job_title` - job_title'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffPartialUpdateJoinedOnErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - joined_on
+          type: string
+          description: '* `joined_on` - joined_on'
+        code:
+          enum:
+          - datetime
+          - invalid
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffPartialUpdateLeftOnErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - left_on
+          type: string
+          description: '* `left_on` - left_on'
+        code:
+          enum:
+          - datetime
+          - invalid
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffPartialUpdateMonthlySalaryErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - monthly_salary
+          type: string
+          description: '* `monthly_salary` - monthly_salary'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - min_value
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `min_value` - min_value
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffPartialUpdateNameErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - name
+          type: string
+          description: '* `name` - name'
+        code:
+          enum:
+          - blank
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - required
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `blank` - blank
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `required` - required
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffPartialUpdateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffPartialUpdateNotesErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - notes
+          type: string
+          description: '* `notes` - notes'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffPartialUpdatePhoneErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - phone
+          type: string
+          description: '* `phone` - phone'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffPartialUpdateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffPartialUpdateError'
+      required:
+      - errors
+      - type
+    StaffRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        job_title:
+          type: string
+          description: e.g. Designer, Fitter
+          maxLength: 80
+      required:
+      - id
+      - job_title
+      - name
+    StaffRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        phone:
+          oneOf:
+          - type: string
+            pattern: ^[0-9+\-\s]{6,20}$
+            maxLength: 20
+          - type: string
+            maxLength: 0
+        job_title:
+          type: string
+          description: e.g. Designer, Fitter
+          maxLength: 80
+        monthly_salary:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        joined_on:
+          type: string
+          format: date
+          description: No pay is counted before this day.
+        left_on:
+          type: string
+          format: date
+          nullable: true
+          description: No pay is counted after this day.
+        is_active:
+          type: boolean
+        notes:
+          type: string
+      required:
+      - joined_on
+      - monthly_salary
+      - name
+    StaffRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    StaffUpdateError:
+      oneOf:
+      - $ref: '#/components/schemas/StaffUpdateNonFieldErrorsErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdateNameErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdatePhoneErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdateJobTitleErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdateMonthlySalaryErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdateJoinedOnErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdateLeftOnErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdateIsActiveErrorComponent'
+      - $ref: '#/components/schemas/StaffUpdateNotesErrorComponent'
+      discriminator:
+        propertyName: attr
+        mapping:
+          non_field_errors: '#/components/schemas/StaffUpdateNonFieldErrorsErrorComponent'
+          name: '#/components/schemas/StaffUpdateNameErrorComponent'
+          phone: '#/components/schemas/StaffUpdatePhoneErrorComponent'
+          job_title: '#/components/schemas/StaffUpdateJobTitleErrorComponent'
+          monthly_salary: '#/components/schemas/StaffUpdateMonthlySalaryErrorComponent'
+          joined_on: '#/components/schemas/StaffUpdateJoinedOnErrorComponent'
+          left_on: '#/components/schemas/StaffUpdateLeftOnErrorComponent'
+          is_active: '#/components/schemas/StaffUpdateIsActiveErrorComponent'
+          notes: '#/components/schemas/StaffUpdateNotesErrorComponent'
+    StaffUpdateErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/StaffUpdateValidationError'
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          validation_error: '#/components/schemas/StaffUpdateValidationError'
+          client_error: '#/components/schemas/ParseErrorResponse'
+    StaffUpdateIsActiveErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - is_active
+          type: string
+          description: '* `is_active` - is_active'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdateJobTitleErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - job_title
+          type: string
+          description: '* `job_title` - job_title'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdateJoinedOnErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - joined_on
+          type: string
+          description: '* `joined_on` - joined_on'
+        code:
+          enum:
+          - datetime
+          - invalid
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdateLeftOnErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - left_on
+          type: string
+          description: '* `left_on` - left_on'
+        code:
+          enum:
+          - datetime
+          - invalid
+          type: string
+          description: |-
+            * `datetime` - datetime
+            * `invalid` - invalid
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdateMonthlySalaryErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - monthly_salary
+          type: string
+          description: '* `monthly_salary` - monthly_salary'
+        code:
+          enum:
+          - invalid
+          - max_decimal_places
+          - max_digits
+          - max_string_length
+          - max_whole_digits
+          - min_value
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_decimal_places` - max_decimal_places
+            * `max_digits` - max_digits
+            * `max_string_length` - max_string_length
+            * `max_whole_digits` - max_whole_digits
+            * `min_value` - min_value
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdateNameErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - name
+          type: string
+          description: '* `name` - name'
+        code:
+          enum:
+          - blank
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - required
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `blank` - blank
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `required` - required
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdateNonFieldErrorsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - non_field_errors
+          type: string
+          description: '* `non_field_errors` - non_field_errors'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdateNotesErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - notes
+          type: string
+          description: '* `notes` - notes'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdatePhoneErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - phone
+          type: string
+          description: '* `phone` - phone'
+        code:
+          enum:
+          - invalid
+          - max_length
+          - 'null'
+          - null_characters_not_allowed
+          - surrogate_characters_not_allowed
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `max_length` - max_length
+            * `null` - null
+            * `null_characters_not_allowed` - null_characters_not_allowed
+            * `surrogate_characters_not_allowed` - surrogate_characters_not_allowed
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    StaffUpdateValidationError:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ValidationErrorEnum'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffUpdateError'
+      required:
+      - errors
+      - type
     Statement:
       type: object
       properties:
@@ -36329,6 +40301,15 @@ components:
       - taxable_amount
       - total
       - vat_amount
+    UndoSalaryRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - reason
     UnitEnum:
       enum:
       - in

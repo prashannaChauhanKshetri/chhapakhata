@@ -17,6 +17,7 @@ Source of truth: `backend/apps/core/permissions.py` (`ROLE_PERMISSIONS`). The fr
 | Manage users and passwords | ✓ | | |
 | Cancel invoices, void payments, adjust balances | ✓ | | |
 | Activity log, backups, data export, shop settings | ✓ | | |
+| Staff list, attendance, advances and salary | ✓ | | |
 
 ## Production stage rules
 
@@ -24,6 +25,13 @@ Source of truth: `backend/apps/core/permissions.py` (`ROLE_PERMISSIONS`). The fr
 - Operators move jobs into **Printing**, **Finishing** and **Ready for collection**, and only after front desk has marked the job **Ready for print** (nothing is printed before the proof is approved).
 - **Delivered** is allowed only from **Ready for collection** (owner excepted). Only the owner reopens a delivered job.
 - Leaving **Printing** requires the roll and sq ft used for media linked to stock; the owner may skip this.
+
+## Staff and salary
+
+- **Staff** are workers on the payroll, separate from logins (helpers need no account). Never deleted: set the last working day when someone leaves.
+- **Attendance** is marked by hand: every working day counts as present unless marked absent; Saturday (the weekly holiday) counts as off unless marked worked.
+- **Pay** for a BS month: one day's pay = monthly salary ÷ days in that month. Each absent day takes off one day's pay; each Saturday worked adds one. Advances given in the month are taken off; advances larger than the pay move to the next month.
+- **Paying** a month records the figures for the salary slip and locks that month's attendance and advances. The owner can undo a payment with a reason (logged).
 
 ## Other rules
 
