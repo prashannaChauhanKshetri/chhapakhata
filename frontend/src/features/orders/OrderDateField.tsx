@@ -23,7 +23,8 @@ export function OrderDateField({
   label,
   showHint = true,
 }: {
-  value: string;
+  /** AD date (YYYY-MM-DD); empty when not chosen yet. */
+  value: string | null;
   onChange: (ad: string) => void;
   error?: React.ReactNode;
   /** e.g. "From"; the boxes read "From (Miti)" and "From (AD)". */
@@ -129,7 +130,7 @@ export function OrderDateField({
         label={label ? `${label} (AD)` : t('Date (AD)')}
         valueFormat="D MMM YYYY"
         maxDate={todayISO()}
-        value={value}
+        value={value || null}
         onChange={(v) => {
           if (v) {
             setBsError(null);

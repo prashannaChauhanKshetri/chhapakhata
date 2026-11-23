@@ -432,3 +432,59 @@ def test_the_nepali_month_for_calendars(api, desk):
     by_ad = api(desk).get("/api/v1/utils/bs-month/", {"ad": "2026-07-20"}).json()
     assert by_ad["label"] == "Shrawan 2083"
     assert api(desk).get("/api/v1/utils/bs-month/", {"month": "nope"}).status_code == 400
+
+
+# -- Dates entered by hand -------------------------------------------------------------
+
+
+def test_a_joining_date_still_to_come_is_refused_with_its_miti(api, owner):
+    later = local_today() + dt.timedelta(days=35)
+    response = api(owner).post(
+        "/api/v1/staff/",
+        {"name": "Chinta", "monthly_salary": "13000", "joined_on": later.isoformat()},
+        format="json",
+    )
+    assert response.status_code == 400
+    error = response.json()["errors"][0]
+    assert error["attr"] == "joined_on"
+    assert "still to come" in error["detail"] and " BS (" in error["detail"]
+
+
+def test_a_balance_needs_the_worker_to_have_joined_by_then(api, owner, ram):
+    # Ram joined 1 Jan 2026 (Poush 2082): a balance up to Asar 2083 is fine.
+    ok = api(owner).patch(
+        f"/api/v1/staff/{ram.pk}/",
+        {"balance_year": 2083, "balance_month": 3, "opening_balance": "3304"},
+        format="json",
+    )
+    assert ok.status_code == 200
+    # Joined after the balance month: nothing could be owed up to it.
+    bad = api(owner).patch(f"/api/v1/staff/{ram.pk}/", {"joined_on": "2026-07-20"}, format="json")
+    assert bad.status_code == 400
+    assert "after Asar 2083" in bad.json()["errors"][0]["detail"]
+
+
+def test_a_worker_who_left_still_shows_on_the_days_they_worked(api, owner, ram):
+    ram.is_active, ram.left_on = False, dt.date(2026, 7, 31)
+    ram.save()
+    register = api(owner).get("/api/v1/attendance/", {"date": TUESDAY.isoformat()}).json()
+    assert [r["staff"]["name"] for r in register["rows"]] == ["Ram Thapa"]
+    after = api(owner).get("/api/v1/attendance/", {"date": "2026-08-05"}).json()
+    assert after["rows"] == []
+
+
+def test_already_working_here_starts_the_day_after_the_balance_month(api, owner):
+    # The form for someone already working sends the 1st of the next month as joining.
+    response = api(owner).post(
+        "/api/v1/staff/",
+        {
+            "name": "Ratan",
+            "monthly_salary": "15000",
+            "joined_on": "2026-07-17",  # 1 Shrawan 2083
+            "balance_year": 2083,
+            "balance_month": 3,  # up to Asar 2083
+            "opening_balance": "3304",
+        },
+        format="json",
+    )
+    assert response.status_code == 201, response.content

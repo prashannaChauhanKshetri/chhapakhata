@@ -441,7 +441,8 @@ def day_register(day: dt.date) -> list[dict[str, Any]]:
     """Everyone working on ``day`` with their mark, for the daily attendance screen."""
     staff = [
         s
-        for s in Staff.objects.filter(is_active=True, joined_on__lte=day).order_by("name")
+        # By working dates, not "still working here": a past day still shows who left later.
+        for s in Staff.objects.filter(joined_on__lte=day).order_by("name")
         if employed_on(s, day)
     ]
     marks = dict(

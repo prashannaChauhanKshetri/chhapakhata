@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import datetime as dt
+
 from rest_framework import serializers
 
 from apps.billing.models import PaymentMode
@@ -51,6 +53,14 @@ class StaffSerializer(serializers.ModelSerializer):
         active = attrs.get("is_active", getattr(self.instance, "is_active", True))
         if joined and left and left < joined:
             raise serializers.ValidationError({"left_on": "The last day cannot be before joining."})
+        if joined and joined > services.local_today():
+            # Usually a date picked in the wrong year on the AD calendar.
+            raise serializers.ValidationError(
+                {
+                    "joined_on": f"{bs_string(joined)} BS ({joined:%d %b %Y}) is still to come. "
+                    "Check the joining date and its year."
+                }
+            )
         year = attrs.get("balance_year", getattr(self.instance, "balance_year", None))
         month = attrs.get("balance_month", getattr(self.instance, "balance_month", None))
         amount = attrs.get("opening_balance", getattr(self.instance, "opening_balance", 0))
@@ -68,6 +78,17 @@ class StaffSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"balance_month": "Choose the month the balance is up to."}
             )
+        if year and amount and joined:
+            end = services.month_bounds(year, month)[1]
+            # "Already working here" starts the record the day after the balance month.
+            if joined > end + dt.timedelta(days=1):
+                label = services.month_label(year, month)
+                raise serializers.ValidationError(
+                    {
+                        "joined_on": f"Joined on {bs_string(joined)} BS, after {label}: nothing "
+                        f"can be owed up to {label}. Check the joining date."
+                    }
+                )
         if self.instance is not None and (
             (year, month, amount)
             != (

@@ -13,7 +13,6 @@ import {
   Textarea,
   TextInput,
 } from '@mantine/core';
-import { DatePickerInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { modals } from '@mantine/modals';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -30,7 +29,7 @@ import { handleFormError, notifyError, notifySuccess } from '@/lib/forms';
 import { formatNPR, todayISO, toNumber } from '@/lib/format';
 import { PAYMENT_MODES } from '@/lib/status';
 
-const day = (v: unknown) => (v ? String(v).slice(0, 10) : null);
+import { OrderDateField } from '../orders/OrderDateField';
 
 // -- Add or edit a worker -------------------------------------------------------------
 
@@ -150,24 +149,25 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
           />
           <TextInput label={t('Phone')} {...form.getInputProps('phone')} />
         </SimpleGrid>
-        <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
-          <NumberInput
-            label={t('Monthly salary (Rs)')}
-            required
-            min={0}
-            thousandSeparator=","
-            decimalScale={2}
-            {...form.getInputProps('monthly_salary')}
+        <NumberInput
+          label={t('Monthly salary (Rs)')}
+          required
+          min={0}
+          thousandSeparator=","
+          decimalScale={2}
+          {...form.getInputProps('monthly_salary')}
+        />
+        {(staff || !form.values.already) && (
+          // Miti first, with the Nepali calendar: AD dates picked in the wrong year
+          // gave joining dates still to come.
+          <OrderDateField
+            label={t('Joined on')}
+            value={form.values.joined_on}
+            onChange={(ad) => form.setFieldValue('joined_on', ad)}
+            error={form.errors.joined_on}
+            showHint={false}
           />
-          {(staff || !form.values.already) && (
-            <DatePickerInput
-              label={t('Joined on')}
-              valueFormat="D MMM YYYY"
-              {...form.getInputProps('joined_on')}
-              onChange={(v) => form.setFieldValue('joined_on', day(v) ?? todayISO())}
-            />
-          )}
-        </SimpleGrid>
+        )}
         <NumberInput
           label={t('Saturday pay (Rs)')}
           description={t(
@@ -238,13 +238,12 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
           />
         )}
         {staff && !form.values.is_active && (
-          <DatePickerInput
+          <OrderDateField
             label={t('Last working day')}
-            description={t('No pay is counted after this day.')}
-            valueFormat="D MMM YYYY"
-            required
-            {...form.getInputProps('left_on')}
-            onChange={(v) => form.setFieldValue('left_on', day(v))}
+            value={form.values.left_on}
+            onChange={(ad) => form.setFieldValue('left_on', ad)}
+            error={form.errors.left_on}
+            showHint={false}
           />
         )}
         <Textarea label={t('Notes')} {...form.getInputProps('notes')} />
@@ -321,24 +320,22 @@ function AdvanceForm({
         <Text size="sm" c="dimmed">
           {t('Taken off the salary of the month it is given in.')}
         </Text>
-        <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
-          <NumberInput
-            label={t('Amount (Rs)')}
-            required
-            min={0}
-            thousandSeparator=","
-            decimalScale={2}
-            data-autofocus
-            {...form.getInputProps('amount')}
-          />
-          <DatePickerInput
-            label={t('Given on')}
-            valueFormat="D MMM YYYY"
-            maxDate={todayISO()}
-            {...form.getInputProps('date')}
-            onChange={(v) => form.setFieldValue('date', day(v) ?? todayISO())}
-          />
-        </SimpleGrid>
+        <NumberInput
+          label={t('Amount (Rs)')}
+          required
+          min={0}
+          thousandSeparator=","
+          decimalScale={2}
+          data-autofocus
+          {...form.getInputProps('amount')}
+        />
+        <OrderDateField
+          label={t('Given on')}
+          value={form.values.date}
+          onChange={(ad) => form.setFieldValue('date', ad)}
+          error={form.errors.date}
+          showHint={false}
+        />
         <TextInput label={t('Note')} placeholder={t('Optional')} {...form.getInputProps('note')} />
         <Group justify="flex-end" gap="xs">
           <Button variant="default" onClick={onDone}>
@@ -421,10 +418,13 @@ function PaySalaryForm({
           <Money value={sheet.net} fz={26} fw={700} />
         </Group>
         <Text size="sm" c="dimmed">
-          {t('Earned {{earned}} − advances {{advances}}', {
-            earned: formatNPR(sheet.earned),
-            advances: formatNPR(sheet.advances_total),
-          })}
+          {t('Earned {{earned}}', { earned: formatNPR(sheet.earned) })}
+          {toNumber(sheet.opening_balance) !== 0 &&
+            ` ${toNumber(sheet.opening_balance) > 0 ? '+' : '−'} ${t('balance to {{month}}', {
+              month: sheet.opening_label,
+            })} ${formatNPR(Math.abs(toNumber(sheet.opening_balance)))}`}
+          {toNumber(sheet.advances_total) !== 0 &&
+            ` − ${t('advances')} ${formatNPR(sheet.advances_total)}`}
         </Text>
         {sheet.days_ahead > 0 && (
           <Alert color="amber" p="xs">
@@ -439,12 +439,12 @@ function PaySalaryForm({
             {note}
           </Alert>
         ))}
-        <DatePickerInput
+        <OrderDateField
           label={t('Paid on')}
-          valueFormat="D MMM YYYY"
-          maxDate={todayISO()}
-          {...form.getInputProps('paid_on')}
-          onChange={(v) => form.setFieldValue('paid_on', day(v) ?? todayISO())}
+          value={form.values.paid_on}
+          onChange={(ad) => form.setFieldValue('paid_on', ad)}
+          error={form.errors.paid_on}
+          showHint={false}
         />
         <div>
           <Text size="sm" fw={500} mb={4}>

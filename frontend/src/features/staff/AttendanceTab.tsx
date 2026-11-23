@@ -1,5 +1,7 @@
 import {
   ActionIcon,
+  Alert,
+  Anchor,
   Button,
   Card,
   Group,
@@ -21,7 +23,7 @@ import { Link } from 'react-router';
 
 import { api, unwrap } from '@/api/client';
 import { apiGet } from '@/api/http';
-import type { DateConversion, DayRegister, DayRow, DayStatus } from '@/api/types';
+import type { DateConversion, DayRegister, DayRow, DayStatus, Staff } from '@/api/types';
 import { QueryError } from '@/components/QueryError';
 import { notifyError } from '@/lib/forms';
 import { formatDate, todayISO } from '@/lib/format';
@@ -60,6 +62,12 @@ export function AttendanceTab() {
     queryKey: dayKey,
     queryFn: () => apiGet<DayRegister>('/api/v1/attendance/', { date: day }),
   });
+  const { data: staffList } = useQuery({
+    queryKey: ['staff', 'list'],
+    queryFn: () => apiGet<Staff[]>('/api/v1/staff/'),
+  });
+  // Workers who join after the chosen day are not in its list; say so instead of hiding them.
+  const upcoming = (staffList ?? []).filter((s) => s.is_active && s.joined_on > day);
   const { data: dayInfo } = useQuery({
     queryKey: ['date-conversion', 'ad', day],
     queryFn: () => apiGet<DateConversion>('/api/v1/utils/date/', { ad: day }),
@@ -255,6 +263,20 @@ export function AttendanceTab() {
             ))}
           </div>
         </Card>
+      )}
+
+      {upcoming.length > 0 && (
+        <Alert color="amber" p="sm">
+          <Text size="sm">
+            {t('Not counted yet, because their joining date is after this day:')}{' '}
+            {upcoming.map((s) => `${s.name} (${s.joined_on_bs} BS)`).join(', ')}.{' '}
+            {t('If a date is wrong, correct it in')}{' '}
+            <Anchor component={Link} to="/staff/list" size="sm">
+              {t('Staff')}
+            </Anchor>
+            .
+          </Text>
+        </Alert>
       )}
 
       <AttendanceRegister pickedDay={day} onPickDay={setDay} />

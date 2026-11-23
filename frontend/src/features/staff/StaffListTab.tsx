@@ -8,7 +8,7 @@ import type { Staff } from '@/api/types';
 import { DataTable } from '@/components/DataTable';
 import { Money } from '@/components/Money';
 import { QueryError } from '@/components/QueryError';
-import { toNumber } from '@/lib/format';
+import { todayISO, toNumber } from '@/lib/format';
 
 import { openStaffForm } from './StaffForms';
 
@@ -66,10 +66,13 @@ export function StaffListTab() {
             accessor: 'is_active',
             title: t('Status'),
             render: (s) =>
-              s.is_active ? (
-                <Badge color="green">{t('Working')}</Badge>
-              ) : (
+              !s.is_active ? (
                 <Badge color="slate">{t('Left on {{date}}', { date: s.left_on_bs })}</Badge>
+              ) : s.joined_on > todayISO() ? (
+                // Not in attendance or salary until then: usually a date in the wrong year.
+                <Badge color="amber">{t('Starts on {{date}}', { date: s.joined_on_bs })}</Badge>
+              ) : (
+                <Badge color="green">{t('Working')}</Badge>
               ),
           },
           {
@@ -88,7 +91,11 @@ export function StaffListTab() {
             accessor: 'opening_balance',
             title: t('Balance'),
             render: (s) =>
-              s.balance_label ? (
+              s.balance_label && toNumber(s.opening_balance) === 0 ? (
+                <Text size="sm" c="dimmed">
+                  {t('Settled to {{month}}', { month: s.balance_label })}
+                </Text>
+              ) : s.balance_label ? (
                 <div>
                   <Money
                     value={Math.abs(toNumber(s.opening_balance))}
