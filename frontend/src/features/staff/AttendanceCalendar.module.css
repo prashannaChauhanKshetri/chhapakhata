@@ -1,0 +1,120 @@
+/* One worker's month: 7 columns from Sunday, one button per day. */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  color: var(--ck-text-muted);
+  padding-bottom: 2px;
+}
+
+.weekend {
+  color: var(--mantine-color-blue-7);
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-height: 52px;
+  border-radius: var(--mantine-radius-md);
+  border: 1px solid var(--ck-border);
+  background: var(--ck-surface);
+  color: var(--ck-text);
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+
+  &:not(:disabled):hover {
+    border-color: var(--mantine-color-slate-5);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mantine-color-orange-6);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.number {
+  font-size: var(--mantine-font-size-md);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.mark {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.present {
+  background: var(--mantine-color-green-0);
+  border-color: var(--mantine-color-green-2);
+
+  & .mark {
+    color: var(--mantine-color-green-8);
+  }
+}
+
+.absent {
+  background: var(--mantine-color-red-7);
+  border-color: var(--mantine-color-red-7);
+  color: #fff;
+}
+
+.off {
+  background: var(--mantine-color-slate-1);
+  border-color: var(--mantine-color-slate-2);
+
+  & .mark {
+    color: var(--ck-text-muted);
+  }
+}
+
+.worked {
+  background: var(--mantine-color-blue-7);
+  border-color: var(--mantine-color-blue-7);
+  color: #fff;
+}
+
+/* Not working here yet or any more, or a day still to come. */
+.blank {
+  background: transparent;
+  border-style: dashed;
+  color: var(--mantine-color-slate-4);
+}
+
+/* A paid month: shown as it was, but not changeable. */
+.locked {
+  opacity: 0.75;
+}
+
+@mixin smaller-than $mantine-breakpoint-xs {
+  .grid {
+    gap: 4px;
+  }
+
+  .day {
+    min-height: 46px;
+  }
+
+  .mark {
+    font-size: 9px;
+  }
+}

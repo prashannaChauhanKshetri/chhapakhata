@@ -29,8 +29,8 @@ Source of truth: `backend/apps/core/permissions.py` (`ROLE_PERMISSIONS`). The fr
 ## Staff and salary
 
 - **Staff** are workers on the payroll, separate from logins (helpers need no account). Never deleted: set the last working day when someone leaves.
-- **Attendance** is marked by hand: every working day counts as present unless marked absent; Saturday (the weekly holiday) counts as off unless marked worked.
-- **Pay** for a BS month: one day's pay = monthly salary ÷ days in that month. Each absent day takes off one day's pay; each Saturday worked adds one. Advances given in the month are taken off; advances larger than the pay move to the next month.
+- **Attendance** is marked by hand: every working day counts as present unless marked absent; Saturday (the weekly holiday) counts as off unless marked worked. Any past day can be corrected, from the daily register or a worker's month calendar.
+- **Pay** for a BS month: one day's pay = monthly salary ÷ days in that month. Each absent day takes off one day's pay; each Saturday worked adds one day's pay, or the worker's own **Saturday pay** when the owner has set an amount. Advances given in the month are taken off; advances larger than the pay move to the next month.
 - **Paying** a month records the figures for the salary slip and locks that month's attendance and advances. The owner can undo a payment with a reason (logged).
 
 ## Other rules

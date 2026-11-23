@@ -9,7 +9,12 @@ import {
   Text,
   Tooltip,
 } from '@mantine/core';
-import { IconChevronLeft, IconChevronRight, IconLock } from '@tabler/icons-react';
+import {
+  IconCalendarMonth,
+  IconChevronLeft,
+  IconChevronRight,
+  IconLock,
+} from '@tabler/icons-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +28,7 @@ import { notifyError } from '@/lib/forms';
 import { todayISO } from '@/lib/format';
 
 import { OrderDateField } from '../orders/OrderDateField';
+import { openAttendanceCalendar } from './AttendanceCalendar';
 
 function shiftDay(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00`);
@@ -143,16 +149,26 @@ export function AttendanceTab() {
                 wrap="nowrap"
                 gap="sm"
               >
-                <div style={{ minWidth: 0 }}>
-                  <Text fw={500} lineClamp={1}>
-                    {row.staff.name}
-                  </Text>
-                  {row.staff.job_title && (
-                    <Text size="xs" c="dimmed" lineClamp={1}>
-                      {row.staff.job_title}
+                <Group gap={4} wrap="nowrap" miw={0}>
+                  <Tooltip label={t('Whole month')}>
+                    <ActionIcon
+                      onClick={() => openAttendanceCalendar(row.staff)}
+                      aria-label={t('Month of {{name}}', { name: row.staff.name })}
+                    >
+                      <IconCalendarMonth size={18} />
+                    </ActionIcon>
+                  </Tooltip>
+                  <div style={{ minWidth: 0 }}>
+                    <Text fw={500} lineClamp={1}>
+                      {row.staff.name}
                     </Text>
-                  )}
-                </div>
+                    {row.staff.job_title && (
+                      <Text size="xs" c="dimmed" lineClamp={1}>
+                        {row.staff.job_title}
+                      </Text>
+                    )}
+                  </div>
+                </Group>
                 <Group gap={6} wrap="nowrap">
                   {row.locked && (
                     <Tooltip label={t('This month is paid. Undo the payment to change it.')}>

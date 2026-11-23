@@ -1061,7 +1061,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description The salary slip, A5, with signature lines. */
+        /** @description The salary slip (A4), with signature lines. */
         get: operations["salary_payments_slip_retrieve"];
         put?: never;
         post?: never;
@@ -1230,6 +1230,23 @@ export interface paths {
         head?: never;
         /** @description Workers on the payroll. Never deleted: set the last working day instead. */
         patch: operations["staff_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/staff/{id}/days/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The worker's month as a calendar, to correct past days. */
+        get: operations["staff_days_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/stock-items/": {
@@ -5690,6 +5707,25 @@ export interface components {
          * @enum {string}
          */
         ModeEnum: "cash" | "bank" | "cheque" | "wallet";
+        MonthDay: {
+            /** Format: date */
+            date: string;
+            bs_day: number;
+            /** @description 0 = Sunday … 6 = Saturday */
+            weekday: number;
+            is_holiday: boolean;
+            status: components["schemas"]["MonthDayStatusEnum"];
+            editable: boolean;
+        };
+        /**
+         * @description * `present` - present
+         *     * `absent` - absent
+         *     * `off` - off
+         *     * `worked` - worked
+         *     * `not_working` - not_working
+         * @enum {string}
+         */
+        MonthDayStatusEnum: "present" | "absent" | "off" | "worked" | "not_working";
         MonthRef: {
             year: number;
             month: number;
@@ -5716,6 +5752,8 @@ export interface components {
             absent_deduction: string;
             /** Format: decimal */
             holiday_pay: string;
+            /** Format: decimal */
+            holiday_rate: string;
             /** Format: decimal */
             earned: string;
             advances: components["schemas"]["StaffAdvance"][];
@@ -8229,6 +8267,11 @@ export interface components {
             /** Format: decimal */
             monthly_salary?: string;
             /**
+             * Format: decimal
+             * @description Extra pay for each Saturday worked. Empty: one day's pay (double).
+             */
+            saturday_pay?: string | null;
+            /**
              * Format: date
              * @description No pay is counted before this day.
              */
@@ -10293,6 +10336,11 @@ export interface components {
             /** Format: decimal */
             monthly_salary: string;
             /**
+             * Format: decimal
+             * @description Extra pay for each Saturday worked. Empty: one day's pay (double).
+             */
+            saturday_pay: string | null;
+            /**
              * Format: date
              * @description No pay is counted before this day.
              */
@@ -10423,7 +10471,7 @@ export interface components {
         };
         StaffAdvancesDestroyErrorResponse400: components["schemas"]["ParseErrorResponse"];
         StaffAdvancesListErrorResponse400: components["schemas"]["ParseErrorResponse"];
-        StaffCreateError: components["schemas"]["StaffCreateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffCreateNameErrorComponent"] | components["schemas"]["StaffCreatePhoneErrorComponent"] | components["schemas"]["StaffCreateJobTitleErrorComponent"] | components["schemas"]["StaffCreateMonthlySalaryErrorComponent"] | components["schemas"]["StaffCreateJoinedOnErrorComponent"] | components["schemas"]["StaffCreateLeftOnErrorComponent"] | components["schemas"]["StaffCreateIsActiveErrorComponent"] | components["schemas"]["StaffCreateNotesErrorComponent"];
+        StaffCreateError: components["schemas"]["StaffCreateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffCreateNameErrorComponent"] | components["schemas"]["StaffCreatePhoneErrorComponent"] | components["schemas"]["StaffCreateJobTitleErrorComponent"] | components["schemas"]["StaffCreateMonthlySalaryErrorComponent"] | components["schemas"]["StaffCreateSaturdayPayErrorComponent"] | components["schemas"]["StaffCreateJoinedOnErrorComponent"] | components["schemas"]["StaffCreateLeftOnErrorComponent"] | components["schemas"]["StaffCreateIsActiveErrorComponent"] | components["schemas"]["StaffCreateNotesErrorComponent"];
         StaffCreateErrorResponse400: components["schemas"]["StaffCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
         StaffCreateIsActiveErrorComponent: {
             /**
@@ -10572,6 +10620,24 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
+        StaffCreateSaturdayPayErrorComponent: {
+            /**
+             * @description * `saturday_pay` - saturday_pay (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "saturday_pay";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value";
+            detail: string;
+        };
         StaffCreateValidationError: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -10580,8 +10646,20 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["StaffCreateError"][];
         };
+        StaffDaysRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         StaffListErrorResponse400: components["schemas"]["ParseErrorResponse"];
-        StaffPartialUpdateError: components["schemas"]["StaffPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffPartialUpdateNameErrorComponent"] | components["schemas"]["StaffPartialUpdatePhoneErrorComponent"] | components["schemas"]["StaffPartialUpdateJobTitleErrorComponent"] | components["schemas"]["StaffPartialUpdateMonthlySalaryErrorComponent"] | components["schemas"]["StaffPartialUpdateJoinedOnErrorComponent"] | components["schemas"]["StaffPartialUpdateLeftOnErrorComponent"] | components["schemas"]["StaffPartialUpdateIsActiveErrorComponent"] | components["schemas"]["StaffPartialUpdateNotesErrorComponent"];
+        /** @description One worker's month as a calendar. */
+        StaffMonth: {
+            staff: components["schemas"]["StaffRef"];
+            year: number;
+            month: number;
+            label: string;
+            previous: components["schemas"]["MonthRef"];
+            next: components["schemas"]["MonthRef"] | null;
+            paid: boolean;
+            days: components["schemas"]["MonthDay"][];
+        };
+        StaffPartialUpdateError: components["schemas"]["StaffPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffPartialUpdateNameErrorComponent"] | components["schemas"]["StaffPartialUpdatePhoneErrorComponent"] | components["schemas"]["StaffPartialUpdateJobTitleErrorComponent"] | components["schemas"]["StaffPartialUpdateMonthlySalaryErrorComponent"] | components["schemas"]["StaffPartialUpdateSaturdayPayErrorComponent"] | components["schemas"]["StaffPartialUpdateJoinedOnErrorComponent"] | components["schemas"]["StaffPartialUpdateLeftOnErrorComponent"] | components["schemas"]["StaffPartialUpdateIsActiveErrorComponent"] | components["schemas"]["StaffPartialUpdateNotesErrorComponent"];
         StaffPartialUpdateErrorResponse400: components["schemas"]["StaffPartialUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         StaffPartialUpdateIsActiveErrorComponent: {
             /**
@@ -10730,6 +10808,24 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
+        StaffPartialUpdateSaturdayPayErrorComponent: {
+            /**
+             * @description * `saturday_pay` - saturday_pay (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "saturday_pay";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value";
+            detail: string;
+        };
         StaffPartialUpdateValidationError: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -10752,6 +10848,11 @@ export interface components {
             /** Format: decimal */
             monthly_salary: string;
             /**
+             * Format: decimal
+             * @description Extra pay for each Saturday worked. Empty: one day's pay (double).
+             */
+            saturday_pay?: string | null;
+            /**
              * Format: date
              * @description No pay is counted before this day.
              */
@@ -10765,7 +10866,7 @@ export interface components {
             notes?: string;
         };
         StaffRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
-        StaffUpdateError: components["schemas"]["StaffUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffUpdateNameErrorComponent"] | components["schemas"]["StaffUpdatePhoneErrorComponent"] | components["schemas"]["StaffUpdateJobTitleErrorComponent"] | components["schemas"]["StaffUpdateMonthlySalaryErrorComponent"] | components["schemas"]["StaffUpdateJoinedOnErrorComponent"] | components["schemas"]["StaffUpdateLeftOnErrorComponent"] | components["schemas"]["StaffUpdateIsActiveErrorComponent"] | components["schemas"]["StaffUpdateNotesErrorComponent"];
+        StaffUpdateError: components["schemas"]["StaffUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["StaffUpdateNameErrorComponent"] | components["schemas"]["StaffUpdatePhoneErrorComponent"] | components["schemas"]["StaffUpdateJobTitleErrorComponent"] | components["schemas"]["StaffUpdateMonthlySalaryErrorComponent"] | components["schemas"]["StaffUpdateSaturdayPayErrorComponent"] | components["schemas"]["StaffUpdateJoinedOnErrorComponent"] | components["schemas"]["StaffUpdateLeftOnErrorComponent"] | components["schemas"]["StaffUpdateIsActiveErrorComponent"] | components["schemas"]["StaffUpdateNotesErrorComponent"];
         StaffUpdateErrorResponse400: components["schemas"]["StaffUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         StaffUpdateIsActiveErrorComponent: {
             /**
@@ -10912,6 +11013,24 @@ export interface components {
              * @enum {string}
              */
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
+            detail: string;
+        };
+        StaffUpdateSaturdayPayErrorComponent: {
+            /**
+             * @description * `saturday_pay` - saturday_pay (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "saturday_pay";
+            /**
+             * @description * `invalid` - invalid
+             *     * `max_decimal_places` - max_decimal_places
+             *     * `max_digits` - max_digits
+             *     * `max_string_length` - max_string_length
+             *     * `max_whole_digits` - max_whole_digits
+             *     * `min_value` - min_value
+             * @enum {string}
+             */
+            code: "invalid" | "max_decimal_places" | "max_digits" | "max_string_length" | "max_whole_digits" | "min_value";
             detail: string;
         };
         StaffUpdateValidationError: {
@@ -21740,6 +21859,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaffPartialUpdateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    staff_days_retrieve: {
+        parameters: {
+            query?: {
+                /** @description BS month YYYY-MM; default: now */
+                month?: string;
+            };
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this staff. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffMonth"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDaysRetrieveErrorResponse400"];
                 };
             };
             401: {

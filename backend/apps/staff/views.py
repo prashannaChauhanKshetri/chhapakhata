@@ -25,6 +25,7 @@ from .serializers import (
     PaySalarySerializer,
     SalaryPaymentSerializer,
     StaffAdvanceSerializer,
+    StaffMonthSerializer,
     StaffSerializer,
     UndoSalarySerializer,
 )
@@ -49,6 +50,28 @@ class StaffViewSet(
     def perform_create(self, serializer):
         staff = serializer.save()
         log_activity(self.request.user, "staff.created", staff, f"Staff {staff.name} added")
+
+    @extend_schema(
+        parameters=[OpenApiParameter("month", str, description="BS month YYYY-MM; default: now")],
+        responses=StaffMonthSerializer,
+    )
+    @action(detail=True, methods=["get"])
+    def days(self, request, pk=None):
+        """The worker's month as a calendar, to correct past days."""
+        staff = self.get_object()
+        year, month = _month_param(request.query_params.get("month"))
+        data = {
+            "staff": staff,
+            "year": year,
+            "month": month,
+            "label": services.month_label(year, month),
+            **_neighbours(year, month),
+            "paid": SalaryPayment.objects.filter(
+                staff=staff, bs_year=year, bs_month=month
+            ).exists(),
+            "days": services.month_days(staff, year, month),
+        }
+        return Response(StaffMonthSerializer(data).data)
 
     def perform_update(self, serializer):
         before = serializer.instance.monthly_salary
@@ -145,6 +168,19 @@ def _month_param(value: str | None) -> tuple[int, int]:
     return year, month
 
 
+def _neighbours(year: int, month: int) -> dict:
+    """The months either side; no next month once it has not started."""
+    py, pm = services.previous_month(year, month)
+    ny, nm = services.next_month(year, month)
+    upcoming = services.month_bounds(ny, nm)[0] > local_today()
+    return {
+        "previous": {"year": py, "month": pm, "label": services.month_label(py, pm)},
+        "next": None
+        if upcoming
+        else {"year": ny, "month": nm, "label": services.month_label(ny, nm)},
+    }
+
+
 class SalaryView(APIView):
     """One BS month's salary for everyone who worked in it."""
 
@@ -158,19 +194,13 @@ class SalaryView(APIView):
         year, month = _month_param(request.query_params.get("month"))
         start, end = services.month_bounds(year, month)
         rows = services.payroll(year, month)
-        py, pm = services.previous_month(year, month)
-        ny, nm = services.next_month(year, month)
-        upcoming = services.month_bounds(ny, nm)[0] > local_today()
         data = {
             "year": year,
             "month": month,
             "label": services.month_label(year, month),
             "start": start,
             "end": end,
-            "previous": {"year": py, "month": pm, "label": services.month_label(py, pm)},
-            "next": None
-            if upcoming
-            else {"year": ny, "month": nm, "label": services.month_label(ny, nm)},
+            **_neighbours(year, month),
             "rows": rows,
             "total_net": sum((r.net for r in rows), Decimal("0")),
             "total_paid": sum((r.net for r in rows if r.payment), Decimal("0")),

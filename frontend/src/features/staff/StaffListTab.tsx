@@ -72,6 +72,18 @@ export function StaffListTab() {
               ),
           },
           {
+            accessor: 'saturday_pay',
+            title: t('Saturday pay'),
+            render: (s) =>
+              s.saturday_pay != null ? (
+                <Money value={s.saturday_pay} size="sm" />
+              ) : (
+                <Text size="sm" c="dimmed">
+                  {t('One day')}
+                </Text>
+              ),
+          },
+          {
             accessor: 'monthly_salary',
             title: t('Monthly salary'),
             textAlign: 'right',

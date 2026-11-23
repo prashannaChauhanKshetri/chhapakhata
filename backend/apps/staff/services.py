@@ -82,6 +82,8 @@ class MonthSheet:
     base_pay: Decimal
     absent_deduction: Decimal
     holiday_pay: Decimal
+    #: Paid for each Saturday worked: one day's pay, or the worker's own Saturday pay.
+    holiday_rate: Decimal
     earned: Decimal
     advances: list[StaffAdvance]
     advances_total: Decimal
@@ -136,6 +138,7 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
             base_pay=payment.base_pay,
             absent_deduction=payment.absent_deduction,
             holiday_pay=payment.holiday_pay,
+            holiday_rate=payment.holiday_rate,
             earned=payment.earned,
             advances=advances,
             advances_total=payment.advances,
@@ -148,7 +151,13 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
     # Whole month: exactly the monthly salary; part month: its share by days.
     base = salary if employed == days else q2(salary * employed / days)
     deduction = q2(salary * len(absent) / days)
-    extra = q2(salary * len(worked) / days)
+    day_rate = q2(salary / days)
+    if staff.saturday_pay is not None:
+        holiday_rate = staff.saturday_pay
+        extra = q2(holiday_rate * len(worked))
+    else:
+        holiday_rate = day_rate
+        extra = q2(salary * len(worked) / days)
     earned = base - deduction + extra
     net = earned - advances_total
     carry = ZERO
@@ -163,12 +172,13 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
         days_in_month=days,
         days_employed=employed,
         monthly_salary=salary,
-        day_rate=q2(salary / days),
+        day_rate=day_rate,
         absent_dates=absent,
         worked_dates=worked,
         base_pay=base,
         absent_deduction=deduction,
         holiday_pay=extra,
+        holiday_rate=holiday_rate,
         earned=earned,
         advances=advances,
         advances_total=advances_total,
@@ -271,6 +281,37 @@ def set_attendance(
             request=request,
         )
     return status
+
+
+def month_days(staff: Staff, bs_year: int, bs_month: int) -> list[dict[str, Any]]:
+    """Every day of a BS month for one worker, for the attendance calendar.
+
+    ``editable`` is false for days still to come, days the worker was not here,
+    and every day of a paid month.
+    """
+    start, end = month_bounds(bs_year, bs_month)
+    marks = dict(
+        Attendance.objects.filter(staff=staff, date__range=(start, end)).values_list("date", "kind")
+    )
+    paid = SalaryPayment.objects.filter(staff=staff, bs_year=bs_year, bs_month=bs_month).exists()
+    today = local_today()
+    days = []
+    day = start
+    while day <= end:
+        working = employed_on(staff, day)
+        days.append(
+            {
+                "date": day,
+                "bs_day": to_bs(day).day,
+                # Nepali calendars start the week on Sunday.
+                "weekday": (day.weekday() + 1) % 7,
+                "is_holiday": is_holiday(day),
+                "status": day_status(day, marks.get(day)) if working else "not_working",
+                "editable": working and day <= today and not paid,
+            }
+        )
+        day += dt.timedelta(days=1)
+    return days
 
 
 def day_register(day: dt.date) -> list[dict[str, Any]]:
@@ -399,6 +440,7 @@ def pay_salary(
         base_pay=sheet.base_pay,
         absent_deduction=sheet.absent_deduction,
         holiday_pay=sheet.holiday_pay,
+        holiday_rate=sheet.holiday_rate,
         earned=sheet.earned,
         advances=sheet.advances_total,
         net_paid=sheet.net,

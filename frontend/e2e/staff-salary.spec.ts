@@ -14,9 +14,13 @@ test('owner adds a worker, marks a day, gives an advance, pays and undoes the sa
   const form = owner.getByRole('dialog');
   await form.getByRole('textbox', { name: 'Name' }).fill(name);
   await form.getByRole('textbox', { name: 'Monthly salary (Rs)' }).fill('15000');
+  await form.getByRole('textbox', { name: 'Saturday pay (Rs)' }).fill('800');
   await form.getByRole('button', { name: 'Add staff' }).click();
   await expect(form).toBeHidden();
   await expect(owner.getByText(name)).toBeVisible();
+  await expect(
+    owner.getByRole('row').filter({ hasText: name }).getByText('Rs. 800.00'),
+  ).toBeVisible();
 
   // Today: absent on a working day, or worked on Saturday.
   await owner.getByRole('tab', { name: 'Attendance' }).click();
@@ -27,7 +31,7 @@ test('owner adds a worker, marks a day, gives an advance, pays and undoes the sa
 
   // Salary: the mark shows; give an advance and pay.
   await owner.getByRole('tab', { name: 'Salary' }).click();
-  const row = owner.getByRole('row').filter({ hasText: name });
+  const row = owner.getByRole('row').filter({ hasText: name }).first();
   await expect(row.getByText('Not paid')).toBeVisible();
   await row.getByRole('button', { name: `Actions for ${name}` }).click();
   await owner.getByRole('menuitem', { name: 'Give advance' }).click();
@@ -50,12 +54,27 @@ test('owner adds a worker, marks a day, gives an advance, pays and undoes the sa
   await (await slip).close();
   await expect(row.getByText('Paid', { exact: true })).toBeVisible();
 
+  // The month calendar: the paid month cannot be changed.
+  await row.getByRole('button', { name: `Actions for ${name}` }).click();
+  await owner.getByRole('menuitem', { name: 'Attendance days' }).click();
+  const calendar = owner.getByRole('dialog', { name: `${name} · Attendance` });
+  await expect(calendar.getByText(/This month is paid/)).toBeVisible();
+  await owner.keyboard.press('Escape');
+
   // The paid month is locked; undoing opens it again.
   await row.getByRole('button', { name: `Actions for ${name}` }).click();
   await owner.getByRole('menuitem', { name: 'Undo payment' }).click();
   await owner.getByRole('dialog').getByRole('textbox').fill('Testing');
   await owner.getByRole('dialog').getByRole('button', { name: 'Undo payment' }).click();
   await expect(row.getByText('Not paid')).toBeVisible();
+
+  // Unlocked, today's mark is corrected from the calendar (joined today: the only open day).
+  await row.getByRole('button', { name: `Actions for ${name}` }).click();
+  await owner.getByRole('menuitem', { name: 'Attendance days' }).click();
+  const today = calendar.locator('button:not([disabled])').filter({ hasText: /\d/ });
+  await expect(today).toHaveCount(1);
+  await today.click();
+  await expect(calendar.getByText(saturday ? 'Saturdays worked: 0' : 'Absent: 0')).toBeVisible();
 });
 
 test('front desk cannot open staff and salary', async ({ browser }) => {

@@ -41,6 +41,9 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
       job_title: staff?.job_title ?? '',
       phone: staff?.phone ?? '',
       monthly_salary: (staff ? toNumber(staff.monthly_salary) : '') as number | string,
+      saturday_pay: (staff?.saturday_pay != null ? toNumber(staff.saturday_pay) : '') as
+        | number
+        | string,
       joined_on: staff?.joined_on ?? todayISO(),
       is_active: staff?.is_active ?? true,
       left_on: (staff?.left_on ?? null) as string | null,
@@ -58,6 +61,8 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
     const body = {
       ...values,
       monthly_salary: String(values.monthly_salary),
+      // Empty: one day's pay for each Saturday worked.
+      saturday_pay: values.saturday_pay === '' ? null : String(values.saturday_pay),
       left_on: values.is_active ? values.left_on || null : values.left_on,
     };
     try {
@@ -104,6 +109,18 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
             onChange={(v) => form.setFieldValue('joined_on', day(v) ?? todayISO())}
           />
         </SimpleGrid>
+        <NumberInput
+          label={t('Saturday pay (Rs)')}
+          description={t(
+            'Extra for each Saturday worked. Leave empty for one day’s pay (double for that day).',
+          )}
+          placeholder={t('One day’s pay')}
+          min={0}
+          thousandSeparator=","
+          decimalScale={2}
+          inputWrapperOrder={['label', 'input', 'description', 'error']}
+          {...form.getInputProps('saturday_pay')}
+        />
         {staff && (
           <Switch
             label={t('Still working here')}

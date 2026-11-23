@@ -240,3 +240,78 @@ def test_front_desk_and_operators_cannot_see_or_change_salaries(api, desk, opera
 def test_a_bad_month_is_refused(api, owner):
     assert api(owner).get("/api/v1/salary/", {"month": "2083-13"}).status_code == 400
     assert api(owner).get("/api/v1/salary/", {"month": "june"}).status_code == 400
+
+
+# -- Saturday pay chosen by the owner, and correcting past days -----------------------
+
+
+def test_the_owner_can_set_a_worker_s_own_saturday_pay(ram, owner):
+    ram.saturday_pay = D("800")
+    ram.save()
+    mark(ram, SATURDAY, "worked", owner)
+    mark(ram, dt.date(2026, 8, 1), "worked", owner)
+    s = sheet(ram)
+    assert (s.holiday_rate, s.holiday_pay) == (D("800"), D("1600.00"))
+    assert s.net == D("17100.00")  # 15,500 + 2 × 800
+
+    payment = services.pay_salary(
+        staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+    )
+    assert payment.holiday_rate == D("800")
+    # Changing it later leaves the paid month as paid.
+    ram.saturday_pay = None
+    ram.save()
+    assert sheet(ram).holiday_pay == D("1600.00")
+
+
+def test_without_its_own_saturday_pay_a_saturday_is_one_day(ram, owner):
+    mark(ram, SATURDAY, "worked", owner)
+    assert sheet(ram).holiday_rate == D("500.00")
+
+
+def test_saturday_pay_is_set_through_the_staff_form(api, owner, ram):
+    response = api(owner).patch(f"/api/v1/staff/{ram.pk}/", {"saturday_pay": "750"}, format="json")
+    assert response.status_code == 200
+    assert response.json()["saturday_pay"] == "750.00"
+    response = api(owner).patch(f"/api/v1/staff/{ram.pk}/", {"saturday_pay": None}, format="json")
+    assert response.json()["saturday_pay"] is None
+
+
+def test_the_month_calendar_lets_past_days_be_corrected(api, owner, ram):
+    client = api(owner)
+    month = client.get(f"/api/v1/staff/{ram.pk}/days/", {"month": "2083-04"}).json()
+    assert month["label"] == "Shrawan 2083"
+    assert len(month["days"]) == 31
+    first = month["days"][0]
+    assert (first["bs_day"], first["weekday"]) == (1, 5)  # 1 Shrawan 2083 was a Friday
+    saturday = month["days"][1]
+    assert (saturday["is_holiday"], saturday["status"], saturday["editable"]) == (True, "off", True)
+
+    # A day weeks ago is corrected like any other.
+    client.post(
+        "/api/v1/attendance/",
+        {"staff": ram.pk, "date": TUESDAY.isoformat(), "status": "absent"},
+        format="json",
+    )
+    month = client.get(f"/api/v1/staff/{ram.pk}/days/", {"month": "2083-04"}).json()
+    assert month["days"][4]["status"] == "absent"
+
+    # Paid: nothing can be changed until the payment is undone.
+    services.pay_salary(
+        staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+    )
+    month = client.get(f"/api/v1/staff/{ram.pk}/days/", {"month": "2083-04"}).json()
+    assert month["paid"] is True
+    assert not any(day["editable"] for day in month["days"])
+
+
+def test_days_before_joining_and_still_to_come_are_not_editable(api, owner):
+    newcomer = Staff.objects.create(
+        name="Gopal", monthly_salary=D("12000"), joined_on=dt.date(2026, 8, 10)
+    )
+    month = api(owner).get(f"/api/v1/staff/{newcomer.pk}/days/", {"month": "2083-04"}).json()
+    before = [d for d in month["days"] if d["date"] < "2026-08-10"]
+    assert all(d["status"] == "not_working" and not d["editable"] for d in before)
+    this_month = api(owner).get(f"/api/v1/staff/{newcomer.pk}/days/").json()
+    today = local_today().isoformat()
+    assert all(not d["editable"] for d in this_month["days"] if d["date"] > today)

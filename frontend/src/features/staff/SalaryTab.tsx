@@ -11,6 +11,7 @@ import {
   Tooltip,
 } from '@mantine/core';
 import {
+  IconCalendarMonth,
   IconCash,
   IconChevronLeft,
   IconChevronRight,
@@ -37,12 +38,21 @@ import { StatCard } from '@/components/StatCard';
 import { notifyError, notifySuccess } from '@/lib/forms';
 import { formatAmount, formatNPR, toNumber } from '@/lib/format';
 
+import { openAttendanceCalendar } from './AttendanceCalendar';
 import { openAdvanceForm, openPaySalary } from './StaffForms';
 
 const monthParam = (year: number, month: number) => `${year}-${String(month).padStart(2, '0')}`;
 
 /** What makes up one worker's pay for the month, line by line, as on the slip. */
-function Breakdown({ sheet, onChanged }: { sheet: MonthSheet; onChanged: () => void }) {
+function Breakdown({
+  sheet,
+  month,
+  onChanged,
+}: {
+  sheet: MonthSheet;
+  month: string;
+  onChanged: () => void;
+}) {
   const { t } = useTranslation();
   const paid = !!sheet.payment;
   const removeAdvance = async (id: number) => {
@@ -86,7 +96,7 @@ function Breakdown({ sheet, onChanged }: { sheet: MonthSheet; onChanged: () => v
         line(
           t('Saturdays worked: {{n}}', { n: sheet.worked_dates.length }),
           `+ ${formatAmount(sheet.holiday_pay)}`,
-          sheet.worked_dates.map((d) => d.bs).join(', '),
+          `${sheet.worked_dates.map((d) => d.bs).join(', ')} · ${t('{{rate}} each', { rate: formatNPR(sheet.holiday_rate) })}`,
         )}
       {sheet.advances.map((a) => (
         <Group key={a.id} justify="space-between" wrap="nowrap" gap="md">
@@ -144,6 +154,15 @@ function Breakdown({ sheet, onChanged }: { sheet: MonthSheet; onChanged: () => v
           {note}
         </Text>
       ))}
+      <Button
+        variant="default"
+        size="xs"
+        w="fit-content"
+        leftSection={<IconCalendarMonth size={14} />}
+        onClick={() => openAttendanceCalendar(sheet.staff, month)}
+      >
+        {t('Days of {{name}}', { name: sheet.staff.name })}
+      </Button>
     </Stack>
   );
 }
@@ -243,7 +262,13 @@ export function SalaryTab() {
           phoneAside="net"
           noRecordsText={t('No staff worked in this month')}
           rowExpansion={{
-            content: ({ record }) => <Breakdown sheet={record} onChanged={refresh} />,
+            content: ({ record }) => (
+              <Breakdown
+                sheet={record}
+                month={monthParam(data!.year, data!.month)}
+                onChanged={refresh}
+              />
+            ),
           }}
           columns={[
             {
@@ -330,6 +355,14 @@ export function SalaryTab() {
                         {t('Pay salary')}
                       </Menu.Item>
                     )}
+                    <Menu.Item
+                      leftSection={<IconCalendarMonth size={16} />}
+                      onClick={() =>
+                        data && openAttendanceCalendar(r.staff, monthParam(data.year, data.month))
+                      }
+                    >
+                      {t('Attendance days')}
+                    </Menu.Item>
                     {!r.payment && (
                       <Menu.Item
                         leftSection={<IconPlus size={16} />}

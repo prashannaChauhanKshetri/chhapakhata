@@ -4,7 +4,8 @@ Salary is counted per Nepali (BS) month:
 
 * one day's pay = monthly salary ÷ days in that BS month;
 * a working day marked **absent** takes off one day's pay;
-* **Saturday** is the paid weekly holiday; working it adds one day's pay;
+* **Saturday** is the paid weekly holiday; working it adds one day's pay, or
+  the worker's own Saturday pay when the owner has set one;
 * advances given during the month are taken off that month's salary.
 
 Only the exceptions are stored (absent days, Saturdays worked): every other
@@ -37,6 +38,14 @@ class Staff(BusinessOwned, TimeStampedModel):
     job_title = models.CharField(max_length=80, blank=True, help_text="e.g. Designer, Fitter")
     monthly_salary = models.DecimalField(
         max_digits=10, decimal_places=2, validators=[MinValueValidator(0)]
+    )
+    saturday_pay = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        help_text="Extra pay for each Saturday worked. Empty: one day's pay (double).",
     )
     joined_on = models.DateField(help_text="No pay is counted before this day.")
     left_on = models.DateField(null=True, blank=True, help_text="No pay is counted after this day.")
@@ -121,6 +130,9 @@ class SalaryPayment(BusinessOwned, TimeStampedModel):
     day_rate = models.DecimalField(max_digits=10, decimal_places=2)
     absent_days = models.PositiveSmallIntegerField()
     holidays_worked = models.PositiveSmallIntegerField()
+    holiday_rate = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0, help_text="Paid for each Saturday worked."
+    )
     base_pay = models.DecimalField(max_digits=10, decimal_places=2)
     absent_deduction = models.DecimalField(max_digits=10, decimal_places=2)
     holiday_pay = models.DecimalField(max_digits=10, decimal_places=2)

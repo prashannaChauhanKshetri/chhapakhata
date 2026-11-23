@@ -21,6 +21,7 @@ class StaffSerializer(serializers.ModelSerializer):
             "phone",
             "job_title",
             "monthly_salary",
+            "saturday_pay",
             "joined_on",
             "joined_on_bs",
             "left_on",
@@ -148,6 +149,7 @@ class MonthSheetSerializer(serializers.Serializer):
     base_pay = serializers.DecimalField(max_digits=10, decimal_places=2)
     absent_deduction = serializers.DecimalField(max_digits=10, decimal_places=2)
     holiday_pay = serializers.DecimalField(max_digits=10, decimal_places=2)
+    holiday_rate = serializers.DecimalField(max_digits=10, decimal_places=2)
     earned = serializers.DecimalField(max_digits=10, decimal_places=2)
     advances = StaffAdvanceSerializer(many=True)
     advances_total = serializers.DecimalField(max_digits=10, decimal_places=2)
@@ -171,6 +173,28 @@ class MonthRefSerializer(serializers.Serializer):
     year = serializers.IntegerField()
     month = serializers.IntegerField()
     label = serializers.CharField()
+
+
+class MonthDaySerializer(serializers.Serializer):
+    date = serializers.DateField()
+    bs_day = serializers.IntegerField()
+    weekday = serializers.IntegerField(help_text="0 = Sunday … 6 = Saturday")
+    is_holiday = serializers.BooleanField()
+    status = serializers.ChoiceField(choices=[*DAY_STATUSES, "not_working"])
+    editable = serializers.BooleanField()
+
+
+class StaffMonthSerializer(serializers.Serializer):
+    """One worker's month as a calendar."""
+
+    staff = StaffRefSerializer()
+    year = serializers.IntegerField()
+    month = serializers.IntegerField()
+    label = serializers.CharField()
+    previous = MonthRefSerializer()
+    next = MonthRefSerializer(allow_null=True)
+    paid = serializers.BooleanField()
+    days = MonthDaySerializer(many=True)
 
 
 class PayrollSerializer(serializers.Serializer):
