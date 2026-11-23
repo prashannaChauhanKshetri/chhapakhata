@@ -573,6 +573,9 @@ def update_order(
     order.save()
     if order.status != OrderStatus.QUOTATION:
         create_jobs_for_order(order, user)  # jobs for newly added items
+        from apps.billing.services import sync_order_charge
+
+        sync_order_charge(order, user, why="changed")
     log_activity(user, "order.updated", order, message=f"Total {order.total}", request=request)
     return order
 
@@ -628,6 +631,10 @@ def confirm_order(*, order: Order, user: Any, request: Any = None) -> Order:
     order.confirmed_at = timezone.now()
     order.save(update_fields=["status", "confirmed_at", "updated_at"])
     create_jobs_for_order(order, user)
+    # On the customer's statement from the order day, until it is billed.
+    from apps.billing.services import sync_order_charge
+
+    sync_order_charge(order, user, entry_date=order.order_date)
     log_activity(user, "order.confirmed", order, request=request)
     return order
 
@@ -650,6 +657,9 @@ def cancel_order(*, order: Order, user: Any, reason: str, request: Any = None) -
     order.cancelled_at = timezone.now()
     order.cancel_reason = reason
     order.save(update_fields=["status", "cancelled_at", "cancel_reason", "updated_at"])
+    from apps.billing.services import sync_order_charge
+
+    sync_order_charge(order, user, why=f"cancelled ({reason})")
     log_activity(user, "order.cancelled", order, message=reason, request=request)
     return order
 

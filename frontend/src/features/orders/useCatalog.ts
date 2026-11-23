@@ -29,3 +29,9 @@ export function useShopSettings() {
     staleTime: 5 * 60_000,
   });
 }
+
+/** Production board, job stages and Deliver: on unless the shop turned them off. */
+export function useTracksProduction(): boolean {
+  const { data } = useShopSettings();
+  return data?.track_production ?? true;
+}

@@ -45,7 +45,7 @@ import {
   type OrderFormValues,
   pricingPayload,
 } from './orderForm';
-import { useAddOns, useMediaTypes, useShopSettings } from './useCatalog';
+import { useAddOns, useMediaTypes, useShopSettings, useTracksProduction } from './useCatalog';
 
 /** The item a field path such as "items.2.width" belongs to. */
 function itemAt(values: OrderFormValues, path: string) {
@@ -66,6 +66,7 @@ function OrderFormInner({
   presetCustomer?: Customer | null;
 }) {
   const { t } = useTranslation();
+  const tracks = useTracksProduction();
   const navigate = useNavigate();
   const client = useQueryClient();
   const { user } = useAuth();
@@ -441,14 +442,16 @@ function OrderFormInner({
                     {...form.getInputProps('deadline')}
                   />
                 </Grid.Col>
-                <Grid.Col span={{ base: 12, sm: 6 }}>
-                  <Switch
-                    mt={{ base: 0, sm: 30 }}
-                    label={t('Urgent job')}
-                    description={t('Shown first on the production board')}
-                    {...form.getInputProps('is_urgent', { type: 'checkbox' })}
-                  />
-                </Grid.Col>
+                {tracks && (
+                  <Grid.Col span={{ base: 12, sm: 6 }}>
+                    <Switch
+                      mt={{ base: 0, sm: 30 }}
+                      label={t('Urgent job')}
+                      description={t('Shown first on the production board')}
+                      {...form.getInputProps('is_urgent', { type: 'checkbox' })}
+                    />
+                  </Grid.Col>
+                )}
                 <Grid.Col span={12}>
                   <Textarea
                     label={t('Notes')}

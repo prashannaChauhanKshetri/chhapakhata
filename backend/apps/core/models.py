@@ -137,6 +137,12 @@ class ShopSettings(models.Model):
     print_header = models.CharField(
         "Header layout", max_length=10, choices=PrintHeader.choices, default=PrintHeader.LEFT
     )
+    track_production = models.BooleanField(
+        "Track production",
+        default=True,
+        help_text="Production board, job stages and Deliver on orders. Off: orders are "
+        "simply confirmed, then billed and paid.",
+    )
     quotation_validity_days = models.PositiveSmallIntegerField(default=7)
     quotation_terms = models.TextField(
         blank=True,

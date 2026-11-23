@@ -31,6 +31,7 @@ import { ORDER_STATUS } from '@/lib/status';
 import { PAGE_SIZE, useListState } from '@/lib/useListState';
 
 import { openPrintOrders } from './PrintOrdersForm';
+import { useTracksProduction } from './useCatalog';
 
 const VIEWS = [
   { value: 'all', label: 'All' },
@@ -58,6 +59,7 @@ function viewQuery(view: string): Record<string, string> {
 
 export default function OrdersPage() {
   const { t } = useTranslation();
+  const tracks = useTracksProduction();
   const navigate = useNavigate();
   const list = useListState(['view'] as const, '-created_at');
   const view = list.filters.view || 'all';
@@ -118,7 +120,10 @@ export default function OrdersPage() {
             <SegmentedControl
               value={view}
               onChange={(v) => list.setFilter('view', v === 'all' ? null : v)}
-              data={VIEWS.map((v) => ({ ...v, label: t(v.label) }))}
+              data={VIEWS.filter((v) => tracks || v.value !== 'ready').map((v) => ({
+                ...v,
+                label: t(v.label),
+              }))}
             />
           </ScrollArea>
           <TextInput
@@ -213,6 +218,7 @@ export default function OrdersPage() {
               {
                 accessor: 'progress',
                 title: t('Progress'),
+                hidden: !tracks,
                 visibleMediaQuery: '(min-width: 48em)',
                 render: (o) => <WorkProgress progress={o.progress} />,
               },

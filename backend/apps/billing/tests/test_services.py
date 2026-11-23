@@ -51,7 +51,8 @@ def test_cancel_keeps_number_and_reverses_ledger(make_order, desk, owner, custom
     services.cancel_invoice(invoice=invoice, user=owner, reason="Wrong size billed")
     invoice.refresh_from_db()
     assert invoice.status == InvoiceStatus.CANCELLED
-    assert customer_balance(customer) == D("0.00")
+    # The bill is gone; the confirmed order is still owed, back on the account.
+    assert customer_balance(customer) == order.total
     reissued = services.issue_invoice(order=order, user=desk)
     assert reissued.sequence == 2  # cancelled number is never reused
 
@@ -131,7 +132,9 @@ def test_opening_balance_and_statement(customer, owner, desk, make_order):
     assert statement["opening_balance"] == D("4500.00")
     assert [e["entry_type"] for e in statement["entries"]] == [
         LedgerEntryType.PAYMENT,
+        LedgerEntryType.ORDER_CHARGE,  # owed from confirmation …
         LedgerEntryType.INVOICE,
+        LedgerEntryType.WORK_BILLED,  # … then moved onto the bill
     ]
     assert statement["entries"][0]["balance"] == D("3000.00")
     assert statement["closing_balance"] == D("3000.00") + order.total

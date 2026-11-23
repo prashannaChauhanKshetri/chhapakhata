@@ -6280,6 +6280,7 @@ paths:
             - invoice
             - invoice_cancel
             - opening
+            - order
             - payment
             - payment_void
             - work_billed
@@ -6291,6 +6292,7 @@ paths:
           * `payment_void` - Payment voided
           * `adjustment` - Adjustment
           * `imported_work` - Work (imported)
+          * `order` - Order
           * `work_billed` - Work moved to a bill
         explode: true
         style: form
@@ -32675,6 +32677,10 @@ components:
           allOf:
           - $ref: '#/components/schemas/PrintHeaderEnum'
           title: Header layout
+        track_production:
+          type: boolean
+          description: 'Production board, job stages and Deliver on orders. Off: orders
+            are simply confirmed, then billed and paid.'
         quotation_validity_days:
           type: integer
           maximum: 32767
@@ -35892,6 +35898,7 @@ components:
       - $ref: '#/components/schemas/SettingsShopPartialUpdatePrintColorErrorComponent'
       - $ref: '#/components/schemas/SettingsShopPartialUpdatePrintTextSizeErrorComponent'
       - $ref: '#/components/schemas/SettingsShopPartialUpdatePrintHeaderErrorComponent'
+      - $ref: '#/components/schemas/SettingsShopPartialUpdateTrackProductionErrorComponent'
       - $ref: '#/components/schemas/SettingsShopPartialUpdateQuotationValidityDaysErrorComponent'
       - $ref: '#/components/schemas/SettingsShopPartialUpdateQuotationTermsErrorComponent'
       - $ref: '#/components/schemas/SettingsShopPartialUpdateOrderNumberPatternErrorComponent'
@@ -35925,6 +35932,7 @@ components:
           print_color: '#/components/schemas/SettingsShopPartialUpdatePrintColorErrorComponent'
           print_text_size: '#/components/schemas/SettingsShopPartialUpdatePrintTextSizeErrorComponent'
           print_header: '#/components/schemas/SettingsShopPartialUpdatePrintHeaderErrorComponent'
+          track_production: '#/components/schemas/SettingsShopPartialUpdateTrackProductionErrorComponent'
           quotation_validity_days: '#/components/schemas/SettingsShopPartialUpdateQuotationValidityDaysErrorComponent'
           quotation_terms: '#/components/schemas/SettingsShopPartialUpdateQuotationTermsErrorComponent'
           order_number_pattern: '#/components/schemas/SettingsShopPartialUpdateOrderNumberPatternErrorComponent'
@@ -36643,6 +36651,28 @@ components:
       - attr
       - code
       - detail
+    SettingsShopPartialUpdateTrackProductionErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - track_production
+          type: string
+          description: '* `track_production` - track_production'
+        code:
+          enum:
+          - invalid
+          - 'null'
+          type: string
+          description: |-
+            * `invalid` - invalid
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     SettingsShopPartialUpdateValidationError:
       type: object
       properties:
@@ -36782,6 +36812,10 @@ components:
           allOf:
           - $ref: '#/components/schemas/PrintHeaderEnum'
           title: Header layout
+        track_production:
+          type: boolean
+          description: 'Production board, job stages and Deliver on orders. Off: orders
+            are simply confirmed, then billed and paid.'
         quotation_validity_days:
           type: integer
           maximum: 32767
@@ -36833,6 +36867,7 @@ components:
       - signature_image
       - stamp_image
       - tagline
+      - track_production
       - updated_at
       - vat_rate
     SourceEnum:

@@ -50,7 +50,7 @@ import {
 import { QueryError } from '@/components/QueryError';
 import { StatusBadge } from '@/components/StatusBadge';
 import { handleFormError, notifyError, notifySuccess } from '@/lib/forms';
-import { formatAmount, formatDate, formatNPR, toNumber } from '@/lib/format';
+import { formatAmount, formatDate, toNumber } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
 import { ORDER_STATUS } from '@/lib/status';
 
@@ -448,14 +448,10 @@ export default function CustomerDetailPage() {
   if (error) return <QueryError error={error} onRetry={() => void refetch()} />;
   if (!customer) return <DetailSkeleton />;
   const balance = toNumber(customer.balance);
-  // Work in progress is billed when invoiced; show it so the counter sees the full picture.
-  // Imported work-log orders are already charged to the ledger, so they are not counted.
-  const uninvoiced = (orders?.results ?? [])
-    .filter(
-      (o) =>
-        !o.invoice_no && o.source !== 'import' && !['quotation', 'cancelled'].includes(o.status),
-    )
-    .reduce((sum, o) => sum + toNumber(o.balance_due), 0);
+  // Confirmed orders count in the balance from confirmation, billed or not.
+  const hasUnbilled = (orders?.results ?? []).some(
+    (o) => !o.invoice_no && o.source !== 'import' && !['quotation', 'cancelled'].includes(o.status),
+  );
 
   const adjust = () => {
     const modalId = modals.open({
@@ -558,13 +554,11 @@ export default function CustomerDetailPage() {
                 style={{ fontVariantNumeric: 'normal' }}
               />
               <Text size="xs" c="dimmed" mt={4}>
-                {t('From the customer ledger, after all invoices and payments.')}
+                {t('Confirmed orders, bills and payments, from the customer ledger.')}
               </Text>
-              {uninvoiced > 0 && (
-                <Text size="sm" mt="sm" pt="sm" style={{ borderTop: '1px solid var(--ck-border)' }}>
-                  {t('Plus {{amount}} on orders not yet invoiced.', {
-                    amount: formatNPR(uninvoiced),
-                  })}
+              {hasUnbilled && (
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t('Includes orders not billed yet; making a bill does not add them again.')}
                 </Text>
               )}
             </Card>

@@ -26,6 +26,16 @@ Source of truth: `backend/apps/core/permissions.py` (`ROLE_PERMISSIONS`). The fr
 - **Delivered** is allowed only from **Ready for collection** (owner excepted). Only the owner reopens a delivered job.
 - Leaving **Printing** requires the roll and sq ft used for media linked to stock; the owner may skip this.
 
+## Orders on the customer's account
+
+- A **confirmed order counts** on the customer's statement and in dues from its order date, billed or not (ledger line "Order"). Editing it posts the difference; cancelling it takes it off.
+- **Making a bill moves** the order onto the bill ("Work moved to a bill"), so it is never counted twice; cancelling the bill puts it back on the account.
+- Imported work-log orders work the same way, with the line "Work (imported)".
+
+## Production tracking
+
+- **Settings → Shop → Track production** (owner): off hides the production board, job stages, job tickets, Urgent and Deliver. Orders are then confirmed, billed (Issue invoice / Make a bill) and paid. Nothing is deleted; switching it on brings everything back.
+
 ## Staff and salary
 
 - **Staff** are workers on the payroll, separate from logins (helpers need no account). When someone leaves, switch off "Still working here" and set the last working day; the record and its slips are kept. Only a worker with no salary paid and no advance given (e.g. added by mistake) can be deleted.

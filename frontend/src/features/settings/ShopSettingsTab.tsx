@@ -68,6 +68,7 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
       vat_rate: toNumber(shop.vat_rate) as number | string,
       default_min_sqft: toNumber(shop.default_min_sqft) as number | string,
       round_total_to_rupee: shop.round_total_to_rupee ?? false,
+      track_production: shop.track_production ?? true,
       front_desk_max_discount_percent: toNumber(shop.front_desk_max_discount_percent) as
         | number
         | string,
@@ -211,6 +212,16 @@ function ShopForm({ shop }: { shop: ShopSettings }) {
               'Rate changes apply to new orders only. Quoted and confirmed orders keep their rates.',
             )}
           </Alert>
+        </SectionCard>
+
+        <SectionCard title={t('Work flow')}>
+          <Switch
+            label={t('Track production')}
+            description={t(
+              'Production board, job stages (Design → Ready for print → Printing → Finishing → Ready) and Deliver on orders. Off: orders are simply confirmed, then billed and paid. Nothing is deleted; switch it back on any time.',
+            )}
+            {...form.getInputProps('track_production', { type: 'checkbox' })}
+          />
         </SectionCard>
 
         <SectionCard title={t('Documents')}>

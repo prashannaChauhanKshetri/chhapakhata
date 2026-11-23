@@ -51,6 +51,7 @@ import { INVOICE_STATUS, ORDER_STATUS, PAYMENT_STATUS } from '@/lib/status';
 import { openReceivePayment } from '../billing/ReceivePaymentForm';
 import { openMakeBill } from '../billing/MakeBillForm';
 import { openDeliver } from './DeliverForm';
+import { useTracksProduction } from './useCatalog';
 import { openEditDetails } from './EditDetailsForm';
 
 export default function OrderDetailPage() {
@@ -59,6 +60,7 @@ export default function OrderDetailPage() {
   const orderId = Number(id);
   const navigate = useNavigate();
   const client = useQueryClient();
+  const tracks = useTracksProduction();
   const [busy, setBusy] = useState<string | null>(null);
   const {
     data: order,
@@ -180,7 +182,7 @@ export default function OrderDetailPage() {
                 {t('Confirm order')}
               </Button>
             )}
-            {a.can_deliver && (
+            {tracks && a.can_deliver && (
               <Button
                 leftSection={<IconTruckDelivery size={16} />}
                 onClick={() => openDeliver(order)}
@@ -197,7 +199,7 @@ export default function OrderDetailPage() {
                 {t('Receive payment')}
               </Button>
             )}
-            {a.can_invoice && !a.can_deliver && (
+            {a.can_invoice && !(tracks && a.can_deliver) && (
               <Button
                 variant="default"
                 leftSection={<IconFileInvoice size={16} />}
@@ -220,7 +222,7 @@ export default function OrderDetailPage() {
                 >
                   {order.status === 'quotation' ? t('Print quotation') : t('Print estimate')}
                 </Menu.Item>
-                {order.status !== 'quotation' && (
+                {order.status !== 'quotation' && tracks && (
                   <Menu.Item
                     leftSection={<IconTicket size={16} />}
                     onClick={() => void printTickets()}
@@ -276,7 +278,7 @@ export default function OrderDetailPage() {
       <Grid gap="lg">
         <Grid.Col span={{ base: 12, lg: 8 }}>
           <Stack gap="lg">
-            {order.progress && order.source !== 'import' && (
+            {tracks && order.progress && order.source !== 'import' && (
               <Card padding="md">
                 <WorkSteps progress={order.progress} />
               </Card>
@@ -320,7 +322,7 @@ export default function OrderDetailPage() {
                         {t('Finishing')}: {item.finishing}
                       </Text>
                     )}
-                    {item.job && (
+                    {tracks && item.job && (
                       <Group gap={6} mt={4}>
                         <Text size="xs" c="dimmed">
                           {item.job.job_no}
@@ -365,7 +367,7 @@ export default function OrderDetailPage() {
                               {t('Finishing')}: {item.finishing}
                             </Text>
                           )}
-                          {item.job && (
+                          {tracks && item.job && (
                             <Group gap={6} mt={4}>
                               <Text size="xs" c="dimmed">
                                 {item.job.job_no}

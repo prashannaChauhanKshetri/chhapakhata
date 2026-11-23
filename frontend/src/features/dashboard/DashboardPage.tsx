@@ -19,6 +19,7 @@ import { StageBadge } from '@/components/StatusBadge';
 import { deadlineLabel, formatDate, formatNPRCompact, formatQty } from '@/lib/format';
 import { Perm } from '@/lib/permissions';
 
+import { useTracksProduction } from '../orders/useCatalog';
 import { AttendanceRegister } from '../staff/AttendanceRegister';
 import classes from './Dashboard.module.css';
 import { SalesTrendCard } from './SalesTrendCard';
@@ -72,6 +73,8 @@ export default function DashboardPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { can } = useAuth();
+  // Off (Settings → Shop): no jobs, stages or delivery on the dashboard.
+  const tracks = useTracksProduction();
   const { data, error, refetch } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => apiGet<Dashboard>('/api/v1/dashboard/'),
@@ -90,7 +93,7 @@ export default function DashboardPage() {
   const late = (deadline: string | null) => deadline !== null && new Date(deadline) < new Date();
   const weekday = data ? WEEKDAYS[new Date(`${data.date}T00:00:00`).getDay()] : '';
 
-  const readyCard = data?.ready_orders && (
+  const readyCard = tracks && data?.ready_orders && (
     <SectionCard title={t('Ready for collection')} flush>
       {data.ready_orders.length === 0 ? (
         <EmptyState compact title={t('No orders waiting')} />
@@ -197,7 +200,7 @@ export default function DashboardPage() {
                 to="/reports/pending-dues"
               />
             )}
-            {jobs && (
+            {jobs && tracks && (
               <Figure
                 label={t('Jobs due today')}
                 value={jobs.due_today}
@@ -237,7 +240,7 @@ export default function DashboardPage() {
           {/* -- Work ------------------------------------------------------------------ */}
           <Grid.Col span={{ base: 12, lg: 8 }}>
             <Stack gap="md">
-              {data?.overdue_jobs && (
+              {data?.overdue_jobs && tracks && (
                 <SectionCard
                   title={t('Jobs to deliver')}
                   description={t('Due today and late, oldest first')}
@@ -295,7 +298,7 @@ export default function DashboardPage() {
 
           <Grid.Col span={{ base: 12, lg: 4 }}>
             <Stack gap="md">
-              {jobs && (
+              {jobs && tracks && (
                 <SectionCard
                   title={t('In production')}
                   actions={<SeeAll to="/production">{t('Open board')}</SeeAll>}

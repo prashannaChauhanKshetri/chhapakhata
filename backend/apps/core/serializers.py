@@ -61,6 +61,7 @@ class ShopSettingsSerializer(serializers.ModelSerializer):
             "print_color",
             "print_text_size",
             "print_header",
+            "track_production",
             "quotation_validity_days",
             "quotation_terms",
             "order_number_pattern",

@@ -200,7 +200,10 @@ export function AppLayout() {
             <Stack gap="md" pb="md">
               {NAV.map((section, index) => {
                 const items = section.items.filter(
-                  (item) => item.perms.length === 0 || canAny(...item.perms),
+                  (item) =>
+                    (item.perms.length === 0 || canAny(...item.perms)) &&
+                    // The shop can switch production tracking off (Settings → Shop).
+                    (item.to !== '/production' || shop?.track_production !== false),
                 );
                 if (items.length === 0) return null;
                 return (

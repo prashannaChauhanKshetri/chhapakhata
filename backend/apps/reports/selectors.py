@@ -32,7 +32,7 @@ from apps.inventory.models import (
     StockKind,
     StockMovement,
 )
-from apps.orders.models import Order, OrderStatus
+from apps.orders.models import Order, OrderSource, OrderStatus
 from apps.production.models import JobStageEvent, Stage
 
 from .tables import Column, Metric, Report, Table, period_label
@@ -160,7 +160,10 @@ def _imported_work_metric(date_from: dt.date, date_to: dt.date) -> list[Metric]:
     """
     entries = LedgerEntry.objects.filter(entry_date__gte=date_from, entry_date__lte=date_to)
     imported = _sum(entries.filter(entry_type=LedgerEntryType.IMPORTED_WORK), "debit")
-    billed = _sum(entries.filter(entry_type=LedgerEntryType.WORK_BILLED), "credit")
+    billed = _sum(
+        entries.filter(entry_type=LedgerEntryType.WORK_BILLED, order__source=OrderSource.IMPORT),
+        "credit",
+    )
     net = imported - billed
     return [Metric("Work imported from the work log (not billed)", net)] if net else []
 

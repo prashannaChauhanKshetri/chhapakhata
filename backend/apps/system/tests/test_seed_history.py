@@ -32,8 +32,11 @@ def test_two_weeks_of_history_follow_the_rules():
     receipts = list(Payment.objects.order_by("sequence").values_list("payment_date", flat=True))
     assert receipts == sorted(receipts)
 
-    # Each customer's ledger balance = issued invoices − valid payments (no other entries yet).
-    assert not LedgerEntry.objects.exclude(entry_type__in=["invoice", "payment"]).exists()
+    # Each customer's balance = issued invoices − valid payments + confirmed orders not
+    # billed yet (an order counts from confirmation; a bill moves it onto the bill).
+    assert not LedgerEntry.objects.exclude(
+        entry_type__in=["invoice", "payment", "order", "work_billed"]
+    ).exists()
     for customer in Customer.objects.all():
         billed = sum(
             (i.total for i in Invoice.objects.filter(customer=customer, status="issued")),
@@ -43,7 +46,16 @@ def test_two_weeks_of_history_follow_the_rules():
             (p.amount for p in Payment.objects.filter(customer=customer, status="valid")),
             Decimal(0),
         )
-        assert customer_balance(customer) == billed - paid
+        unbilled = sum(
+            (
+                o.total
+                for o in Order.objects.filter(customer=customer)
+                .exclude(status__in=["quotation", "cancelled"])
+                .exclude(invoices__status="issued")
+            ),
+            Decimal(0),
+        )
+        assert customer_balance(customer) == billed - paid + unbilled
 
 
 def test_refuses_a_database_that_is_in_use(owner):

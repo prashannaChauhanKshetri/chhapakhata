@@ -8371,6 +8371,8 @@ export interface components {
             print_text_size?: components["schemas"]["PrintTextSizeEnum"];
             /** Header layout */
             print_header?: components["schemas"]["PrintHeaderEnum"];
+            /** @description Production board, job stages and Deliver on orders. Off: orders are simply confirmed, then billed and paid. */
+            track_production?: boolean;
             quotation_validity_days?: number;
             quotation_terms?: string;
             order_number_pattern?: string;
@@ -9952,7 +9954,7 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
-        SettingsShopPartialUpdateError: components["schemas"]["SettingsShopPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateNameErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateTaglineErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateAddressErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePhoneErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateEmailErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePanVatNumberErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateIsVatRegisteredErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateVatRateErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateDefaultMinSqftErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRoundTotalToRupeeErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateFrontDeskMaxDiscountPercentErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateLogoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateStampImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateSignatureImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveLogoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveStampImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveSignatureImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateInvoiceFooterNoteErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePaymentInfoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePrintColorErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePrintTextSizeErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePrintHeaderErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateQuotationValidityDaysErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateQuotationTermsErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateOrderNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateJobNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateInvoiceNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateReceiptNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePurchaseNumberPatternErrorComponent"];
+        SettingsShopPartialUpdateError: components["schemas"]["SettingsShopPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateNameErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateTaglineErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateAddressErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePhoneErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateEmailErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePanVatNumberErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateIsVatRegisteredErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateVatRateErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateDefaultMinSqftErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRoundTotalToRupeeErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateFrontDeskMaxDiscountPercentErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateLogoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateStampImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateSignatureImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveLogoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveStampImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateRemoveSignatureImageErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateInvoiceFooterNoteErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePaymentInfoErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePrintColorErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePrintTextSizeErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePrintHeaderErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateTrackProductionErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateQuotationValidityDaysErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateQuotationTermsErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateOrderNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateJobNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateInvoiceNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdateReceiptNumberPatternErrorComponent"] | components["schemas"]["SettingsShopPartialUpdatePurchaseNumberPatternErrorComponent"];
         SettingsShopPartialUpdateErrorResponse400: components["schemas"]["SettingsShopPartialUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
         SettingsShopPartialUpdateFrontDeskMaxDiscountPercentErrorComponent: {
             /**
@@ -10383,6 +10385,20 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
+        SettingsShopPartialUpdateTrackProductionErrorComponent: {
+            /**
+             * @description * `track_production` - track_production (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "track_production";
+            /**
+             * @description * `invalid` - invalid
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "invalid" | "null";
+            detail: string;
+        };
         SettingsShopPartialUpdateValidationError: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -10458,6 +10474,8 @@ export interface components {
             print_text_size: components["schemas"]["PrintTextSizeEnum"];
             /** Header layout */
             print_header: components["schemas"]["PrintHeaderEnum"];
+            /** @description Production board, job stages and Deliver on orders. Off: orders are simply confirmed, then billed and paid. */
+            track_production: boolean;
             quotation_validity_days: number;
             quotation_terms: string;
             order_number_pattern: string;
@@ -17634,9 +17652,10 @@ export interface operations {
                  *     * `payment_void` - Payment voided
                  *     * `adjustment` - Adjustment
                  *     * `imported_work` - Work (imported)
+                 *     * `order` - Order
                  *     * `work_billed` - Work moved to a bill
                  */
-                entry_type?: ("adjustment" | "imported_work" | "invoice" | "invoice_cancel" | "opening" | "payment" | "payment_void" | "work_billed")[];
+                entry_type?: ("adjustment" | "imported_work" | "invoice" | "invoice_cancel" | "opening" | "order" | "payment" | "payment_void" | "work_billed")[];
                 /** @description Which field to use when ordering the results. */
                 ordering?: string;
                 /** @description A page number within the paginated result set. */

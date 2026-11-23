@@ -80,7 +80,8 @@ def test_cancelling_frees_the_orders_for_a_new_bill(make_order, owner, customer)
     assert not InvoiceOrder.objects.filter(is_active=True).exists()
     again = services.issue_bill(customer=customer, orders=[a], user=owner)
     assert again.total == a.total
-    assert customer_balance(customer) == a.total
+    # a is on the new bill; b, still confirmed, is back on the account.
+    assert customer_balance(customer) == a.total + b.total
 
 
 def _work_log(owner, rows):

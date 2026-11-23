@@ -184,13 +184,48 @@ def billable_orders(customer: Any, orders: Any, *, lock: bool = False) -> list[O
     return found
 
 
+#: Ledger lines that keep an order's work on the account until it is billed.
+ON_ACCOUNT_TYPES = (
+    LedgerEntryType.IMPORTED_WORK,
+    LedgerEntryType.ORDER_CHARGE,
+    LedgerEntryType.WORK_BILLED,
+)
+
+
 def work_on_account(order: Order) -> Decimal:
-    """What a work-log order has charged to the account and not yet moved to a bill."""
-    entries = order.ledger_entries.filter(
-        entry_type__in=(LedgerEntryType.IMPORTED_WORK, LedgerEntryType.WORK_BILLED)
-    )
+    """What an order has charged to the account and not yet moved to a bill."""
+    entries = order.ledger_entries.filter(entry_type__in=ON_ACCOUNT_TYPES)
     net = sum((e.debit - e.credit for e in entries), Decimal("0"))
     return q2(net)
+
+
+def sync_order_charge(
+    order: Order, user: Any, *, entry_date: dt.date | None = None, why: str = ""
+) -> LedgerEntry | None:
+    """Keep a confirmed order's total on the customer's account until it is billed.
+
+    A confirmed order counts on the statement and in dues straight away; making a
+    bill moves it onto the bill (see ``issue_bill``). Editing the order posts the
+    difference, cancelling takes it off. Quotations and billed orders carry nothing
+    here; imported work-log orders are charged by the import itself.
+    """
+    if order.source == OrderSource.IMPORT:
+        return None
+    billed = order.invoices.filter(status=InvoiceStatus.ISSUED).exists()
+    counts = order.status not in (OrderStatus.QUOTATION, OrderStatus.CANCELLED) and not billed
+    change = q2((order.total if counts else Decimal("0")) - work_on_account(order))
+    if change == 0:
+        return None
+    return LedgerEntry.objects.create(
+        customer_id=order.customer_id,
+        entry_date=entry_date or local_today(),
+        entry_type=LedgerEntryType.ORDER_CHARGE,
+        debit=change if change > 0 else Decimal("0"),
+        credit=-change if change < 0 else Decimal("0"),
+        order=order,
+        narration=(f"Order {order.order_no}" + (f": {why}" if why else ""))[:255],
+        created_by=user if getattr(user, "is_authenticated", False) else None,
+    )
 
 
 def _bill_lines(invoice: Invoice, orders: list[Order]) -> list[InvoiceLine]:
@@ -363,7 +398,7 @@ def issue_invoice(
 def cancel_invoice(*, invoice: Invoice, user: Any, reason: str, request: Any = None) -> Invoice:
     """Cancel (never delete) an invoice. The number stays used; the ledger is reversed.
 
-    Its orders can be billed again, and work-log orders go back on the account.
+    Its orders can be billed again, and their work goes back on the account.
     """
     reason = _require_reason(reason)
     invoice = Invoice.objects.select_for_update().get(pk=invoice.pk)
@@ -392,7 +427,11 @@ def cancel_invoice(*, invoice: Invoice, user: Any, reason: str, request: Any = N
         LedgerEntry.objects.create(
             customer_id=invoice.customer_id,
             entry_date=today,
-            entry_type=LedgerEntryType.IMPORTED_WORK,
+            entry_type=(
+                LedgerEntryType.IMPORTED_WORK
+                if entry.order.source == OrderSource.IMPORT
+                else LedgerEntryType.ORDER_CHARGE
+            ),
             debit=entry.credit,
             invoice=invoice,
             order=entry.order,

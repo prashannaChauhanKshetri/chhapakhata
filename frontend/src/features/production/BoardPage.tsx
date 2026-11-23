@@ -41,6 +41,7 @@ import { QueryError } from '@/components/QueryError';
 import { StageBadge } from '@/components/StatusBadge';
 import { BoardSkeleton } from '@/components/Skeletons';
 import { STAGES } from '@/lib/status';
+import { useTracksProduction } from '@/features/orders/useCatalog';
 
 import { useMediaTypes } from '../orders/useCatalog';
 import classes from './Board.module.css';
@@ -100,7 +101,27 @@ function StageColumn({
   );
 }
 
+/** The board, unless the shop has switched production tracking off. */
 export default function BoardPage() {
+  const tracks = useTracksProduction();
+  const { t } = useTranslation();
+  if (!tracks) {
+    return (
+      <>
+        <PageHeader title={t('Production board')} />
+        <EmptyState
+          title={t('Production tracking is off')}
+          description={t(
+            'Orders are confirmed, then billed and paid, without job stages. It can be switched on in Settings → Shop.',
+          )}
+        />
+      </>
+    );
+  }
+  return <ProductionBoard />;
+}
+
+function ProductionBoard() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isPhone = useMediaQuery('(max-width: 48em)');

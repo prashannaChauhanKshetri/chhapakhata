@@ -41,6 +41,8 @@ const ENTRY_TYPES = [
   { value: 'opening', label: 'Opening balance' },
   { value: 'invoice', label: 'Invoice' },
   { value: 'invoice_cancel', label: 'Invoice cancelled' },
+  { value: 'order', label: 'Order' },
+  { value: 'work_billed', label: 'Work moved to a bill' },
   { value: 'imported_work', label: 'Work (imported)' },
   { value: 'payment', label: 'Payment received' },
   { value: 'payment_void', label: 'Payment voided' },

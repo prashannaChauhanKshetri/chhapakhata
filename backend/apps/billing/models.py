@@ -262,6 +262,7 @@ class LedgerEntryType(models.TextChoices):
     PAYMENT_VOID = "payment_void", "Payment voided"
     ADJUSTMENT = "adjustment", "Adjustment"
     IMPORTED_WORK = "imported_work", "Work (imported)"
+    ORDER_CHARGE = "order", "Order"
     WORK_BILLED = "work_billed", "Work moved to a bill"
 
 
@@ -287,7 +288,8 @@ class LedgerEntry(BusinessOwned):
         blank=True,
         on_delete=models.PROTECT,
         related_name="ledger_entries",
-        help_text="Set for work charged without an invoice (imported history).",
+        help_text="Set for work charged without an invoice: a confirmed order not billed "
+        "yet, or imported history.",
     )
     narration = models.CharField(max_length=255)
     created_by = models.ForeignKey(

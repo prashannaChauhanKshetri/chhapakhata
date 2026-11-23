@@ -319,7 +319,11 @@ def outstanding_by_customer(
     return result
 
 
-ITEM_ENTRY_TYPES = (LedgerEntryType.INVOICE, LedgerEntryType.IMPORTED_WORK)
+ITEM_ENTRY_TYPES = (
+    LedgerEntryType.INVOICE,
+    LedgerEntryType.IMPORTED_WORK,
+    LedgerEntryType.ORDER_CHARGE,
+)
 
 
 def _size(value: Decimal, unit: str) -> str:
@@ -461,6 +465,10 @@ def add_item_lines(statement: dict[str, Any]) -> dict[str, Any]:
             source = orders.get(entry["order_id"])
             covered = [source] if source is not None else []
         if source is None:
+            continue
+        # An order changed after it was confirmed: its first entry no longer matches its
+        # items, so it shows as one line (the narration) rather than wrong item lines.
+        if not is_bill(entry) and q2(entry["debit"]) != q2(source.total):
             continue
         entry["lines"] = source_lines(source, covered, len(covered) > 1 or is_bill(entry))
     return statement
