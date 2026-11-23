@@ -291,7 +291,9 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
             <Button variant="default" onClick={onDone}>
               {t('Cancel')}
             </Button>
-            <Button type="submit" loading={busy}>
+            {/* The balance month comes from the month list: wait for it, or a worker
+                already here could be saved without their balance. */}
+            <Button type="submit" loading={busy} disabled={withBalance && !months}>
               {staff ? t('Save') : t('Add staff')}
             </Button>
           </Group>

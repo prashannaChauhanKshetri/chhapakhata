@@ -514,3 +514,65 @@ def test_a_worker_with_an_advance_or_salary_is_kept(api, owner, ram):
 
 def test_only_the_owner_can_delete_a_worker(api, desk, ram):
     assert api(desk).delete(f"/api/v1/staff/{ram.pk}/").status_code == 403
+
+
+# -- Edge cases found in review ---------------------------------------------------------
+
+
+def test_the_year_turns_from_chaitra_to_baisakh(ram, owner):
+    # Chaitra 2082 (the last month): advances beyond the pay move to 1 Baisakh 2083.
+    start, end = services.month_bounds(2082, 12)
+    assert services.next_month(2082, 12) == (2083, 1)
+    services.give_advance(staff=ram, day=start, amount=D("20000"), note="", user=owner)
+    payment = services.pay_salary(
+        staff=ram, bs_year=2082, bs_month=12, paid_on=end, mode="cash", user=owner
+    )
+    carried = StaffAdvance.objects.get(carried_from=payment)
+    assert carried.date == services.month_bounds(2083, 1)[0]
+    assert services.month_sheet(ram, 2083, 1).advances_total == payment.carried_forward
+
+
+def test_a_worker_who_left_still_owing_an_advance_is_listed_next_month(ram, owner):
+    ram.is_active, ram.left_on = False, LAST  # left on the last day of Shrawan
+    ram.save()
+    services.give_advance(staff=ram, day=TUESDAY, amount=D("16000"), note="", user=owner)
+    services.pay_salary(
+        staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+    )
+    # The 500 still owed is carried into Bhadra, where Ram no longer works: still shown.
+    bhadra = {s.staff.name: s for s in services.payroll(2083, 5)}
+    assert bhadra["Ram Thapa"].advances_total == D("500")
+    assert bhadra["Ram Thapa"].days_employed == 0
+
+
+def test_leaving_mid_month_pays_the_days_worked(ram, owner):
+    ram.is_active, ram.left_on = False, dt.date(2026, 7, 26)  # 10 Shrawan
+    ram.save()
+    mark(ram, TUESDAY, "absent", owner)
+    s = sheet(ram)
+    assert s.days_employed == 10
+    assert s.base_pay == D("5000.00")  # 10 days × 500
+    assert s.net == D("4500.00")
+    with pytest.raises(ValidationError, match="not working here"):
+        mark(ram, dt.date(2026, 7, 28), "absent", owner)
+
+
+def test_a_raise_counts_from_months_not_yet_paid(ram, owner):
+    services.pay_salary(
+        staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+    )
+    ram.monthly_salary = D("18600")
+    ram.save()
+    assert sheet(ram).net == D("15500")  # Shrawan: as paid
+    assert services.month_sheet(ram, 2083, 5).monthly_salary == D("18600")  # Bhadra: new
+
+
+def test_paying_twice_at_once_is_impossible(ram, owner):
+    services.pay_salary(
+        staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+    )
+    with pytest.raises(ValidationError, match="already paid"):
+        services.pay_salary(
+            staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="bank", user=owner
+        )
+    assert SalaryPayment.objects.count() == 1

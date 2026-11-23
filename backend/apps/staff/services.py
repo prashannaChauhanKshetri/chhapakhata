@@ -264,14 +264,18 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
 
 
 def staff_for_month(bs_year: int, bs_month: int) -> list[Staff]:
-    """Workers employed on any day of the month, or already paid for it."""
+    """Workers employed on any day of the month, already paid for it, or with an advance
+    in it (e.g. one carried over after they left, which they still owe)."""
     start, end = month_bounds(bs_year, bs_month)
     paid = SalaryPayment.objects.filter(bs_year=bs_year, bs_month=bs_month).values("staff")
+    owing = StaffAdvance.objects.filter(date__range=(start, end)).values("staff")
     working = Q(joined_on__lte=end) & (Q(left_on__isnull=True) | Q(left_on__gte=start))
     paid_ids = set(paid.values_list("staff", flat=True))
     return [
         staff
-        for staff in Staff.objects.filter(working | Q(pk__in=paid)).order_by("name")
+        for staff in Staff.objects.filter(working | Q(pk__in=paid) | Q(pk__in=owing)).order_by(
+            "name"
+        )
         # A month wholly covered by the opening balance has nothing to pay.
         if staff.pk in paid_ids or not ((settled := settled_until(staff)) and settled >= end)
     ]
