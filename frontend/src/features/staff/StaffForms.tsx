@@ -126,6 +126,32 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
 
   const monthOptions = (months ?? []).map((m) => ({ value: monthKey(m), label: m.label }));
 
+  // Only for a worker with no salary paid and no advance given (e.g. added by mistake).
+  const confirmDelete = () =>
+    staff &&
+    modals.openConfirmModal({
+      title: t('Delete {{name}}?', { name: staff.name }),
+      children: (
+        <Text size="sm">
+          {t(
+            'The worker and their attendance marks are removed. Use this only for a worker added by mistake; for someone who left, switch off “Still working here” instead.',
+          )}
+        </Text>
+      ),
+      labels: { confirm: t('Delete worker'), cancel: t('Keep') },
+      confirmProps: { color: 'red' },
+      onConfirm: async () => {
+        try {
+          await unwrap(api.DELETE('/api/v1/staff/{id}/', { params: { path: { id: staff.id } } }));
+          await client.invalidateQueries({ queryKey: ['staff'] });
+          notifySuccess(t('{{name}} deleted', { name: staff.name }));
+          onDone();
+        } catch (e) {
+          notifyError(e, t('Could not delete'));
+        }
+      },
+    });
+
   return (
     <form onSubmit={submit} noValidate>
       <Stack gap="sm">
@@ -234,6 +260,7 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
         {staff && (
           <Switch
             label={t('Still working here')}
+            description={t('Left the shop? Switch this off and enter the last working day.')}
             {...form.getInputProps('is_active', { type: 'checkbox' })}
           />
         )}
@@ -252,13 +279,22 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
             {t('A new salary counts from months not yet paid. Paid months keep what was paid.')}
           </Text>
         )}
-        <Group justify="flex-end" gap="xs">
-          <Button variant="default" onClick={onDone}>
-            {t('Cancel')}
-          </Button>
-          <Button type="submit" loading={busy}>
-            {staff ? t('Save') : t('Add staff')}
-          </Button>
+        <Group justify="space-between" gap="xs">
+          {staff?.can_delete ? (
+            <Button variant="subtle" color="red" onClick={confirmDelete}>
+              {t('Delete worker')}
+            </Button>
+          ) : (
+            <span />
+          )}
+          <Group gap="xs">
+            <Button variant="default" onClick={onDone}>
+              {t('Cancel')}
+            </Button>
+            <Button type="submit" loading={busy}>
+              {staff ? t('Save') : t('Add staff')}
+            </Button>
+          </Group>
         </Group>
       </Stack>
     </form>

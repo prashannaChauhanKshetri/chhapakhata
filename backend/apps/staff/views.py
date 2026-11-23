@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as dt
 from decimal import Decimal
 
+from django.db.models import Exists, OuterRef
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -38,16 +39,28 @@ class StaffViewSet(
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
     mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """Workers on the payroll. Never deleted: set the last working day instead."""
+    """Workers on the payroll. One who leaves gets a last working day; only a worker
+    with no salary paid and no advance given (e.g. added by mistake) can be deleted."""
 
     serializer_class = StaffSerializer
     required_perms = Perm.STAFF_MANAGE
     pagination_class = None
 
     def get_queryset(self):
-        return Staff.objects.all().order_by("-is_active", "name")
+        return (
+            Staff.objects.annotate(
+                has_money=Exists(SalaryPayment.objects.filter(staff=OuterRef("pk")))
+                | Exists(StaffAdvance.objects.filter(staff=OuterRef("pk")))
+            )
+            .all()
+            .order_by("-is_active", "name")
+        )
+
+    def perform_destroy(self, instance):
+        services.delete_staff(staff=instance, user=self.request.user, request=self.request)
 
     def perform_create(self, serializer):
         staff = serializer.save()

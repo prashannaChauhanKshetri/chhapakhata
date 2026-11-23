@@ -16,6 +16,9 @@ class StaffSerializer(serializers.ModelSerializer):
     joined_on_bs = serializers.SerializerMethodField()
     left_on_bs = serializers.SerializerMethodField()
     balance_label = serializers.SerializerMethodField()
+    can_delete = serializers.SerializerMethodField(
+        help_text="No salary paid and no advance given: the worker can be deleted."
+    )
 
     class Meta:
         model = Staff
@@ -36,6 +39,7 @@ class StaffSerializer(serializers.ModelSerializer):
             "left_on_bs",
             "is_active",
             "notes",
+            "can_delete",
         ]
 
     def get_joined_on_bs(self, obj: Staff) -> str | None:
@@ -43,6 +47,10 @@ class StaffSerializer(serializers.ModelSerializer):
 
     def get_left_on_bs(self, obj: Staff) -> str | None:
         return bs_string(obj.left_on)
+
+    def get_can_delete(self, obj: Staff) -> bool:
+        has_money = getattr(obj, "has_money", None)
+        return not (services.has_money_records(obj) if has_money is None else has_money)
 
     def get_balance_label(self, obj: Staff) -> str:
         return services.balance_label(obj)

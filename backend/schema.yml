@@ -12745,8 +12745,9 @@ paths:
   /api/v1/staff/:
     get:
       operationId: staff_list
-      description: 'Workers on the payroll. Never deleted: set the last working day
-        instead.'
+      description: |-
+        Workers on the payroll. One who leaves gets a last working day; only a worker
+        with no salary paid and no advance given (e.g. added by mistake) can be deleted.
       parameters:
       - name: ordering
         required: false
@@ -12886,8 +12887,9 @@ paths:
           description: ''
     post:
       operationId: staff_create
-      description: 'Workers on the payroll. Never deleted: set the last working day
-        instead.'
+      description: |-
+        Workers on the payroll. One who leaves gets a last working day; only a worker
+        with no salary paid and no advance given (e.g. added by mistake) can be deleted.
       tags:
       - staff
       requestBody:
@@ -13449,8 +13451,9 @@ paths:
   /api/v1/staff/{id}/:
     get:
       operationId: staff_retrieve
-      description: 'Workers on the payroll. Never deleted: set the last working day
-        instead.'
+      description: |-
+        Workers on the payroll. One who leaves gets a last working day; only a worker
+        with no salary paid and no advance given (e.g. added by mistake) can be deleted.
       parameters:
       - in: path
         name: id
@@ -13582,8 +13585,9 @@ paths:
           description: ''
     put:
       operationId: staff_update
-      description: 'Workers on the payroll. Never deleted: set the last working day
-        instead.'
+      description: |-
+        Workers on the payroll. One who leaves gets a last working day; only a worker
+        with no salary paid and no advance given (e.g. added by mistake) can be deleted.
       parameters:
       - in: path
         name: id
@@ -13727,8 +13731,9 @@ paths:
           description: ''
     patch:
       operationId: staff_partial_update
-      description: 'Workers on the payroll. Never deleted: set the last working day
-        instead.'
+      description: |-
+        Workers on the payroll. One who leaves gets a last working day; only a worker
+        with no salary paid and no advance given (e.g. added by mistake) can be deleted.
       parameters:
       - in: path
         name: id
@@ -13869,6 +13874,136 @@ paths:
               schema:
                 $ref: '#/components/schemas/Staff'
           description: ''
+    delete:
+      operationId: staff_destroy
+      description: |-
+        Workers on the payroll. One who leaves gets a last working day; only a worker
+        with no salary paid and no advance given (e.g. added by mistake) can be deleted.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this staff.
+        required: true
+      tags:
+      - staff
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffDestroyErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '204':
+          description: No response body
   /api/v1/staff/{id}/days/:
     get:
       operationId: staff_days_retrieve
@@ -36779,10 +36914,15 @@ components:
           type: boolean
         notes:
           type: string
+        can_delete:
+          type: boolean
+          readOnly: true
+          description: 'No salary paid and no advance given: the worker can be deleted.'
       required:
       - balance_label
       - balance_month
       - balance_year
+      - can_delete
       - id
       - is_active
       - job_title
@@ -37447,6 +37587,13 @@ components:
       - errors
       - type
     StaffDaysRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
+    StaffDestroyErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/ParseErrorResponse'
       discriminator:

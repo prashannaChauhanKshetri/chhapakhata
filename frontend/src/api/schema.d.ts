@@ -1201,10 +1201,16 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Workers on the payroll. Never deleted: set the last working day instead. */
+        /**
+         * @description Workers on the payroll. One who leaves gets a last working day; only a worker
+         *     with no salary paid and no advance given (e.g. added by mistake) can be deleted.
+         */
         get: operations["staff_list"];
         put?: never;
-        /** @description Workers on the payroll. Never deleted: set the last working day instead. */
+        /**
+         * @description Workers on the payroll. One who leaves gets a last working day; only a worker
+         *     with no salary paid and no advance given (e.g. added by mistake) can be deleted.
+         */
         post: operations["staff_create"];
         delete?: never;
         options?: never;
@@ -1254,15 +1260,28 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** @description Workers on the payroll. Never deleted: set the last working day instead. */
+        /**
+         * @description Workers on the payroll. One who leaves gets a last working day; only a worker
+         *     with no salary paid and no advance given (e.g. added by mistake) can be deleted.
+         */
         get: operations["staff_retrieve"];
-        /** @description Workers on the payroll. Never deleted: set the last working day instead. */
+        /**
+         * @description Workers on the payroll. One who leaves gets a last working day; only a worker
+         *     with no salary paid and no advance given (e.g. added by mistake) can be deleted.
+         */
         put: operations["staff_update"];
         post?: never;
-        delete?: never;
+        /**
+         * @description Workers on the payroll. One who leaves gets a last working day; only a worker
+         *     with no salary paid and no advance given (e.g. added by mistake) can be deleted.
+         */
+        delete: operations["staff_destroy"];
         options?: never;
         head?: never;
-        /** @description Workers on the payroll. Never deleted: set the last working day instead. */
+        /**
+         * @description Workers on the payroll. One who leaves gets a last working day; only a worker
+         *     with no salary paid and no advance given (e.g. added by mistake) can be deleted.
+         */
         patch: operations["staff_partial_update"];
         trace?: never;
     };
@@ -10490,6 +10509,8 @@ export interface components {
             readonly left_on_bs: string | null;
             is_active: boolean;
             notes: string;
+            /** @description No salary paid and no advance given: the worker can be deleted. */
+            readonly can_delete: boolean;
         };
         StaffAdvance: {
             readonly id: number;
@@ -10833,6 +10854,7 @@ export interface components {
             errors: components["schemas"]["StaffCreateError"][];
         };
         StaffDaysRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
+        StaffDestroyErrorResponse400: components["schemas"]["ParseErrorResponse"];
         StaffListErrorResponse400: components["schemas"]["ParseErrorResponse"];
         /** @description One worker's month as a calendar. */
         StaffMonth: {
@@ -22230,6 +22252,91 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StaffUpdateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    staff_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description A unique integer value identifying this staff. */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDestroyErrorResponse400"];
                 };
             };
             401: {

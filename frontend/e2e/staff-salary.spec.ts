@@ -150,3 +150,45 @@ test('a day is picked from the Nepali calendar and shows in the month register',
   await expect(box).toHaveText(saturday ? '' : 'P');
   await expect(control.getByRole('radio', { name: saturday ? 'Off' : 'Present' })).toBeChecked();
 });
+
+test('a worker added by mistake is deleted; one with an advance can only leave', async ({
+  browser,
+}) => {
+  const owner = await signIn(browser, 'owner');
+  const add = async (name: string) => {
+    await owner.goto('/staff/list');
+    await owner.getByRole('button', { name: 'Add staff' }).click();
+    const form = owner.getByRole('dialog');
+    await form.getByRole('textbox', { name: 'Name' }).fill(name);
+    await form.getByRole('textbox', { name: 'Monthly salary (Rs)' }).fill('9000');
+    await form.getByRole('button', { name: 'Add staff' }).click();
+    await expect(form).toBeHidden();
+  };
+
+  const mistake = `Hari ${Date.now() % 100000}`;
+  await add(mistake);
+  await owner.getByText(mistake).click();
+  await owner.getByRole('button', { name: 'Delete worker' }).click();
+  await owner
+    .getByRole('dialog', { name: `Delete ${mistake}?` })
+    .getByRole('button', { name: 'Delete worker' })
+    .click();
+  await expect(owner.getByText(`${mistake} deleted`)).toBeVisible();
+  await expect(owner.getByRole('row').filter({ hasText: mistake })).toHaveCount(0);
+
+  // With an advance given, the record stays: no Delete, only "Still working here".
+  const kept = `Sita ${Date.now() % 100000}`;
+  await add(kept);
+  await owner.goto('/staff/salary');
+  const row = owner.getByRole('row').filter({ hasText: kept }).first();
+  await row.getByRole('button', { name: `Actions for ${kept}` }).click();
+  await owner.getByRole('menuitem', { name: 'Give advance' }).click();
+  await owner.getByRole('dialog').getByRole('textbox', { name: 'Amount (Rs)' }).fill('100');
+  await owner.getByRole('dialog').getByRole('button', { name: 'Give advance' }).click();
+  await expect(owner.getByRole('dialog')).toBeHidden();
+  await owner.goto('/staff/list');
+  await owner.getByText(kept).click();
+  const form = owner.getByRole('dialog');
+  await expect(form.getByRole('switch', { name: 'Still working here' })).toBeVisible();
+  await expect(form.getByRole('button', { name: 'Delete worker' })).toHaveCount(0);
+});

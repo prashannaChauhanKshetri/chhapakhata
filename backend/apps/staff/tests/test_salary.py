@@ -488,3 +488,29 @@ def test_already_working_here_starts_the_day_after_the_balance_month(api, owner)
         format="json",
     )
     assert response.status_code == 201, response.content
+
+
+# -- Deleting a worker added by mistake -----------------------------------------------
+
+
+def test_a_worker_with_no_money_records_can_be_deleted(api, owner, ram):
+    mark(ram, TUESDAY, "absent", owner)
+    listed = api(owner).get("/api/v1/staff/").json()
+    assert listed[0]["can_delete"] is True
+    assert api(owner).delete(f"/api/v1/staff/{ram.pk}/").status_code == 204
+    assert not Staff.objects.filter(pk=ram.pk).exists()
+    assert not Attendance.objects.exists()
+    assert ActivityLog.objects.filter(action="staff.deleted").exists()
+
+
+def test_a_worker_with_an_advance_or_salary_is_kept(api, owner, ram):
+    services.give_advance(staff=ram, day=TUESDAY, amount=D("500"), note="", user=owner)
+    assert api(owner).get("/api/v1/staff/").json()[0]["can_delete"] is False
+    response = api(owner).delete(f"/api/v1/staff/{ram.pk}/")
+    assert response.status_code == 400
+    assert "Still working here" in response.json()["errors"][0]["detail"]
+    assert Staff.objects.filter(pk=ram.pk).exists()
+
+
+def test_only_the_owner_can_delete_a_worker(api, desk, ram):
+    assert api(desk).delete(f"/api/v1/staff/{ram.pk}/").status_code == 403

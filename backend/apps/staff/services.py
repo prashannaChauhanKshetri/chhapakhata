@@ -323,6 +323,33 @@ def _ensure_working(staff: Staff, day: dt.date) -> None:
     _ensure_counted(staff, day)
 
 
+# -- Removing a worker ----------------------------------------------------------------
+
+
+def has_money_records(staff: Staff) -> bool:
+    """Salary paid or an advance given: such a worker is kept (marked as left), not deleted."""
+    return (
+        SalaryPayment.objects.filter(staff=staff).exists()
+        or StaffAdvance.objects.filter(staff=staff).exists()
+    )
+
+
+@transaction.atomic
+def delete_staff(*, staff: Staff, user: Any, request: Any = None) -> None:
+    """Remove a worker entered by mistake, with their attendance marks."""
+    if has_money_records(staff):
+        raise ValidationError(
+            {
+                "detail": f"{staff.name} has salary paid or advances given, so the record "
+                'is kept. If they have left, switch off "Still working here" and enter '
+                "the last working day."
+            }
+        )
+    log_activity(user, "staff.deleted", staff, f"Staff {staff.name} deleted", request=request)
+    Attendance.objects.filter(staff=staff).delete()
+    staff.delete()
+
+
 # -- Attendance -----------------------------------------------------------------------
 
 
