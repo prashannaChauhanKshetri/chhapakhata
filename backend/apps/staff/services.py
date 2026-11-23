@@ -21,6 +21,9 @@ ZERO = Decimal("0")
 
 #: What the owner can mark: a working day is present or absent; a Saturday is off or worked.
 DAY_STATUSES = ("present", "absent", "off", "worked")
+#: As shown on calendars: also days before joining / after leaving, and days settled
+#: by the opening balance.
+CALENDAR_STATUSES = (*DAY_STATUSES, "not_working", "settled")
 
 
 # -- Months ---------------------------------------------------------------------------
@@ -400,6 +403,38 @@ def month_days(staff: Staff, bs_year: int, bs_month: int) -> list[dict[str, Any]
         )
         day += dt.timedelta(days=1)
     return days
+
+
+def month_register(bs_year: int, bs_month: int) -> dict[str, Any]:
+    """The whole month for everyone, like the paper attendance register."""
+    start, end = month_bounds(bs_year, bs_month)
+    rows = []
+    for staff in staff_for_month(bs_year, bs_month):
+        days = month_days(staff, bs_year, bs_month)
+        rows.append(
+            {
+                "staff": staff,
+                "paid": SalaryPayment.objects.filter(
+                    staff=staff, bs_year=bs_year, bs_month=bs_month
+                ).exists(),
+                "cells": [{"status": d["status"], "editable": d["editable"]} for d in days],
+                "absent": sum(d["status"] == "absent" for d in days),
+                "worked": sum(d["status"] == "worked" for d in days),
+            }
+        )
+    days = []
+    day = start
+    while day <= end:
+        days.append(
+            {
+                "date": day,
+                "bs_day": to_bs(day).day,
+                "weekday": (day.weekday() + 1) % 7,
+                "is_holiday": is_holiday(day),
+            }
+        )
+        day += dt.timedelta(days=1)
+    return {"days": days, "rows": rows}
 
 
 def day_register(day: dt.date) -> list[dict[str, Any]]:

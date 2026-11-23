@@ -94,6 +94,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/attendance/month/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The month's register for everyone (BS month YYYY-MM; default: this month). */
+        get: operations["attendance_month_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/change-password/": {
         parameters: {
             query?: never;
@@ -1704,6 +1721,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/utils/bs-month/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The days of one BS month (with their AD dates), for Nepali calendars. */
+        get: operations["utils_bs_month_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/utils/date/": {
         parameters: {
             query?: never;
@@ -2435,6 +2469,7 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["AttendanceCreateError"][];
         };
+        AttendanceMonthRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         AttendanceRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         AuthChangePasswordCreateCurrentPasswordErrorComponent: {
             /**
@@ -2655,10 +2690,44 @@ export interface components {
             count: number;
             jobs: components["schemas"]["Job"][];
         };
+        BsDay: {
+            /**
+             * Format: date
+             * @description AD
+             */
+            date: string;
+            bs_day: number;
+            /** @description 0 = Sunday … 6 = Saturday */
+            weekday: number;
+        };
+        /** @description A BS month laid out for a calendar. */
+        BsMonth: {
+            year: number;
+            month: number;
+            label: string;
+            previous: components["schemas"]["BsMonthRef"];
+            next: components["schemas"]["BsMonthRef"];
+            days: components["schemas"]["BsDay"][];
+        };
+        BsMonthRef: {
+            year: number;
+            month: number;
+            label: string;
+        };
         BusinessRef: {
             readonly id: number;
             readonly name: string;
         };
+        /**
+         * @description * `present` - present
+         *     * `absent` - absent
+         *     * `off` - off
+         *     * `worked` - worked
+         *     * `not_working` - not_working
+         *     * `settled` - settled
+         * @enum {string}
+         */
+        CalendarStatusEnum: "present" | "absent" | "off" | "worked" | "not_working" | "settled";
         ChangePasswordRequest: {
             current_password: string;
             new_password: string;
@@ -5731,19 +5800,9 @@ export interface components {
             /** @description 0 = Sunday … 6 = Saturday */
             weekday: number;
             is_holiday: boolean;
-            status: components["schemas"]["MonthDayStatusEnum"];
+            status: components["schemas"]["CalendarStatusEnum"];
             editable: boolean;
         };
-        /**
-         * @description * `present` - present
-         *     * `absent` - absent
-         *     * `off` - off
-         *     * `worked` - worked
-         *     * `not_working` - not_working
-         *     * `settled` - settled
-         * @enum {string}
-         */
-        MonthDayStatusEnum: "present" | "absent" | "off" | "worked" | "not_working" | "settled";
         MonthRange: {
             year: number;
             month: number;
@@ -5757,6 +5816,18 @@ export interface components {
             year: number;
             month: number;
             label: string;
+        };
+        /** @description Everyone's attendance for one BS month: one row per worker, one cell per day. */
+        MonthRegister: {
+            year: number;
+            month: number;
+            label: string;
+            previous: components["schemas"]["MonthRef"];
+            next: components["schemas"]["MonthRef"] | null;
+            /** Format: date */
+            today: string;
+            days: components["schemas"]["RegisterDay"][];
+            rows: components["schemas"]["RegisterRow"][];
         };
         MonthSheet: {
             staff: components["schemas"]["StaffRef"];
@@ -9461,6 +9532,25 @@ export interface components {
         /** @description A short reason, required for cancellations, voids and adjustments. */
         ReasonRequest: {
             reason: string;
+        };
+        RegisterCell: {
+            status: components["schemas"]["CalendarStatusEnum"];
+            editable: boolean;
+        };
+        RegisterDay: {
+            /** Format: date */
+            date: string;
+            bs_day: number;
+            /** @description 0 = Sunday … 6 = Saturday */
+            weekday: number;
+            is_holiday: boolean;
+        };
+        RegisterRow: {
+            staff: components["schemas"]["StaffRef"];
+            paid: boolean;
+            cells: components["schemas"]["RegisterCell"][];
+            absent: number;
+            worked: number;
         };
         ReportsListErrorResponse400: components["schemas"]["ParseErrorResponse"];
         ReportsRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
@@ -13498,6 +13588,7 @@ export interface components {
             type: "validation_error";
             errors: components["schemas"]["UsersUpdateError"][];
         };
+        UtilsBsMonthRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         UtilsDateRetrieveErrorResponse400: components["schemas"]["ParseErrorResponse"];
         UtilsPeriodsListErrorResponse400: components["schemas"]["ParseErrorResponse"];
         /**
@@ -14409,6 +14500,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AttendanceCreateErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    attendance_month_retrieve: {
+        parameters: {
+            query?: {
+                /** @description BS month YYYY-MM; default: now */
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonthRegister"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceMonthRetrieveErrorResponse400"];
                 };
             };
             401: {
@@ -25463,6 +25640,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UsersOperatorsListErrorResponse400"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse401"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse403"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse404"];
+                };
+            };
+            405: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse405"];
+                };
+            };
+            406: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse406"];
+                };
+            };
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse500"];
+                };
+            };
+        };
+    };
+    utils_bs_month_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Or an AD date in the month, YYYY-MM-DD */
+                ad?: string;
+                /** @description BS month YYYY-MM */
+                month?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BsMonth"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UtilsBsMonthRetrieveErrorResponse400"];
                 };
             };
             401: {

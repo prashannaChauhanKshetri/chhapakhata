@@ -1,11 +1,13 @@
-import { SimpleGrid, TextInput } from '@mantine/core';
+import { ActionIcon, Popover, SimpleGrid, TextInput } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
+import { IconCalendar } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { apiGet } from '@/api/http';
 import type { DateConversion } from '@/api/types';
+import { BsCalendar } from '@/components/BsCalendar';
 import { todayISO } from '@/lib/format';
 
 const BS_PATTERN = /^(\d{4})[.\-/ ](\d{1,2})[.\-/ ](\d{1,2})$/;
@@ -32,6 +34,7 @@ export function OrderDateField({
   // What is being typed; null shows the Miti of the chosen date.
   const [bsDraft, setBsDraft] = useState<string | null>(null);
   const [bsError, setBsError] = useState<string | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const { data } = useQuery({
     queryKey: ['date-conversion', 'ad', value],
     queryFn: () => apiGet<DateConversion>('/api/v1/utils/date/', { ad: value }),
@@ -65,28 +68,63 @@ export function OrderDateField({
   const late = !!value && value < todayISO();
   return (
     <SimpleGrid cols={{ base: 1, xs: 2 }} spacing="sm">
-      <TextInput
-        label={label ? `${label} (Miti)` : t('Order date (Miti)')}
-        placeholder="2083.08.04"
-        value={bsText}
-        onChange={(e) => setBsDraft(e.currentTarget.value)}
-        onBlur={() => void readBs()}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            void readBs();
-          }
-        }}
-        description={
-          !showHint
-            ? undefined
-            : late
-              ? t('Entered late: not today')
-              : t('Today, or an earlier day')
-        }
-        inputWrapperOrder={['label', 'input', 'description', 'error']}
-        error={bsError ?? error}
-      />
+      <Popover
+        opened={calendarOpen}
+        onChange={setCalendarOpen}
+        position="bottom-start"
+        shadow="md"
+        trapFocus={false}
+        returnFocus={false}
+      >
+        <Popover.Target>
+          <TextInput
+            label={label ? `${label} (Miti)` : t('Order date (Miti)')}
+            placeholder="2083.08.04"
+            value={bsText}
+            onChange={(e) => setBsDraft(e.currentTarget.value)}
+            onBlur={() => void readBs()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                void readBs();
+              }
+            }}
+            description={
+              !showHint
+                ? undefined
+                : late
+                  ? t('Entered late: not today')
+                  : t('Today, or an earlier day')
+            }
+            inputWrapperOrder={['label', 'input', 'description', 'error']}
+            error={bsError ?? error}
+            onClick={() => setCalendarOpen(true)}
+            rightSection={
+              <ActionIcon
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCalendarOpen((o) => !o);
+                }}
+                aria-label={t('Nepali calendar')}
+              >
+                <IconCalendar size={16} />
+              </ActionIcon>
+            }
+          />
+        </Popover.Target>
+        <Popover.Dropdown p="xs">
+          <BsCalendar
+            value={value || null}
+            maxDate={todayISO()}
+            onPick={(ad) => {
+              setBsError(null);
+              setBsDraft(null);
+              setCalendarOpen(false);
+              onChange(ad);
+            }}
+          />
+        </Popover.Dropdown>
+      </Popover>
       <DatePickerInput
         label={label ? `${label} (AD)` : t('Date (AD)')}
         valueFormat="D MMM YYYY"

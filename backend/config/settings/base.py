@@ -193,6 +193,7 @@ SPECTACULAR_SETTINGS = {
         "ErrorCode500Enum": "drf_standardized_errors.openapi_serializers.ErrorCode500Enum.choices",
         "JobStageEnum": "apps.production.models.Stage.choices",
         "DayStatusEnum": "apps.staff.services.DAY_STATUSES",
+        "CalendarStatusEnum": "apps.staff.services.CALENDAR_STATUSES",
         "OrderStatusEnum": "apps.orders.models.OrderStatus.choices",
         "InvoiceStatusEnum": "apps.billing.models.InvoiceStatus.choices",
         "PaymentStatusEnum": "apps.billing.models.PaymentStatus.choices",

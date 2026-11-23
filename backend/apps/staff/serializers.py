@@ -7,7 +7,7 @@ from apps.core.dates import bs_string
 
 from . import services
 from .models import SalaryPayment, Staff, StaffAdvance
-from .services import DAY_STATUSES
+from .services import CALENDAR_STATUSES, DAY_STATUSES
 
 
 class StaffSerializer(serializers.ModelSerializer):
@@ -217,8 +217,41 @@ class MonthDaySerializer(serializers.Serializer):
     bs_day = serializers.IntegerField()
     weekday = serializers.IntegerField(help_text="0 = Sunday … 6 = Saturday")
     is_holiday = serializers.BooleanField()
-    status = serializers.ChoiceField(choices=[*DAY_STATUSES, "not_working", "settled"])
+    status = serializers.ChoiceField(choices=CALENDAR_STATUSES)
     editable = serializers.BooleanField()
+
+
+class RegisterDaySerializer(serializers.Serializer):
+    date = serializers.DateField()
+    bs_day = serializers.IntegerField()
+    weekday = serializers.IntegerField(help_text="0 = Sunday … 6 = Saturday")
+    is_holiday = serializers.BooleanField()
+
+
+class RegisterCellSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=CALENDAR_STATUSES)
+    editable = serializers.BooleanField()
+
+
+class RegisterRowSerializer(serializers.Serializer):
+    staff = StaffRefSerializer()
+    paid = serializers.BooleanField()
+    cells = RegisterCellSerializer(many=True)
+    absent = serializers.IntegerField()
+    worked = serializers.IntegerField()
+
+
+class MonthRegisterSerializer(serializers.Serializer):
+    """Everyone's attendance for one BS month: one row per worker, one cell per day."""
+
+    year = serializers.IntegerField()
+    month = serializers.IntegerField()
+    label = serializers.CharField()
+    previous = MonthRefSerializer()
+    next = MonthRefSerializer(allow_null=True)
+    today = serializers.DateField()
+    days = RegisterDaySerializer(many=True)
+    rows = RegisterRowSerializer(many=True)
 
 
 class StaffMonthSerializer(serializers.Serializer):

@@ -116,3 +116,37 @@ test('a worker already here starts from a balance up to last month', async ({ br
   await expect(owner.getByText(month, { exact: true })).toBeVisible();
   await expect(owner.getByRole('row').filter({ hasText: name })).toHaveCount(0);
 });
+
+test('a day is picked from the Nepali calendar and shows in the month register', async ({
+  browser,
+}) => {
+  const name = `Gita ${Date.now() % 100000}`;
+  const owner = await signIn(browser, 'owner');
+  await owner.goto('/staff/list');
+  await owner.getByRole('button', { name: 'Add staff' }).click();
+  const form = owner.getByRole('dialog');
+  await form.getByText('Already working here').click();
+  await form.getByRole('textbox', { name: 'Name' }).fill(name);
+  await form.getByRole('textbox', { name: 'Monthly salary (Rs)' }).fill('10000');
+  await form.getByRole('button', { name: 'Add staff' }).click();
+  await expect(form).toBeHidden();
+
+  // The Miti box opens a BS calendar; choose the 1st of this month.
+  await owner.getByRole('tab', { name: 'Attendance' }).click();
+  await owner.getByRole('textbox', { name: 'Day (Miti)' }).click();
+  const first = owner.getByRole('button', { name: /^1 [A-Z][a-z]+ \d{4}$/ });
+  const month = (await first.getAttribute('aria-label'))!.slice(2); // e.g. "Mangsir 2083"
+  await first.click();
+  await expect(owner.getByText(`1 ${month}`, { exact: true })).toBeVisible();
+
+  // Mark the day; the register shows it, and a box there switches it back.
+  const register = owner.locator('table');
+  const box = register.getByRole('button', { name: new RegExp(`^${name}, 1 ${month}: `) });
+  const saturday = (await box.getAttribute('aria-label'))!.endsWith('Off');
+  const control = owner.getByRole('radiogroup', { name: `Attendance of ${name}` });
+  await control.getByText(saturday ? 'Worked' : 'Absent').click();
+  await expect(box).toHaveText(saturday ? 'W' : 'A');
+  await box.click();
+  await expect(box).toHaveText(saturday ? '' : 'P');
+  await expect(control.getByRole('radio', { name: saturday ? 'Off' : 'Present' })).toBeChecked();
+});

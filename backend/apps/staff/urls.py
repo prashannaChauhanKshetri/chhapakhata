@@ -11,6 +11,7 @@ router.register("salary-payments", views.SalaryPaymentViewSet, basename="salary-
 
 urlpatterns = [
     path("attendance/", views.AttendanceView.as_view(), name="attendance"),
+    path("attendance/month/", views.AttendanceMonthView.as_view(), name="attendance-month"),
     path("salary/", views.SalaryView.as_view(), name="salary"),
     path("salary/pay/", views.PaySalaryView.as_view(), name="salary-pay"),
     path("salary/months/", views.SalaryMonthsView.as_view(), name="salary-months"),

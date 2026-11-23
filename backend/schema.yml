@@ -1439,6 +1439,139 @@ paths:
               schema:
                 $ref: '#/components/schemas/MarkAttendance'
           description: ''
+  /api/v1/attendance/month/:
+    get:
+      operationId: attendance_month_retrieve
+      description: 'The month''s register for everyone (BS month YYYY-MM; default:
+        this month).'
+      parameters:
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: 'BS month YYYY-MM; default: now'
+      tags:
+      - attendance
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceMonthRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthRegister'
+          description: ''
   /api/v1/auth/change-password/:
     post:
       operationId: auth_change_password_create
@@ -18987,6 +19120,143 @@ paths:
                 items:
                   $ref: '#/components/schemas/User'
           description: ''
+  /api/v1/utils/bs-month/:
+    get:
+      operationId: utils_bs_month_retrieve
+      description: The days of one BS month (with their AD dates), for Nepali calendars.
+      parameters:
+      - in: query
+        name: ad
+        schema:
+          type: string
+        description: Or an AD date in the month, YYYY-MM-DD
+      - in: query
+        name: month
+        schema:
+          type: string
+        description: BS month YYYY-MM
+      tags:
+      - utils
+      security:
+      - cookieAuth: []
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilsBsMonthRetrieveErrorResponse400'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse401'
+              examples:
+                AuthenticationFailed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: authentication_failed
+                      detail: Incorrect authentication credentials.
+                      attr: null
+                NotAuthenticated:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_authenticated
+                      detail: Authentication credentials were not provided.
+                      attr: null
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse403'
+              examples:
+                PermissionDenied:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: permission_denied
+                      detail: You do not have permission to perform this action.
+                      attr: null
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse404'
+              examples:
+                NotFound:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_found
+                      detail: Not found.
+                      attr: null
+          description: ''
+        '405':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse405'
+              examples:
+                MethodNotAllowed:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: method_not_allowed
+                      detail: Method "get" not allowed.
+                      attr: null
+          description: ''
+        '406':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse406'
+              examples:
+                NotAcceptable:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: not_acceptable
+                      detail: Could not satisfy the request Accept header.
+                      attr: null
+          description: ''
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse415'
+              examples:
+                UnsupportedMediaType:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: unsupported_media_type
+                      detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '500':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse500'
+              examples:
+                APIException:
+                  value:
+                    type: server_error
+                    errors:
+                    - code: error
+                      detail: A server error occurred.
+                      attr: null
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BsMonth'
+          description: ''
   /api/v1/utils/date/:
     get:
       operationId: utils_date_retrieve
@@ -20603,6 +20873,13 @@ components:
       required:
       - errors
       - type
+    AttendanceMonthRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
     AttendanceRetrieveErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/ParseErrorResponse'
@@ -21082,6 +21359,60 @@ components:
       - jobs
       - label
       - stage
+    BsDay:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: AD
+        bs_day:
+          type: integer
+        weekday:
+          type: integer
+          description: 0 = Sunday … 6 = Saturday
+      required:
+      - bs_day
+      - date
+      - weekday
+    BsMonth:
+      type: object
+      description: A BS month laid out for a calendar.
+      properties:
+        year:
+          type: integer
+        month:
+          type: integer
+        label:
+          type: string
+        previous:
+          $ref: '#/components/schemas/BsMonthRef'
+        next:
+          $ref: '#/components/schemas/BsMonthRef'
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/BsDay'
+      required:
+      - days
+      - label
+      - month
+      - next
+      - previous
+      - year
+    BsMonthRef:
+      type: object
+      properties:
+        year:
+          type: integer
+        month:
+          type: integer
+        label:
+          type: string
+      required:
+      - label
+      - month
+      - year
     BusinessRef:
       type: object
       properties:
@@ -21094,6 +21425,22 @@ components:
       required:
       - id
       - name
+    CalendarStatusEnum:
+      enum:
+      - present
+      - absent
+      - 'off'
+      - worked
+      - not_working
+      - settled
+      type: string
+      description: |-
+        * `present` - present
+        * `absent` - absent
+        * `off` - off
+        * `worked` - worked
+        * `not_working` - not_working
+        * `settled` - settled
     ChangePasswordRequest:
       type: object
       properties:
@@ -27349,7 +27696,7 @@ components:
         is_holiday:
           type: boolean
         status:
-          $ref: '#/components/schemas/MonthDayStatusEnum'
+          $ref: '#/components/schemas/CalendarStatusEnum'
         editable:
           type: boolean
       required:
@@ -27359,22 +27706,6 @@ components:
       - is_holiday
       - status
       - weekday
-    MonthDayStatusEnum:
-      enum:
-      - present
-      - absent
-      - 'off'
-      - worked
-      - not_working
-      - settled
-      type: string
-      description: |-
-        * `present` - present
-        * `absent` - absent
-        * `off` - off
-        * `worked` - worked
-        * `not_working` - not_working
-        * `settled` - settled
     MonthRange:
       type: object
       properties:
@@ -27408,6 +27739,43 @@ components:
       required:
       - label
       - month
+      - year
+    MonthRegister:
+      type: object
+      description: 'Everyone''s attendance for one BS month: one row per worker, one
+        cell per day.'
+      properties:
+        year:
+          type: integer
+        month:
+          type: integer
+        label:
+          type: string
+        previous:
+          $ref: '#/components/schemas/MonthRef'
+        next:
+          allOf:
+          - $ref: '#/components/schemas/MonthRef'
+          nullable: true
+        today:
+          type: string
+          format: date
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegisterDay'
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegisterRow'
+      required:
+      - days
+      - label
+      - month
+      - next
+      - previous
+      - rows
+      - today
       - year
     MonthSheet:
       type: object
@@ -34534,6 +34902,55 @@ components:
           maxLength: 255
       required:
       - reason
+    RegisterCell:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/CalendarStatusEnum'
+        editable:
+          type: boolean
+      required:
+      - editable
+      - status
+    RegisterDay:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        bs_day:
+          type: integer
+        weekday:
+          type: integer
+          description: 0 = Sunday … 6 = Saturday
+        is_holiday:
+          type: boolean
+      required:
+      - bs_day
+      - date
+      - is_holiday
+      - weekday
+    RegisterRow:
+      type: object
+      properties:
+        staff:
+          $ref: '#/components/schemas/StaffRef'
+        paid:
+          type: boolean
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegisterCell'
+        absent:
+          type: integer
+        worked:
+          type: integer
+      required:
+      - absent
+      - cells
+      - paid
+      - staff
+      - worked
     ReportsListErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/ParseErrorResponse'
@@ -42423,6 +42840,13 @@ components:
       required:
       - errors
       - type
+    UtilsBsMonthRetrieveErrorResponse400:
+      oneOf:
+      - $ref: '#/components/schemas/ParseErrorResponse'
+      discriminator:
+        propertyName: type
+        mapping:
+          client_error: '#/components/schemas/ParseErrorResponse'
     UtilsDateRetrieveErrorResponse400:
       oneOf:
       - $ref: '#/components/schemas/ParseErrorResponse'

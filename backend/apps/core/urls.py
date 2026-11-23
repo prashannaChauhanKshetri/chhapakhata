@@ -16,6 +16,7 @@ urlpatterns = [
         name="shop-image",
     ),
     path("utils/date/", views.DateConversionView.as_view(), name="date-conversion"),
+    path("utils/bs-month/", views.BsMonthView.as_view(), name="bs-month"),
     path("utils/periods/", views.PeriodsView.as_view(), name="periods"),
     path("health/", views.HealthView.as_view(), name="health"),
     *router.urls,

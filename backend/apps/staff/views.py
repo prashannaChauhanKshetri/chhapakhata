@@ -22,6 +22,7 @@ from .serializers import (
     DayRegisterSerializer,
     MarkAttendanceSerializer,
     MonthRangeSerializer,
+    MonthRegisterSerializer,
     PayrollSerializer,
     PaySalarySerializer,
     SalaryPaymentSerializer,
@@ -115,6 +116,28 @@ class AttendanceView(APIView):
             request=request,
         )
         return Response(serializer.data)
+
+
+class AttendanceMonthView(APIView):
+    """The month's register for everyone (BS month YYYY-MM; default: this month)."""
+
+    required_perms = Perm.STAFF_MANAGE
+
+    @extend_schema(
+        parameters=[OpenApiParameter("month", str, description="BS month YYYY-MM; default: now")],
+        responses=MonthRegisterSerializer,
+    )
+    def get(self, request):
+        year, month = _month_param(request.query_params.get("month"))
+        data = {
+            "year": year,
+            "month": month,
+            "label": services.month_label(year, month),
+            **_neighbours(year, month),
+            "today": local_today(),
+            **services.month_register(year, month),
+        }
+        return Response(MonthRegisterSerializer(data).data)
 
 
 class StaffAdvanceViewSet(

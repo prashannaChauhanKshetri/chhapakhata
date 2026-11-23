@@ -18,6 +18,7 @@ from rest_framework.views import APIView
 
 from .activity import log_activity
 from .dates import (
+    BS_MONTHS,
     bs_long,
     bs_month_range,
     bs_string,
@@ -25,6 +26,7 @@ from .dates import (
     from_bs,
     local_today,
     named_periods,
+    to_bs,
 )
 from .documents import PAGE_SIZES, pdf_response, render_pdf
 from .health import health_status
@@ -34,6 +36,7 @@ from .permissions import AUTHENTICATED, Perm
 from .serializers import (
     IMAGE_FIELDS,
     ActivityLogSerializer,
+    BsMonthSerializer,
     DateConversionSerializer,
     ShopSettingsSerializer,
 )
@@ -233,6 +236,54 @@ class DateConversionView(APIView):
                 "bs_month_end": month_end.isoformat(),
             }
         )
+
+
+def _bs_ref(year: int, month: int) -> dict[str, Any]:
+    if month == 0:
+        year, month = year - 1, 12
+    elif month == 13:
+        year, month = year + 1, 1
+    return {"year": year, "month": month, "label": f"{BS_MONTHS[month - 1]} {year}"}
+
+
+class BsMonthView(APIView):
+    """The days of one BS month (with their AD dates), for Nepali calendars."""
+
+    required_perms = AUTHENTICATED
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("month", str, description="BS month YYYY-MM"),
+            OpenApiParameter("ad", str, description="Or an AD date in the month, YYYY-MM-DD"),
+        ],
+        responses=BsMonthSerializer,
+    )
+    def get(self, request):
+        month_param, ad_param = request.query_params.get("month"), request.query_params.get("ad")
+        try:
+            if month_param:
+                year, month = (int(part) for part in month_param.split("-"))
+                start = from_bs(year, month, 1)
+            else:
+                start = bs_month_range(
+                    dt.date.fromisoformat(ad_param) if ad_param else local_today()
+                )[0]
+            start, end = bs_month_range(start)
+        except (ValueError, OverflowError) as exc:
+            raise ValidationError({"month": "Enter a BS month as YYYY-MM, e.g. 2083-08."}) from exc
+        bs = to_bs(start)
+        days = []
+        day = start
+        while day <= end:
+            days.append({"date": day, "bs_day": to_bs(day).day, "weekday": (day.weekday() + 1) % 7})
+            day += dt.timedelta(days=1)
+        data = {
+            **_bs_ref(bs.year, bs.month),
+            "previous": _bs_ref(bs.year, bs.month - 1),
+            "next": _bs_ref(bs.year, bs.month + 1),
+            "days": days,
+        }
+        return Response(BsMonthSerializer(data).data)
 
 
 class PeriodSerializer(serializers.Serializer):

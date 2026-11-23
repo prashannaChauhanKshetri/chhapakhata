@@ -38,6 +38,8 @@ READS = [
     ("/api/v1/settings/shop/", True, True, True),
     ("/api/v1/staff/", True, False, False),
     ("/api/v1/attendance/", True, False, False),
+    ("/api/v1/attendance/month/", True, False, False),
+    ("/api/v1/utils/bs-month/", True, True, True),
     ("/api/v1/staff-advances/", True, False, False),
     ("/api/v1/salary/", True, False, False),
 ]

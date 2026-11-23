@@ -1,0 +1,201 @@
+/* The attendance screen: one day at the top, the month's register below. */
+
+.dayTitle {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ck-text);
+}
+
+.counts {
+  display: flex;
+  gap: var(--mantine-spacing-lg);
+}
+
+.count {
+  display: flex;
+  flex-direction: column;
+
+  & strong {
+    font-size: 20px;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  & span {
+    font-size: var(--mantine-font-size-xs);
+    color: var(--ck-text-muted);
+  }
+}
+
+/* -- The register: like the paper hajiri book ------------------------------------- */
+
+.register {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+
+  & th,
+  & td {
+    border-bottom: 1px solid var(--ck-border);
+    border-right: 1px solid var(--ck-border);
+    padding: 0;
+    text-align: center;
+  }
+
+  & thead th {
+    background: var(--ck-bg);
+    font-weight: 600;
+    color: var(--ck-text-strong);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+}
+
+/* The name column stays in view while the days scroll sideways. */
+.name {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--ck-surface);
+  text-align: left !important;
+  padding: 6px 10px !important;
+  min-width: 150px;
+  max-width: 190px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 1px 0 0 var(--ck-border);
+}
+
+thead .name {
+  background: var(--ck-bg);
+  z-index: 3;
+}
+
+.dayHead {
+  width: 30px;
+  min-width: 30px;
+  padding: 4px 0 !important;
+  cursor: pointer;
+  line-height: 1.1;
+
+  & small {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--ck-text-muted);
+  }
+
+  &:hover {
+    background: var(--mantine-color-slate-1) !important;
+  }
+}
+
+.satHead,
+.satHead small {
+  color: var(--mantine-color-red-7) !important;
+}
+
+/* Today's column: an orange line under the date. */
+.todayHead {
+  box-shadow: inset 0 -3px 0 var(--mantine-color-orange-6);
+}
+
+.picked {
+  background: var(--mantine-color-orange-0) !important;
+}
+
+.satCol {
+  background: var(--mantine-color-slate-0);
+}
+
+.cell {
+  width: 30px;
+  height: 32px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--ck-text);
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &:hover:not(:disabled) {
+    outline: 1px solid var(--mantine-color-slate-5);
+    outline-offset: -1px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mantine-color-orange-6);
+    outline-offset: -2px;
+  }
+}
+
+.present {
+  color: var(--mantine-color-green-8);
+}
+
+.absent {
+  background: var(--mantine-color-red-7);
+  color: #fff;
+}
+
+.worked {
+  background: var(--mantine-color-blue-7);
+  color: #fff;
+}
+
+.settled {
+  color: var(--mantine-color-slate-4);
+  font-weight: 500;
+}
+
+.total {
+  min-width: 42px;
+  padding: 0 6px !important;
+  font-weight: 600;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: var(--mantine-font-size-xs);
+  color: var(--ck-text-muted);
+
+  & span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  & b {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: 1px solid var(--ck-border);
+    font-size: 11px;
+  }
+}
+
+@mixin smaller-than $mantine-breakpoint-xs {
+  .name {
+    min-width: 104px;
+    max-width: 120px;
+    padding: 6px 8px !important;
+  }
+
+  .dayTitle {
+    font-size: 20px;
+  }
+}

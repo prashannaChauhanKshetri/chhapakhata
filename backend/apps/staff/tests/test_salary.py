@@ -402,3 +402,33 @@ def test_the_balance_cannot_change_once_a_month_after_it_is_paid(api, owner, ram
     assert "already paid" in str(response.json())
     # Other details still change.
     assert api(owner).patch(f"/api/v1/staff/{ram.pk}/", {"phone": "9800000000"}).status_code == 200
+
+
+# -- The month register and the Nepali calendar ---------------------------------------
+
+
+def test_the_month_register_shows_everyone_day_by_day(api, owner, ram):
+    mark(ram, TUESDAY, "absent", owner)
+    mark(ram, SATURDAY, "worked", owner)
+    data = api(owner).get("/api/v1/attendance/month/", {"month": "2083-04"}).json()
+    assert data["label"] == "Shrawan 2083"
+    assert len(data["days"]) == 31
+    assert data["days"][1]["is_holiday"] is True  # 2 Shrawan was a Saturday
+    row = data["rows"][0]
+    assert row["staff"]["name"] == "Ram Thapa"
+    assert (row["absent"], row["worked"]) == (1, 1)
+    assert row["cells"][4] == {"status": "absent", "editable": True}  # 5 Shrawan
+    assert row["cells"][8] == {"status": "worked", "editable": True}  # 9 Shrawan
+
+
+def test_the_nepali_month_for_calendars(api, desk):
+    data = api(desk).get("/api/v1/utils/bs-month/", {"month": "2083-04"}).json()
+    assert data["label"] == "Shrawan 2083"
+    assert data["previous"]["label"] == "Asar 2083" and data["next"]["label"] == "Bhadra 2083"
+    assert data["days"][0] == {"date": "2026-07-17", "bs_day": 1, "weekday": 5}
+    assert len(data["days"]) == 31
+    chaitra = api(desk).get("/api/v1/utils/bs-month/", {"month": "2082-12"}).json()
+    assert chaitra["next"]["label"] == "Baisakh 2083"
+    by_ad = api(desk).get("/api/v1/utils/bs-month/", {"ad": "2026-07-20"}).json()
+    assert by_ad["label"] == "Shrawan 2083"
+    assert api(desk).get("/api/v1/utils/bs-month/", {"month": "nope"}).status_code == 400

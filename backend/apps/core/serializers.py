@@ -123,6 +123,29 @@ class DateConversionSerializer(serializers.Serializer):
     bs_month_end = serializers.DateField()
 
 
+class BsMonthRefSerializer(serializers.Serializer):
+    year = serializers.IntegerField()
+    month = serializers.IntegerField()
+    label = serializers.CharField()
+
+
+class BsDaySerializer(serializers.Serializer):
+    date = serializers.DateField(help_text="AD")
+    bs_day = serializers.IntegerField()
+    weekday = serializers.IntegerField(help_text="0 = Sunday … 6 = Saturday")
+
+
+class BsMonthSerializer(serializers.Serializer):
+    """A BS month laid out for a calendar."""
+
+    year = serializers.IntegerField()
+    month = serializers.IntegerField()
+    label = serializers.CharField()
+    previous = BsMonthRefSerializer()
+    next = BsMonthRefSerializer()
+    days = BsDaySerializer(many=True)
+
+
 class ReasonSerializer(serializers.Serializer):
     """A short reason, required for cancellations, voids and adjustments."""
 

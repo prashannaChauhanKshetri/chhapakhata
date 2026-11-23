@@ -1,0 +1,85 @@
+/* A Nepali (BS) month, laid out like a wall calendar: Sunday first, Saturday in red. */
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-xs);
+  margin-bottom: 6px;
+}
+
+.title {
+  font-weight: 600;
+  font-size: var(--mantine-font-size-md);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 40px);
+  gap: 2px;
+}
+
+.weekday {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ck-text-muted);
+  padding: 2px 0 4px;
+}
+
+.saturday {
+  color: var(--mantine-color-red-7);
+}
+
+.day {
+  height: 40px;
+  border: 0;
+  border-radius: var(--mantine-radius-sm);
+  background: transparent;
+  color: var(--ck-text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: var(--mantine-color-slate-1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mantine-color-orange-6);
+    outline-offset: -2px;
+  }
+
+  &:disabled {
+    color: var(--mantine-color-slate-3);
+    cursor: default;
+  }
+
+  &.saturday:not(:disabled) {
+    color: var(--mantine-color-red-7);
+  }
+
+  &.today {
+    box-shadow: inset 0 0 0 1px var(--mantine-color-slate-5);
+  }
+
+  &.selected,
+  &.selected:hover {
+    background: var(--mantine-color-orange-7);
+    color: #fff;
+  }
+}
+
+.bs {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ad {
+  font-size: 9px;
+  opacity: 0.7;
+}
