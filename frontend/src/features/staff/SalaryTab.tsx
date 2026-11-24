@@ -375,15 +375,19 @@ export function SalaryTab() {
                     </ActionIcon>
                   </Menu.Target>
                   <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
-                    {!r.payment && (r.days_employed > 0 || r.days_ahead > 0) && data && (
-                      <Menu.Item
-                        leftSection={<IconCash size={16} />}
-                        disabled={r.days_ahead > 0}
-                        onClick={() => openPaySalary(r, data.year, data.month, data.label)}
-                      >
-                        {r.days_ahead > 0 ? t('Pay salary (after month end)') : t('Pay salary')}
-                      </Menu.Item>
-                    )}
+                    {!r.payment &&
+                      (r.days_employed > 0 ||
+                        r.days_ahead > 0 ||
+                        toNumber(r.opening_balance) !== 0) &&
+                      data && (
+                        <Menu.Item
+                          leftSection={<IconCash size={16} />}
+                          disabled={r.days_ahead > 0}
+                          onClick={() => openPaySalary(r, data.year, data.month, data.label)}
+                        >
+                          {r.days_ahead > 0 ? t('Pay salary (after month end)') : t('Pay salary')}
+                        </Menu.Item>
+                      )}
                     <Menu.Item
                       leftSection={<IconCalendarMonth size={16} />}
                       onClick={() =>

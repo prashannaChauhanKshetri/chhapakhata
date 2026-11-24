@@ -640,3 +640,18 @@ def test_a_balance_brought_in_is_owed_at_once_with_the_days_so_far(owner):
     )
     with freeze_time("2026-07-24 12:00:00+05:45"):  # 8 Shrawan
         assert services.month_sheet(chinta, YEAR, MONTH).net == D("4000.00") + D("3304")
+
+
+def test_mid_month_an_advance_bigger_than_the_pay_so_far_is_not_carried(ram, owner):
+    from freezegun import freeze_time
+
+    with freeze_time("2026-07-19 12:00:00+05:45"):  # 3 Shrawan: 1,500 earned so far
+        services.give_advance(
+            staff=ram, day=dt.date(2026, 7, 18), amount=D("5000"), note="", user=owner
+        )
+        s = sheet(ram)
+        assert s.net == 0 and s.carry_forward == D("3500.00")
+        assert "days still to come make up for it" in s.notes[0]
+    with freeze_time("2026-08-16 12:00:00+05:45"):  # month over: 15,500 − 5,000
+        s = sheet(ram)
+        assert (s.net, s.carry_forward, s.notes) == (D("10500"), D("0"), [])

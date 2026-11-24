@@ -256,7 +256,13 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
         opening_balance=opening,
         opening_label=balance_label(staff) if opening else "",
     )
-    if carry:
+    if carry and days_ahead:
+        # Mid-month the pay is still growing; only at the month's end is anything left over.
+        sheet.notes.append(
+            f"Advances are {format_npr(carry)} more than the pay so far; "
+            "the days still to come make up for it."
+        )
+    elif carry:
         sheet.notes.append(
             f"Advances are {format_npr(carry)} more than this month's pay; "
             "the rest moves to next month's advances when paid."
