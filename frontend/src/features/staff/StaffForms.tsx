@@ -464,14 +464,6 @@ function PaySalaryForm({
           {toNumber(sheet.advances_total) !== 0 &&
             ` − ${t('advances')} ${formatNPR(sheet.advances_total)}`}
         </Text>
-        {sheet.days_ahead > 0 && (
-          <Alert color="amber" p="xs">
-            {t(
-              '{{month}} is not over: the {{n}} days still to come count as present. Pay at month end to be exact.',
-              { month: label, n: sheet.days_ahead },
-            )}
-          </Alert>
-        )}
         {sheet.notes.map((note) => (
           <Alert key={note} color="blue" p="xs">
             {note}

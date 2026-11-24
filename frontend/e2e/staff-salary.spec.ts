@@ -44,8 +44,28 @@ test('owner adds a worker, marks a day, gives an advance, pays and undoes the sa
   await expect(owner.getByText('Advance on', { exact: false })).toBeVisible();
   await expect(owner.getByText(saturday ? /Saturdays worked: 1/ : /Days absent: 1/)).toBeVisible();
 
+  // The month is still running: Pay waits for its end …
   await row.getByRole('button', { name: `Actions for ${name}` }).click();
-  await owner.getByRole('menuitem', { name: 'Pay salary' }).click();
+  await expect(
+    owner.getByRole('menuitem', { name: 'Pay salary (after month end)' }),
+  ).toBeDisabled();
+  await owner.keyboard.press('Escape');
+
+  // … unless the worker has left: today is their last day, so the month can be paid.
+  await owner.getByRole('tab', { name: 'Staff' }).click();
+  await owner.getByRole('row').filter({ hasText: name }).first().click();
+  const edit = owner.getByRole('dialog');
+  const joined = await edit.getByLabel('Joined on (Miti)').inputValue();
+  await edit.getByRole('switch', { name: 'Still working here' }).click();
+  const lastDay = edit.getByLabel('Last working day (Miti)');
+  await lastDay.fill(joined);
+  await lastDay.press('Enter');
+  await edit.getByRole('button', { name: 'Save' }).click();
+  await expect(edit).toBeHidden();
+  await owner.getByRole('tab', { name: 'Salary' }).click();
+  await expect(owner.getByText('Salary month (BS)')).toBeVisible();
+  await row.getByRole('button', { name: `Actions for ${name}` }).click();
+  await owner.getByRole('menuitem', { name: 'Pay salary', exact: true }).click();
   const slip = owner.context().waitForEvent('page');
   await owner
     .getByRole('dialog')

@@ -576,3 +576,67 @@ def test_paying_twice_at_once_is_impossible(ram, owner):
             staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="bank", user=owner
         )
     assert SalaryPayment.objects.count() == 1
+
+
+# -- A month still running: pay counts to today ------------------------------------------
+
+
+def test_a_running_month_counts_the_salary_earned_to_date(ram, owner):
+    from freezegun import freeze_time
+
+    with freeze_time("2026-07-25 12:00:00+05:45"):  # 9 Shrawan: 9 of 31 days
+        s = sheet(ram)
+        assert (s.days_employed, s.days_ahead) == (9, 22)
+        assert s.base_pay == D("4500.00")  # 15,500 × 9 / 31
+        mark(ram, TUESDAY, "absent", owner)
+        assert sheet(ram).net == D("4000.00")
+        with pytest.raises(ValidationError, match="not over yet"):
+            services.pay_salary(
+                staff=ram,
+                bs_year=YEAR,
+                bs_month=MONTH,
+                paid_on=dt.date(2026, 7, 25),
+                mode="cash",
+                user=owner,
+            )
+    with freeze_time("2026-08-16 12:00:00+05:45"):  # the last day: the whole month, payable
+        s = sheet(ram)
+        assert (s.days_employed, s.days_ahead, s.base_pay) == (31, 0, D("15500"))
+        payment = services.pay_salary(
+            staff=ram, bs_year=YEAR, bs_month=MONTH, paid_on=LAST, mode="cash", user=owner
+        )
+        assert payment.net_paid == D("15000.00")
+
+
+def test_a_worker_who_left_mid_month_can_be_paid_before_it_ends(ram, owner):
+    from freezegun import freeze_time
+
+    ram.is_active, ram.left_on = False, dt.date(2026, 7, 20)  # 4 Shrawan
+    ram.save()
+    with freeze_time("2026-07-25 12:00:00+05:45"):
+        s = sheet(ram)
+        assert (s.days_employed, s.days_ahead, s.base_pay) == (4, 0, D("2000.00"))
+        payment = services.pay_salary(
+            staff=ram,
+            bs_year=YEAR,
+            bs_month=MONTH,
+            paid_on=dt.date(2026, 7, 25),
+            mode="cash",
+            user=owner,
+        )
+        assert payment.net_paid == D("2000.00")
+
+
+def test_a_balance_brought_in_is_owed_at_once_with_the_days_so_far(owner):
+    from freezegun import freeze_time
+
+    chinta = Staff.objects.create(
+        name="Chinta",
+        monthly_salary=D("15500"),
+        joined_on=dt.date(2026, 7, 17),
+        balance_year=2083,
+        balance_month=3,
+        opening_balance=D("3304"),
+    )
+    with freeze_time("2026-07-24 12:00:00+05:45"):  # 8 Shrawan
+        assert services.month_sheet(chinta, YEAR, MONTH).net == D("4000.00") + D("3304")

@@ -42,6 +42,7 @@ Source of truth: `backend/apps/core/permissions.py` (`ROLE_PERMISSIONS`). The fr
 - **Attendance** is marked by hand: every working day counts as present unless marked absent; Saturday (the weekly holiday) counts as off unless marked worked. Any past day can be corrected, from the daily register or a worker's month calendar.
 - **Pay** for a BS month: one day's pay = monthly salary ÷ days in that month. Each absent day takes off one day's pay; each Saturday worked adds one day's pay, or the worker's own **Saturday pay** when the owner has set an amount. Advances given in the month are taken off; advances larger than the pay move to the next month.
 - **Starting with existing workers:** each can have a balance up to the end of a BS month (unpaid salary owed to them, or an old advance they owe). Pay is counted from the next month, where that balance is added or taken off once; days up to the balance month cannot be marked. The balance cannot change once a month after it is paid.
+- **A month still running** shows the salary earned to date (the days up to today), growing each day. It can be paid from its last day on, or earlier for a worker who has left; money given before that is an advance.
 - **Paying** a month records the figures for the salary slip and locks that month's attendance and advances. The owner can undo a payment with a reason (logged).
 
 ## Other rules

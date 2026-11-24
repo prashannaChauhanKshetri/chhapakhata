@@ -82,7 +82,15 @@ function Breakdown({
   return (
     <Stack gap={8} px="var(--ck-card-pad)" py="sm" bg="slate.0">
       {line(
-        t('Salary ({{n}} of {{days}} days)', { n: sheet.days_employed, days: sheet.days_in_month }),
+        sheet.days_ahead > 0 && !sheet.payment
+          ? t('Salary to date ({{n}} of {{days}} days)', {
+              n: sheet.days_employed,
+              days: sheet.days_in_month,
+            })
+          : t('Salary ({{n}} of {{days}} days)', {
+              n: sheet.days_employed,
+              days: sheet.days_in_month,
+            }),
         formatAmount(sheet.base_pay),
         t('One day = {{rate}}', { rate: formatNPR(sheet.day_rate) }),
       )}
@@ -156,7 +164,9 @@ function Breakdown({
       )}
       {!paid && sheet.days_ahead > 0 && (
         <Text size="xs" c="dimmed">
-          {t('{{n}} days still to come count as present.', { n: sheet.days_ahead })}
+          {t('{{n}} more days are added as they pass. Pay after the month ends.', {
+            n: sheet.days_ahead,
+          })}
         </Text>
       )}
       {sheet.notes.map((note) => (
@@ -263,6 +273,14 @@ export function SalaryTab() {
         />
       </SimpleGrid>
 
+      {rows.some((r) => !r.payment && r.days_ahead > 0) && (
+        <Text size="sm" c="dimmed">
+          {t(
+            '{{month}} is still running: Net pay counts the salary up to today and grows each day. Money given now goes in as an advance.',
+            { month: data?.label },
+          )}
+        </Text>
+      )}
       <Card padding={0}>
         <DataTable<MonthSheet>
           minHeight={160}
@@ -357,12 +375,13 @@ export function SalaryTab() {
                     </ActionIcon>
                   </Menu.Target>
                   <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
-                    {!r.payment && r.days_employed > 0 && data && (
+                    {!r.payment && (r.days_employed > 0 || r.days_ahead > 0) && data && (
                       <Menu.Item
                         leftSection={<IconCash size={16} />}
+                        disabled={r.days_ahead > 0}
                         onClick={() => openPaySalary(r, data.year, data.month, data.label)}
                       >
-                        {t('Pay salary')}
+                        {r.days_ahead > 0 ? t('Pay salary (after month end)') : t('Pay salary')}
                       </Menu.Item>
                     )}
                     <Menu.Item

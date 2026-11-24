@@ -168,7 +168,6 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
     settled = settled_until(staff)
     first = max(start, staff.joined_on, settled + dt.timedelta(days=1) if settled else start)
     last = min(end, staff.left_on) if staff.left_on else end
-    employed = max((last - first).days + 1, 0)
 
     exceptions = list(
         Attendance.objects.filter(staff=staff, date__range=(first, last)).values_list(
@@ -214,8 +213,10 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
         )
 
     salary = staff.monthly_salary
-    # Whole month: exactly the monthly salary; part month: its share by days.
-    base = salary if employed == days else q2(salary * employed / days)
+    # Earned to date: a month still running counts the days up to today only, so
+    # the pay grows day by day. Whole month: exactly the monthly salary.
+    so_far = max((min(last, today) - first).days + 1, 0)
+    base = salary if so_far == days else q2(salary * so_far / days)
     deduction = q2(salary * len(absent) / days)
     day_rate = q2(salary / days)
     if staff.saturday_pay is not None:
@@ -237,7 +238,7 @@ def month_sheet(staff: Staff, bs_year: int, bs_month: int) -> MonthSheet:
         start=start,
         end=end,
         days_in_month=days,
-        days_employed=employed,
+        days_employed=so_far,
         monthly_salary=salary,
         day_rate=day_rate,
         absent_dates=absent,
@@ -571,6 +572,14 @@ def pay_salary(
             }
         )
     sheet = month_sheet(staff, bs_year, bs_month)
+    if sheet.days_ahead:
+        # Paying now would lock the month and lose the days still to come.
+        raise ValidationError(
+            {
+                "month": f"{month_label(bs_year, bs_month)} is not over yet: it ends on "
+                f"{bs_string(end)} BS. Pay then; for money given now, use Give advance."
+            }
+        )
     if sheet.days_employed == 0 and not sheet.opening_balance:
         raise ValidationError(
             {"month": f"{staff.name} did not work here in {month_label(bs_year, bs_month)}."}
