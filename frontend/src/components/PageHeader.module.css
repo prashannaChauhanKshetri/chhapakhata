@@ -8,7 +8,8 @@
   .actions {
     width: 100%;
 
-    & > :global(.mantine-Button-root) {
+    /* Text buttons only: an icon button (e.g. the ⋮ menu) keeps its own size. */
+    & > :global(.mantine-Button-root):not([aria-haspopup]):not([aria-label]) {
       flex: 1 1 calc(50% - var(--mantine-spacing-xs));
       min-width: 0;
     }

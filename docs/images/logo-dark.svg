@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1700 312" width="425" height="78" role="img" aria-label="ChhapaKhata">
+  <title>ChhapaKhata</title>
+  <!-- The mark: a print stamp (chhapa) over ledger lines (khata). Same artwork as the app icon. -->
+  <rect width="312" height="312" rx="65" fill="#0F172A" stroke="#334155" stroke-width="10"/>
+  <rect x="122" y="43" width="68" height="69" rx="28" fill="#E2E8F0"/>
+  <rect x="139" y="97" width="34" height="36" fill="#94A3B8"/>
+  <rect x="73" y="132" width="166" height="44" rx="10" fill="#F8FAFC"/>
+  <rect x="63" y="205" width="186" height="17" rx="8.5" fill="#94A3B8"/>
+  <rect x="63" y="239" width="127" height="17" rx="8.5" fill="#94A3B8"/>
+  <text x="400" y="228" font-family="Inter, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="206" letter-spacing="-4" fill="#F8FAFC"><tspan font-weight="700">Chhapa</tspan><tspan font-weight="500" fill="#94A3B8">Khata</tspan></text>
+</svg>
