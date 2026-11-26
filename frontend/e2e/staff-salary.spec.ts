@@ -53,6 +53,8 @@ test('owner adds a worker, marks a day, gives an advance, pays and undoes the sa
 
   // … unless the worker has left: today is their last day, so the month can be paid.
   await owner.getByRole('tab', { name: 'Staff' }).click();
+  // Wait for the staff list: until then the row can still be the salary table's.
+  await expect(owner.getByRole('button', { name: 'Add staff' })).toBeVisible();
   await owner.getByRole('row').filter({ hasText: name }).first().click();
   const edit = owner.getByRole('dialog');
   const joined = await edit.getByLabel('Joined on (Miti)').inputValue();

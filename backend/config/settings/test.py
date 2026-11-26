@@ -20,3 +20,6 @@ MEDIA_ROOT = _tmp / "media"
 BACKUP_DIR = _tmp / "backups"
 AXES_ENABLED = False
 Q_CLUSTER = {"name": "test", "orm": "default", "sync": True, "timeout": 60, "retry": 120}
+
+# Each test starts with empty rate-limit counters (see conftest.py).
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}

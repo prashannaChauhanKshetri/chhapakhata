@@ -1,0 +1,201 @@
+/* The 404 page: a misprinted proof sheet with its job ticket and a rubber stamp. */
+
+.page {
+  display: grid;
+  place-items: center;
+  padding: var(--mantine-spacing-xl) 0;
+  min-height: 70vh;
+}
+
+.press {
+  position: relative;
+  width: min(440px, 100%);
+}
+
+/* The slot the sheet comes out of. */
+.slot {
+  height: 10px;
+  margin: 0 18px;
+  border-radius: 6px;
+  background: var(--ck-sidebar);
+  box-shadow: 0 2px 0 var(--mantine-color-slate-6) inset;
+}
+
+.feed {
+  overflow: hidden; /* the sheet appears from under the slot */
+  padding: 0 4px 24px;
+  margin-top: -4px;
+}
+
+.sheet {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--ck-border);
+  box-shadow: var(--mantine-shadow-lg);
+  /* Room at the foot of the sheet for the stamp. */
+  padding: 40px 34px 92px;
+  transform: rotate(-1.6deg);
+  transform-origin: top center;
+  animation: print 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes print {
+  from {
+    transform: translateY(-105%) rotate(0deg);
+  }
+  to {
+    transform: translateY(0) rotate(-1.6deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    animation: none;
+  }
+}
+
+/* Crop marks at the four corners, as on a printer's proof. */
+.crop {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-color: var(--mantine-color-slate-5);
+  border-style: solid;
+  border-width: 0;
+}
+
+.tl {
+  top: 10px;
+  left: 10px;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+
+.tr {
+  top: 10px;
+  right: 10px;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+
+.bl {
+  bottom: 10px;
+  left: 10px;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+
+.br {
+  bottom: 10px;
+  right: 10px;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+/* The registration target at the top, and the colour bar down one side. */
+.registration {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--mantine-color-slate-5);
+}
+
+.cmyk {
+  position: absolute;
+  top: 40px;
+  right: 12px;
+  display: grid;
+  gap: 3px;
+
+  & span {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+.ticket {
+  border: 1px dashed var(--mantine-color-slate-4);
+  border-radius: var(--mantine-radius-sm);
+  padding: 14px 16px;
+  font-size: var(--mantine-font-size-sm);
+}
+
+.ticketHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid var(--ck-border);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 8px;
+  padding: 3px 0;
+
+  & dt {
+    color: var(--ck-text-muted);
+  }
+
+  & dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.path {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  color: var(--ck-text-strong);
+}
+
+/* The rubber stamp, in red ink, struck at an angle on the foot of the sheet. */
+.stamp {
+  position: absolute;
+  right: 34px;
+  bottom: 20px;
+  transform: rotate(-9deg);
+  background: rgba(255, 255, 255, 0.6);
+  border: 3px double var(--mantine-color-red-7);
+  border-radius: 10px;
+  padding: 6px 14px 4px;
+  color: var(--mantine-color-red-7);
+  text-align: center;
+  opacity: 0.88;
+  mix-blend-mode: multiply;
+  line-height: 1.05;
+  pointer-events: none;
+}
+
+.stampMain {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.stampSub {
+  font-family: 'Noto Sans Devanagari', var(--mantine-font-family);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@mixin smaller-than $mantine-breakpoint-xs {
+  .sheet {
+    padding: 36px 22px 84px;
+  }
+
+  .stamp {
+    right: 20px;
+    bottom: 18px;
+  }
+
+  .stampMain {
+    font-size: 18px;
+  }
+}

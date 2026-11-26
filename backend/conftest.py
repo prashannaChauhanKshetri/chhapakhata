@@ -25,6 +25,15 @@ DB_FIXTURES = {"db", "transactional_db", "django_db_setup"}
 
 
 @pytest.fixture(autouse=True)
+def _empty_rate_limits():
+    """Each test starts with fresh rate-limit counters."""
+    from django.core.cache import cache
+
+    cache.clear()
+    yield
+
+
+@pytest.fixture(autouse=True)
 def business(request):
     """Database tests run inside one business, like a signed-in request.
 

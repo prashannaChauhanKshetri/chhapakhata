@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.throttling import ScopedRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 
 from apps.core.activity import log_activity
@@ -93,6 +93,9 @@ class MeView(APIView):
 
 class ChangePasswordView(APIView):
     required_perms = AUTHENTICATED
+    # A stolen session must not be able to guess the current password quickly.
+    throttle_classes = [UserRateThrottle, ScopedRateThrottle]
+    throttle_scope = "password"
 
     @extend_schema(request=ChangePasswordSerializer, responses={204: None})
     def post(self, request):

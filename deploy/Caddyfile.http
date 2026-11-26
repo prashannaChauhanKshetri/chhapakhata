@@ -16,10 +16,19 @@
 	}
 
 	handle /api/* {
-		reverse_proxy api:8000
+		# Largest upload is a 10 MB import file.
+		request_body {
+			max_size 12MB
+		}
+		reverse_proxy api:8000 {
+			# The visitor's real address (see apps/core/client_ip.py).
+			header_up X-Real-IP {client_ip}
+		}
 	}
 	handle /django-admin/* {
-		reverse_proxy api:8000
+		reverse_proxy api:8000 {
+			header_up X-Real-IP {client_ip}
+		}
 	}
 	handle_path /static/* {
 		root * /data/static
@@ -42,6 +51,8 @@
 		# or installed phones would keep running an old version.
 		@app_shell path /sw.js /manifest.webmanifest /index.html /
 		header @app_shell Cache-Control "no-cache"
+		# Only the app's own scripts may run: an injected script is refused.
+		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; frame-src 'self' blob:; object-src 'self' blob:; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 		try_files {path} /index.html
 		file_server
 	}

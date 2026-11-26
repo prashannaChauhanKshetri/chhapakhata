@@ -29,6 +29,8 @@ class UserRefSerializer(serializers.Serializer):
 
 
 IMAGE_FIELDS = ("logo", "stamp_image", "signature_image")
+#: A logo, stamp or signature is small; anything bigger is a mistake (or an attack).
+MAX_IMAGE_BYTES = 2 * 1024 * 1024
 
 
 class ShopSettingsSerializer(serializers.ModelSerializer):
@@ -72,6 +74,20 @@ class ShopSettingsSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["updated_at"]
+
+    def _small_image(self, value):
+        if value and value.size > MAX_IMAGE_BYTES:
+            raise serializers.ValidationError("Choose an image smaller than 2 MB.")
+        return value
+
+    def validate_logo(self, value):
+        return self._small_image(value)
+
+    def validate_stamp_image(self, value):
+        return self._small_image(value)
+
+    def validate_signature_image(self, value):
+        return self._small_image(value)
 
     def to_representation(self, instance):
         # Images are private files: point at the signed-in-only endpoint, with a

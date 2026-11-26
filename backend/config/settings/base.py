@@ -3,6 +3,7 @@
 Environment-specific values come from environment variables (see `.env.example`).
 """
 
+import tempfile
 from datetime import timedelta
 from pathlib import Path
 
@@ -57,6 +58,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     # First: the container's own health probe (localhost) skips host validation.
     "apps.core.health.LocalHealthCheckMiddleware",
+    # The visitor's real address from Caddy (X-Real-IP), for lock-outs and rate limits.
+    "apps.core.client_ip.RealClientIPMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -134,6 +137,19 @@ AXES_COOLOFF_TIME = timedelta(minutes=15)
 AXES_RESET_ON_SUCCESS = True
 AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
 AXES_LOCKOUT_CALLABLE = "apps.accounts.lockout.lockout_response"
+# The address comes from REMOTE_ADDR only: RealClientIPMiddleware has already put
+# the visitor's real address there; forwarded headers are never trusted directly.
+AXES_IPWARE_META_PRECEDENCE_ORDER = ("REMOTE_ADDR",)
+
+# --- Cache (shared by all web workers: rate-limit counters) ---
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": env.str(
+            "CACHE_DIR", default=str(Path(tempfile.gettempdir()) / "chhapakhata-cache")
+        ),
+    }
+}
 
 # --- Internationalisation ---
 LANGUAGE_CODE = "en"
@@ -167,7 +183,22 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
     "COERCE_DECIMAL_TO_STRING": True,
     "DATETIME_FORMAT": "iso-8601",
-    "DEFAULT_THROTTLE_RATES": {"login": "20/min"},
+    # Rate limits (apps/core/throttling.py). Generous for people, tight for scripts.
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+        "apps.core.throttling.HeavyThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "120/min",  # per address, before signing in
+        "user": "600/min",  # per signed-in person
+        "heavy": "30/min",  # PDFs, Excel, imports, exports
+        "login": "20/min",  # sign-in attempts per address
+        "password": "5/min",  # password changes per person
+        "backup": "5/hour",  # "Backup now"
+    },
+    # The client address is REMOTE_ADDR (see RealClientIPMiddleware), never X-Forwarded-For.
+    "NUM_PROXIES": 0,
 }
 
 DRF_STANDARDIZED_ERRORS = {"ENABLE_IN_DEBUG_FOR_UNHANDLED_EXCEPTIONS": False}

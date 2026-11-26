@@ -11,6 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from apps.core.activity import log_activity
@@ -19,6 +20,7 @@ from apps.core.documents import xlsx_response
 from apps.core.params import parse_range
 from apps.core.permissions import Perm
 from apps.core.serializers import UserRefSerializer
+from apps.core.throttling import BackupThrottle
 
 from . import duplicates, erase, go_live, services, sheets, work_log
 from .models import BackupRun, BackupTrigger
@@ -66,7 +68,11 @@ class BackupRunViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         return Response(backup_status())
 
     @extend_schema(request=None, responses={201: BackupRunSerializer})
-    @action(detail=False, methods=["post"])
+    @action(
+        detail=False,
+        methods=["post"],
+        throttle_classes=[UserRateThrottle, BackupThrottle],
+    )
     def run(self, request):
         backup = services.run_backup(BackupTrigger.MANUAL, user=request.user)
         return Response(BackupRunSerializer(backup).data, status=status.HTTP_201_CREATED)
