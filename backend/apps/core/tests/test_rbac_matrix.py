@@ -215,3 +215,50 @@ def test_finance_writes(api, owner, finance, customer, star_flex):
 
     worker = {"name": "Ram", "monthly_salary": "15000", "joined_on": "2026-04-14"}
     assert client.post("/api/v1/staff/", worker, format="json").status_code == 201
+
+
+def test_the_owner_opens_settings_to_admin_finance_area_by_area(api, owner, finance):
+    client = api(finance)
+    assert client.get("/api/v1/activity/").status_code == 403
+    assert client.patch("/api/v1/settings/shop/", {"name": "X"}, format="json").status_code == 403
+
+    url = f"/api/v1/users/{finance.pk}/"
+    grant = {"extra_permissions": [Perm.SETTINGS_MANAGE, Perm.AUDIT_VIEW]}
+    assert api(owner).patch(url, grant, format="json").status_code == 200
+
+    client = api(finance)
+    me = client.get("/api/v1/auth/me/").json()["permissions"]
+    assert Perm.SETTINGS_MANAGE in me and Perm.AUDIT_VIEW in me
+    assert client.get("/api/v1/activity/").status_code == 200
+    assert client.patch("/api/v1/settings/shop/", {"name": "X"}, format="json").status_code == 200
+    # Not given: still closed.
+    body = {"name": "Mesh", "rate": "40"}
+    assert client.post("/api/v1/media-types/", body, format="json").status_code == 403
+    assert client.get("/api/v1/system/backups/").status_code == 403
+    # Never theirs, whatever is given: logins and deleting all data.
+    assert client.get("/api/v1/users/").status_code == 403
+    erase = client.post("/api/v1/system/erase/", {"confirm": "Confirm"}, format="json")
+    assert erase.status_code in (400, 403)
+
+
+def test_users_cannot_be_opened_to_anyone(api, owner, finance):
+    url = f"/api/v1/users/{finance.pk}/"
+    body = {"extra_permissions": [Perm.USERS_MANAGE]}
+    assert api(owner).patch(url, body, format="json").status_code == 400
+    finance.extra_permissions = [Perm.USERS_MANAGE]  # even if stored somehow
+    finance.save()
+    assert api(finance).get("/api/v1/users/").status_code == 403
+
+
+def test_only_admin_finance_takes_extra_areas_and_a_role_change_closes_them(api, owner, desk):
+    body = {"extra_permissions": [Perm.AUDIT_VIEW]}
+    response = api(owner).patch(f"/api/v1/users/{desk.pk}/", body, format="json")
+    assert response.status_code == 400
+    desk.role, desk.extra_permissions = Role.FINANCE, [Perm.AUDIT_VIEW]
+    desk.save()
+    response = api(owner).patch(
+        f"/api/v1/users/{desk.pk}/", {"role": Role.FRONT_DESK}, format="json"
+    )
+    assert response.status_code == 200
+    desk.refresh_from_db()
+    assert desk.extra_permissions == []

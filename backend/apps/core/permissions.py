@@ -82,6 +82,10 @@ OWNER_ONLY: frozenset[str] = frozenset(
     }
 )
 
+#: Owner-only areas the owner may also open to an Admin (Finance) account, one by
+#: one. Never users: whoever manages logins could make themselves owner.
+GRANTABLE: frozenset[str] = OWNER_ONLY - {Perm.USERS_MANAGE}
+
 #: Marker meaning "any signed-in user".
 AUTHENTICATED: tuple[str, ...] = ()
 
@@ -127,7 +131,11 @@ def permissions_for(user: Any) -> frozenset[str]:
         return frozenset()
     if user.is_superuser:
         return Perm.all()
-    return ROLE_PERMISSIONS.get(getattr(user, "role", ""), frozenset())
+    role = getattr(user, "role", "")
+    held = ROLE_PERMISSIONS.get(role, frozenset())
+    if role == Role.FINANCE:
+        held |= frozenset(getattr(user, "extra_permissions", None) or ()) & GRANTABLE
+    return held
 
 
 def user_can(user: Any, perm: str) -> bool:

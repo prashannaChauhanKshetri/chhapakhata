@@ -138,13 +138,14 @@ It is **in daily use at OM Traders and Suppliers, Nepalgunj**, and one installat
 | Bills and payments | ✓ | ✓ | ✓ | |
 | Cancel bills, void payments, adjust balances | ✓ | ✓ | | |
 | Discounts | no limit | no limit | up to 10 % | |
-| Rate card | ✓ | view | view | |
+| Rate card | ✓ | view (edit if the owner allows) | view | |
 | Customer dues and ledger | ✓ | ✓ | view | |
 | Production board | ✓ | design, delivery | design, delivery | printing, finishing |
 | Stock and purchases | ✓ | ✓ | view | record usage |
 | Reports | all | all | daily sales | own work |
 | Staff, attendance and salary | ✓ | ✓ | | |
-| Users, settings, backups, activity log | ✓ | | | |
+| Settings, backups, activity log | ✓ | if the owner allows | | |
+| Users and passwords | ✓ | | | |
 
 The server enforces every rule; the screens only hide what a role cannot use. Details: [docs/rbac.md](docs/rbac.md).
 

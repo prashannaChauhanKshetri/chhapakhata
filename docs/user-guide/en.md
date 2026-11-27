@@ -7,7 +7,7 @@ This guide is for the **owner**, the **admin (finance)**, the **front desk** and
 | Role | Can do |
 |---|---|
 | **Owner** | Everything: settings, prices, staff accounts, imports, reports, cancelling bills, backups, activity log |
-| **Admin (Finance)** | All the money: customers, orders, bills, payments, cancelling bills and voiding receipts, balances, purchases and stock, every report, staff attendance and salary. Not staff accounts, prices, settings, backups or the activity log |
+| **Admin (Finance)** | All the money: customers, orders, bills, payments, cancelling bills and voiding receipts, balances, purchases and stock, every report, staff attendance and salary. Settings, prices, backups and the activity log only where the owner allows; never staff accounts |
 | **Front desk** | Customers, orders, quotations, payments, bills, approving designs, delivering, daily sales |
 | **Operator** | The production board, recording material used and wastage, their own production log |
 

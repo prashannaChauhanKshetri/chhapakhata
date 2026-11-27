@@ -10,5 +10,5 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ["role", "is_active"]
     fieldsets = (
         *BaseUserAdmin.fieldsets,
-        ("Shop role", {"fields": ("role", "phone", "max_discount_percent")}),
+        ("Shop role", {"fields": ("role", "phone", "max_discount_percent", "extra_permissions")}),
     )

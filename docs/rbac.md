@@ -18,10 +18,15 @@ Source of truth: `backend/apps/core/permissions.py` (`ROLE_PERMISSIONS`). The fr
 | Staff list, attendance, advances and salary | ✓ | ✓ | | |
 | Discount limit | none | none (owner may set one per user) | shop default (10 %) | — |
 | Manage users and passwords | ✓ | | | |
-| Shop settings, bill design, imports, delete all data | ✓ | | | |
-| Activity log, backups, data export | ✓ | | | |
+| Shop settings, bill design, imports, data export | ✓ | if the owner allows | | |
+| Rate card changes | ✓ | if the owner allows | | |
+| Backups | ✓ | if the owner allows | | |
+| Activity log | ✓ | if the owner allows | | |
+| Delete all data | ✓ | | | |
 
 **Admin (Finance)** handles all the money; the **owner** alone runs the shop itself (who can sign in, prices, settings, the activity log and backups). In code: `ROLE_PERMISSIONS[Role.FINANCE] = Perm.all() - OWNER_ONLY`.
+
+**Opening settings to Admin (Finance):** in Settings → Users, the owner can tick areas for an Admin (Finance) account: shop details, bill design, imports and data export; the rate card; backups; the activity log (`User.extra_permissions`, limited to `GRANTABLE`). **Users and passwords are never given**: whoever manages logins could make themselves owner. Deleting all data stays with the owner too. Changing the account to another role closes everything that was opened.
 
 The "Add user" form offers **Front desk** and **Operator** only while **Track production** is on (they split the counter from the print room). With it off, as at OM Traders, there are two roles: **Owner** and **Admin (Finance)**.
 

@@ -25704,6 +25704,18 @@ components:
       required:
       - errors
       - type
+    ExtraPermissionsEnum:
+      enum:
+      - audit.view
+      - catalog.manage
+      - settings.manage
+      - system.backup
+      type: string
+      description: |-
+        * `audit.view` - audit.view
+        * `catalog.manage` - catalog.manage
+        * `settings.manage` - settings.manage
+        * `system.backup` - system.backup
     FinishRollRequest:
       type: object
       properties:
@@ -34761,6 +34773,12 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           nullable: true
           description: Leave empty to use the role default.
+        extra_permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExtraPermissionsEnum'
+          description: Settings areas opened to an Admin (Finance) account by the
+            owner.
         is_active:
           type: boolean
           title: Active
@@ -43710,6 +43728,12 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           nullable: true
           description: Leave empty to use the role default.
+        extra_permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExtraPermissionsEnum'
+          description: Settings areas opened to an Admin (Finance) account by the
+            owner.
         is_active:
           type: boolean
           title: Active
@@ -43727,6 +43751,7 @@ components:
       required:
       - date_joined
       - email
+      - extra_permissions
       - first_name
       - full_name
       - id
@@ -43790,6 +43815,12 @@ components:
           pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
           nullable: true
           description: Leave empty to use the role default.
+        extra_permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExtraPermissionsEnum'
+          description: Settings areas opened to an Admin (Finance) account by the
+            owner.
         is_active:
           type: boolean
           title: Active
@@ -43839,6 +43870,8 @@ components:
       - $ref: '#/components/schemas/UsersCreatePhoneErrorComponent'
       - $ref: '#/components/schemas/UsersCreateRoleErrorComponent'
       - $ref: '#/components/schemas/UsersCreateMaxDiscountPercentErrorComponent'
+      - $ref: '#/components/schemas/UsersCreateExtraPermissionsErrorComponent'
+      - $ref: '#/components/schemas/UsersCreateExtraPermissionsINDEXErrorComponent'
       - $ref: '#/components/schemas/UsersCreateIsActiveErrorComponent'
       - $ref: '#/components/schemas/UsersCreatePasswordErrorComponent'
       discriminator:
@@ -43852,6 +43885,8 @@ components:
           phone: '#/components/schemas/UsersCreatePhoneErrorComponent'
           role: '#/components/schemas/UsersCreateRoleErrorComponent'
           max_discount_percent: '#/components/schemas/UsersCreateMaxDiscountPercentErrorComponent'
+          extra_permissions: '#/components/schemas/UsersCreateExtraPermissionsErrorComponent'
+          extra_permissions.INDEX: '#/components/schemas/UsersCreateExtraPermissionsINDEXErrorComponent'
           is_active: '#/components/schemas/UsersCreateIsActiveErrorComponent'
           password: '#/components/schemas/UsersCreatePasswordErrorComponent'
     UsersCreateErrorResponse400:
@@ -43863,6 +43898,52 @@ components:
         mapping:
           validation_error: '#/components/schemas/UsersCreateValidationError'
           client_error: '#/components/schemas/ParseErrorResponse'
+    UsersCreateExtraPermissionsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - extra_permissions
+          type: string
+          description: '* `extra_permissions` - extra_permissions'
+        code:
+          enum:
+          - not_a_list
+          - 'null'
+          type: string
+          description: |-
+            * `not_a_list` - not_a_list
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    UsersCreateExtraPermissionsINDEXErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - extra_permissions.INDEX
+          type: string
+          description: '* `extra_permissions.INDEX` - extra_permissions.INDEX'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     UsersCreateFirstNameErrorComponent:
       type: object
       properties:
@@ -44253,6 +44334,8 @@ components:
       - $ref: '#/components/schemas/UsersPartialUpdatePhoneErrorComponent'
       - $ref: '#/components/schemas/UsersPartialUpdateRoleErrorComponent'
       - $ref: '#/components/schemas/UsersPartialUpdateMaxDiscountPercentErrorComponent'
+      - $ref: '#/components/schemas/UsersPartialUpdateExtraPermissionsErrorComponent'
+      - $ref: '#/components/schemas/UsersPartialUpdateExtraPermissionsINDEXErrorComponent'
       - $ref: '#/components/schemas/UsersPartialUpdateIsActiveErrorComponent'
       - $ref: '#/components/schemas/UsersPartialUpdatePasswordErrorComponent'
       discriminator:
@@ -44266,6 +44349,8 @@ components:
           phone: '#/components/schemas/UsersPartialUpdatePhoneErrorComponent'
           role: '#/components/schemas/UsersPartialUpdateRoleErrorComponent'
           max_discount_percent: '#/components/schemas/UsersPartialUpdateMaxDiscountPercentErrorComponent'
+          extra_permissions: '#/components/schemas/UsersPartialUpdateExtraPermissionsErrorComponent'
+          extra_permissions.INDEX: '#/components/schemas/UsersPartialUpdateExtraPermissionsINDEXErrorComponent'
           is_active: '#/components/schemas/UsersPartialUpdateIsActiveErrorComponent'
           password: '#/components/schemas/UsersPartialUpdatePasswordErrorComponent'
     UsersPartialUpdateErrorResponse400:
@@ -44277,6 +44362,52 @@ components:
         mapping:
           validation_error: '#/components/schemas/UsersPartialUpdateValidationError'
           client_error: '#/components/schemas/ParseErrorResponse'
+    UsersPartialUpdateExtraPermissionsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - extra_permissions
+          type: string
+          description: '* `extra_permissions` - extra_permissions'
+        code:
+          enum:
+          - not_a_list
+          - 'null'
+          type: string
+          description: |-
+            * `not_a_list` - not_a_list
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    UsersPartialUpdateExtraPermissionsINDEXErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - extra_permissions.INDEX
+          type: string
+          description: '* `extra_permissions.INDEX` - extra_permissions.INDEX'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     UsersPartialUpdateFirstNameErrorComponent:
       type: object
       properties:
@@ -44664,6 +44795,8 @@ components:
       - $ref: '#/components/schemas/UsersUpdatePhoneErrorComponent'
       - $ref: '#/components/schemas/UsersUpdateRoleErrorComponent'
       - $ref: '#/components/schemas/UsersUpdateMaxDiscountPercentErrorComponent'
+      - $ref: '#/components/schemas/UsersUpdateExtraPermissionsErrorComponent'
+      - $ref: '#/components/schemas/UsersUpdateExtraPermissionsINDEXErrorComponent'
       - $ref: '#/components/schemas/UsersUpdateIsActiveErrorComponent'
       - $ref: '#/components/schemas/UsersUpdatePasswordErrorComponent'
       discriminator:
@@ -44677,6 +44810,8 @@ components:
           phone: '#/components/schemas/UsersUpdatePhoneErrorComponent'
           role: '#/components/schemas/UsersUpdateRoleErrorComponent'
           max_discount_percent: '#/components/schemas/UsersUpdateMaxDiscountPercentErrorComponent'
+          extra_permissions: '#/components/schemas/UsersUpdateExtraPermissionsErrorComponent'
+          extra_permissions.INDEX: '#/components/schemas/UsersUpdateExtraPermissionsINDEXErrorComponent'
           is_active: '#/components/schemas/UsersUpdateIsActiveErrorComponent'
           password: '#/components/schemas/UsersUpdatePasswordErrorComponent'
     UsersUpdateErrorResponse400:
@@ -44688,6 +44823,52 @@ components:
         mapping:
           validation_error: '#/components/schemas/UsersUpdateValidationError'
           client_error: '#/components/schemas/ParseErrorResponse'
+    UsersUpdateExtraPermissionsErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - extra_permissions
+          type: string
+          description: '* `extra_permissions` - extra_permissions'
+        code:
+          enum:
+          - not_a_list
+          - 'null'
+          type: string
+          description: |-
+            * `not_a_list` - not_a_list
+            * `null` - null
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
+    UsersUpdateExtraPermissionsINDEXErrorComponent:
+      type: object
+      properties:
+        attr:
+          enum:
+          - extra_permissions.INDEX
+          type: string
+          description: '* `extra_permissions.INDEX` - extra_permissions.INDEX'
+        code:
+          enum:
+          - invalid_choice
+          - 'null'
+          - required
+          type: string
+          description: |-
+            * `invalid_choice` - invalid_choice
+            * `null` - null
+            * `required` - required
+        detail:
+          type: string
+      required:
+      - attr
+      - code
+      - detail
     UsersUpdateFirstNameErrorComponent:
       type: object
       properties:

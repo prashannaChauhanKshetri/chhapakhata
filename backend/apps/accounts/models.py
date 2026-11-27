@@ -35,6 +35,11 @@ class User(AbstractUser):
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         help_text="Leave empty to use the role default.",
     )
+    extra_permissions = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Settings areas the owner has opened to this Admin (Finance) account.",
+    )
 
     class Meta:
         ordering = ["first_name", "username"]

@@ -57,11 +57,15 @@ test('owner adds a worker, marks a day, gives an advance, pays and undoes the sa
   await expect(owner.getByRole('button', { name: 'Add staff' })).toBeVisible();
   await owner.getByRole('row').filter({ hasText: name }).first().click();
   const edit = owner.getByRole('dialog');
+  // The Miti text arrives a moment after the AD date (converted on the server).
+  await expect(edit.getByLabel('Joined on (Miti)')).toHaveValue(/^\d{4}\.\d{2}\.\d{2}$/);
   const joined = await edit.getByLabel('Joined on (Miti)').inputValue();
   await edit.getByRole('switch', { name: 'Still working here' }).click();
   const lastDay = edit.getByLabel('Last working day (Miti)');
   await lastDay.fill(joined);
   await lastDay.press('Enter');
+  // The Miti is converted on the server; save once the AD date shows it.
+  await expect(edit.getByRole('button', { name: 'Last working day (AD)' })).toContainText(/\d{4}/);
   await edit.getByRole('button', { name: 'Save' }).click();
   await expect(edit).toBeHidden();
   await owner.getByRole('tab', { name: 'Salary' }).click();

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from rest_framework import serializers
 
+from apps.core.permissions import GRANTABLE, Role
 from apps.tenancy.context import current_business_id
 
 from .models import User
@@ -71,6 +72,11 @@ class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, required=False, trim_whitespace=False, min_length=8
     )
+    extra_permissions = serializers.ListField(
+        child=serializers.ChoiceField(choices=sorted(GRANTABLE)),
+        required=False,
+        help_text="Settings areas opened to an Admin (Finance) account by the owner.",
+    )
 
     class Meta:
         model = User
@@ -85,6 +91,7 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "role_label",
             "max_discount_percent",
+            "extra_permissions",
             "is_active",
             "last_login",
             "date_joined",
@@ -95,4 +102,14 @@ class UserSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if self.instance is None and not attrs.get("password"):
             raise serializers.ValidationError({"password": "Set a password for the new account."})
+        role = attrs.get("role", getattr(self.instance, "role", None))
+        if "extra_permissions" in attrs:
+            attrs["extra_permissions"] = sorted(set(attrs["extra_permissions"]))
+        if role != Role.FINANCE:
+            if attrs.get("extra_permissions"):
+                raise serializers.ValidationError(
+                    {"extra_permissions": "Only an Admin (Finance) account can be given these."}
+                )
+            if self.instance is not None and self.instance.extra_permissions:
+                attrs["extra_permissions"] = []  # role changed: what was opened closes again
         return attrs

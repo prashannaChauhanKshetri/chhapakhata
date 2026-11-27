@@ -3859,6 +3859,14 @@ export interface components {
             type: components["schemas"]["ServerErrorEnum"];
             errors: components["schemas"]["Error500"][];
         };
+        /**
+         * @description * `audit.view` - audit.view
+         *     * `catalog.manage` - catalog.manage
+         *     * `settings.manage` - settings.manage
+         *     * `system.backup` - system.backup
+         * @enum {string}
+         */
+        ExtraPermissionsEnum: "audit.view" | "catalog.manage" | "settings.manage" | "system.backup";
         FinishRollRequest: {
             /** @default  */
             reason?: string;
@@ -8444,6 +8452,8 @@ export interface components {
              * @description Leave empty to use the role default.
              */
             max_discount_percent?: string | null;
+            /** @description Settings areas opened to an Admin (Finance) account by the owner. */
+            extra_permissions?: components["schemas"]["ExtraPermissionsEnum"][];
             /**
              * Active
              * @description Designates whether this user should be treated as active. Unselect this instead of deleting accounts.
@@ -12971,6 +12981,8 @@ export interface components {
              * @description Leave empty to use the role default.
              */
             max_discount_percent: string | null;
+            /** @description Settings areas opened to an Admin (Finance) account by the owner. */
+            extra_permissions: components["schemas"]["ExtraPermissionsEnum"][];
             /**
              * Active
              * @description Designates whether this user should be treated as active. Unselect this instead of deleting accounts.
@@ -13001,6 +13013,8 @@ export interface components {
              * @description Leave empty to use the role default.
              */
             max_discount_percent?: string | null;
+            /** @description Settings areas opened to an Admin (Finance) account by the owner. */
+            extra_permissions?: components["schemas"]["ExtraPermissionsEnum"][];
             /**
              * Active
              * @description Designates whether this user should be treated as active. Unselect this instead of deleting accounts.
@@ -13025,8 +13039,37 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
-        UsersCreateError: components["schemas"]["UsersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["UsersCreateUsernameErrorComponent"] | components["schemas"]["UsersCreateFirstNameErrorComponent"] | components["schemas"]["UsersCreateLastNameErrorComponent"] | components["schemas"]["UsersCreateEmailErrorComponent"] | components["schemas"]["UsersCreatePhoneErrorComponent"] | components["schemas"]["UsersCreateRoleErrorComponent"] | components["schemas"]["UsersCreateMaxDiscountPercentErrorComponent"] | components["schemas"]["UsersCreateIsActiveErrorComponent"] | components["schemas"]["UsersCreatePasswordErrorComponent"];
+        UsersCreateError: components["schemas"]["UsersCreateNonFieldErrorsErrorComponent"] | components["schemas"]["UsersCreateUsernameErrorComponent"] | components["schemas"]["UsersCreateFirstNameErrorComponent"] | components["schemas"]["UsersCreateLastNameErrorComponent"] | components["schemas"]["UsersCreateEmailErrorComponent"] | components["schemas"]["UsersCreatePhoneErrorComponent"] | components["schemas"]["UsersCreateRoleErrorComponent"] | components["schemas"]["UsersCreateMaxDiscountPercentErrorComponent"] | components["schemas"]["UsersCreateExtraPermissionsErrorComponent"] | components["schemas"]["UsersCreateExtraPermissionsINDEXErrorComponent"] | components["schemas"]["UsersCreateIsActiveErrorComponent"] | components["schemas"]["UsersCreatePasswordErrorComponent"];
         UsersCreateErrorResponse400: components["schemas"]["UsersCreateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        UsersCreateExtraPermissionsErrorComponent: {
+            /**
+             * @description * `extra_permissions` - extra_permissions (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "extra_permissions";
+            /**
+             * @description * `not_a_list` - not_a_list
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "not_a_list" | "null";
+            detail: string;
+        };
+        UsersCreateExtraPermissionsINDEXErrorComponent: {
+            /**
+             * @description * `extra_permissions.INDEX` - extra_permissions.INDEX (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "extra_permissions.INDEX";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null" | "required";
+            detail: string;
+        };
         UsersCreateFirstNameErrorComponent: {
             /**
              * @description * `first_name` - first_name (enum property replaced by openapi-typescript)
@@ -13248,8 +13291,37 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
-        UsersPartialUpdateError: components["schemas"]["UsersPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["UsersPartialUpdateUsernameErrorComponent"] | components["schemas"]["UsersPartialUpdateFirstNameErrorComponent"] | components["schemas"]["UsersPartialUpdateLastNameErrorComponent"] | components["schemas"]["UsersPartialUpdateEmailErrorComponent"] | components["schemas"]["UsersPartialUpdatePhoneErrorComponent"] | components["schemas"]["UsersPartialUpdateRoleErrorComponent"] | components["schemas"]["UsersPartialUpdateMaxDiscountPercentErrorComponent"] | components["schemas"]["UsersPartialUpdateIsActiveErrorComponent"] | components["schemas"]["UsersPartialUpdatePasswordErrorComponent"];
+        UsersPartialUpdateError: components["schemas"]["UsersPartialUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["UsersPartialUpdateUsernameErrorComponent"] | components["schemas"]["UsersPartialUpdateFirstNameErrorComponent"] | components["schemas"]["UsersPartialUpdateLastNameErrorComponent"] | components["schemas"]["UsersPartialUpdateEmailErrorComponent"] | components["schemas"]["UsersPartialUpdatePhoneErrorComponent"] | components["schemas"]["UsersPartialUpdateRoleErrorComponent"] | components["schemas"]["UsersPartialUpdateMaxDiscountPercentErrorComponent"] | components["schemas"]["UsersPartialUpdateExtraPermissionsErrorComponent"] | components["schemas"]["UsersPartialUpdateExtraPermissionsINDEXErrorComponent"] | components["schemas"]["UsersPartialUpdateIsActiveErrorComponent"] | components["schemas"]["UsersPartialUpdatePasswordErrorComponent"];
         UsersPartialUpdateErrorResponse400: components["schemas"]["UsersPartialUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        UsersPartialUpdateExtraPermissionsErrorComponent: {
+            /**
+             * @description * `extra_permissions` - extra_permissions (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "extra_permissions";
+            /**
+             * @description * `not_a_list` - not_a_list
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "not_a_list" | "null";
+            detail: string;
+        };
+        UsersPartialUpdateExtraPermissionsINDEXErrorComponent: {
+            /**
+             * @description * `extra_permissions.INDEX` - extra_permissions.INDEX (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "extra_permissions.INDEX";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null" | "required";
+            detail: string;
+        };
         UsersPartialUpdateFirstNameErrorComponent: {
             /**
              * @description * `first_name` - first_name (enum property replaced by openapi-typescript)
@@ -13469,8 +13541,37 @@ export interface components {
             code: "invalid" | "max_length" | "null" | "null_characters_not_allowed" | "surrogate_characters_not_allowed";
             detail: string;
         };
-        UsersUpdateError: components["schemas"]["UsersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["UsersUpdateUsernameErrorComponent"] | components["schemas"]["UsersUpdateFirstNameErrorComponent"] | components["schemas"]["UsersUpdateLastNameErrorComponent"] | components["schemas"]["UsersUpdateEmailErrorComponent"] | components["schemas"]["UsersUpdatePhoneErrorComponent"] | components["schemas"]["UsersUpdateRoleErrorComponent"] | components["schemas"]["UsersUpdateMaxDiscountPercentErrorComponent"] | components["schemas"]["UsersUpdateIsActiveErrorComponent"] | components["schemas"]["UsersUpdatePasswordErrorComponent"];
+        UsersUpdateError: components["schemas"]["UsersUpdateNonFieldErrorsErrorComponent"] | components["schemas"]["UsersUpdateUsernameErrorComponent"] | components["schemas"]["UsersUpdateFirstNameErrorComponent"] | components["schemas"]["UsersUpdateLastNameErrorComponent"] | components["schemas"]["UsersUpdateEmailErrorComponent"] | components["schemas"]["UsersUpdatePhoneErrorComponent"] | components["schemas"]["UsersUpdateRoleErrorComponent"] | components["schemas"]["UsersUpdateMaxDiscountPercentErrorComponent"] | components["schemas"]["UsersUpdateExtraPermissionsErrorComponent"] | components["schemas"]["UsersUpdateExtraPermissionsINDEXErrorComponent"] | components["schemas"]["UsersUpdateIsActiveErrorComponent"] | components["schemas"]["UsersUpdatePasswordErrorComponent"];
         UsersUpdateErrorResponse400: components["schemas"]["UsersUpdateValidationError"] | components["schemas"]["ParseErrorResponse"];
+        UsersUpdateExtraPermissionsErrorComponent: {
+            /**
+             * @description * `extra_permissions` - extra_permissions (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "extra_permissions";
+            /**
+             * @description * `not_a_list` - not_a_list
+             *     * `null` - null
+             * @enum {string}
+             */
+            code: "not_a_list" | "null";
+            detail: string;
+        };
+        UsersUpdateExtraPermissionsINDEXErrorComponent: {
+            /**
+             * @description * `extra_permissions.INDEX` - extra_permissions.INDEX (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            attr: "extra_permissions.INDEX";
+            /**
+             * @description * `invalid_choice` - invalid_choice
+             *     * `null` - null
+             *     * `required` - required
+             * @enum {string}
+             */
+            code: "invalid_choice" | "null" | "required";
+            detail: string;
+        };
         UsersUpdateFirstNameErrorComponent: {
             /**
              * @description * `first_name` - first_name (enum property replaced by openapi-typescript)

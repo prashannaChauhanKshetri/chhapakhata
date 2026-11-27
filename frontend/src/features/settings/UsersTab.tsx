@@ -3,6 +3,7 @@ import {
   Alert,
   Badge,
   Button,
+  Checkbox,
   Group,
   Menu,
   NumberInput,
@@ -50,9 +51,23 @@ const ROLE_COLOURS: Record<string, string> = {
 const ROLE_HELP: Record<string, string> = {
   owner: 'Everything, including users, prices, settings and backups.',
   finance:
-    'All the money: orders, bills, receipts, cancelling, balances, purchases, stock, reports and salary. Not users, prices, settings or backups.',
+    'All the money: orders, bills, receipts, cancelling, balances, purchases, stock, reports and salary. Settings only where you allow below.',
   front_desk: 'Orders, bills and receipts at the counter. Cannot cancel or void.',
   operator: 'The production board and material used.',
+};
+
+/** Owner-only areas the owner can open to an Admin (Finance) account. Users never. */
+const GRANTS: { value: string; label: string }[] = [
+  { value: 'settings.manage', label: 'Shop details, bill design, imports and data export' },
+  { value: 'catalog.manage', label: 'Rate card and prices' },
+  { value: 'system.backup', label: 'Backups' },
+  { value: 'audit.view', label: 'Activity log' },
+];
+const GRANT_SHORT: Record<string, string> = {
+  'settings.manage': 'Shop settings',
+  'catalog.manage': 'Rate card',
+  'system.backup': 'Backups',
+  'audit.view': 'Activity log',
 };
 
 /** Front desk and Operator split the counter from the print room, so they are offered
@@ -82,6 +97,7 @@ function UserForm({ user, onDone }: { user?: User; onDone: () => void }) {
         user?.max_discount_percent === null || user?.max_discount_percent === undefined
           ? ('' as number | string)
           : toNumber(user.max_discount_percent),
+      extra_permissions: user?.extra_permissions ?? ([] as string[]),
       is_active: user?.is_active ?? true,
       password: '',
     },
@@ -97,6 +113,9 @@ function UserForm({ user, onDone }: { user?: User; onDone: () => void }) {
     const body = {
       ...values,
       role: values.role as 'owner',
+      extra_permissions: (values.role === 'finance' ? values.extra_permissions : []) as NonNullable<
+        User['extra_permissions']
+      >,
       max_discount_percent:
         values.max_discount_percent === '' ? null : String(values.max_discount_percent),
       ...(values.password ? { password: values.password } : { password: undefined }),
@@ -151,6 +170,19 @@ function UserForm({ user, onDone }: { user?: User; onDone: () => void }) {
             decimalScale={2}
             {...form.getInputProps('max_discount_percent')}
           />
+        )}
+        {form.values.role === 'finance' && (
+          <Checkbox.Group
+            label="Settings this admin may also open"
+            description="Users and passwords always stay with the owner."
+            {...form.getInputProps('extra_permissions')}
+          >
+            <Stack gap={6} mt={6}>
+              {GRANTS.map((g) => (
+                <Checkbox key={g.value} value={g.value} label={g.label} />
+              ))}
+            </Stack>
+          </Checkbox.Group>
         )}
         {!user && (
           <PasswordInput
@@ -281,7 +313,17 @@ export function UsersTab() {
             {
               accessor: 'role',
               title: t('Role'),
-              render: (u) => <Badge color={ROLE_COLOURS[u.role] ?? 'blue'}>{u.role_label}</Badge>,
+              render: (u) => (
+                <Stack gap={2} align="flex-start">
+                  <Badge color={ROLE_COLOURS[u.role] ?? 'blue'}>{u.role_label}</Badge>
+                  {u.role === 'finance' && (u.extra_permissions ?? []).length > 0 && (
+                    <Text size="xs" c="dimmed">
+                      {t('Also')}:{' '}
+                      {(u.extra_permissions ?? []).map((p) => GRANT_SHORT[p] ?? p).join(', ')}
+                    </Text>
+                  )}
+                </Stack>
+              ),
             },
             {
               accessor: 'last_login',
