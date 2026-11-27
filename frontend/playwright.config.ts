@@ -33,7 +33,7 @@ export default defineConfig({
       // Needs `npx playwright install webkit` once.
       name: 'iphone',
       use: { ...devices['iPhone 13'] },
-      testMatch: /mobile\.spec\.ts/,
+      testMatch: /(mobile|home)\.spec\.ts/,
     },
   ],
 });

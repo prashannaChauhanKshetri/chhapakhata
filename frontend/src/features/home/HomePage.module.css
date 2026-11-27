@@ -1,0 +1,513 @@
+/* The public home page: what ChhapaKhata is, for a shop that has not seen it. */
+
+.page {
+  min-height: 100vh;
+  background: var(--ck-surface);
+  color: var(--ck-text);
+  scroll-behavior: smooth;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 32px;
+
+  @mixin smaller-than $mantine-breakpoint-sm {
+    padding: 0 16px;
+  }
+}
+
+/* Top bar ------------------------------------------------------------------------- */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgb(255 255 255 / 0.96);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--ck-border);
+  padding-top: env(safe-area-inset-top);
+}
+
+.navInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+}
+
+/* Hero ---------------------------------------------------------------------------- */
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 64px;
+  align-items: center;
+  padding-top: 96px;
+  padding-bottom: 32px;
+
+  @mixin smaller-than $mantine-breakpoint-md {
+    grid-template-columns: 1fr;
+    gap: 48px;
+    padding-top: 48px;
+    padding-bottom: 8px;
+  }
+}
+
+.eyebrow,
+.eyebrowDark {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mantine-color-orange-7);
+  margin-bottom: 14px;
+}
+
+.eyebrowDark {
+  color: var(--mantine-color-orange-4);
+}
+
+.heroTitle {
+  font-size: clamp(34px, 5.2vw, 54px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+.lead {
+  margin-top: 22px;
+  font-size: var(--mantine-font-size-lg);
+  line-height: 1.6;
+  color: var(--ck-text-strong);
+  max-width: 540px;
+}
+
+.ctas {
+  @mixin smaller-than $mantine-breakpoint-xs {
+    & > * {
+      flex: 1 1 100%;
+    }
+  }
+}
+
+/* The hero picture: a tax invoice coming out of the press, stamped paid. */
+.heroArt {
+  position: relative;
+  max-width: 420px;
+  width: 100%;
+  justify-self: center;
+}
+
+.slot {
+  height: 12px;
+  margin: 0 14px;
+  border-radius: 6px;
+  background: var(--ck-sidebar);
+  box-shadow: 0 3px 0 var(--mantine-color-slate-6) inset;
+}
+
+.feed {
+  overflow: hidden; /* the bill appears from under the slot */
+  padding: 0 32px 56px; /* room for its shadow */
+  margin: -5px -26px 0;
+
+  @mixin smaller-than $mantine-breakpoint-sm {
+    padding: 0 12px 40px;
+    margin: -5px -6px 0;
+  }
+}
+
+.bill {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--ck-border);
+  box-shadow: 0 24px 48px -16px rgb(15 23 42 / 0.25);
+  /* Blank paper at the foot for the stamp. */
+  padding: 30px 30px 88px;
+  font-size: 13px;
+  transform: rotate(1.4deg);
+  transform-origin: top center;
+  animation: print 1100ms cubic-bezier(0.2, 0.8, 0.2, 1) 200ms both;
+}
+
+@keyframes print {
+  from {
+    transform: translateY(-104%) rotate(0deg);
+  }
+  to {
+    transform: translateY(0) rotate(1.4deg);
+  }
+}
+
+.cmyk {
+  position: absolute;
+  top: 30px;
+  right: 10px;
+  display: grid;
+  gap: 3px;
+
+  & span {
+    width: 7px;
+    height: 7px;
+  }
+}
+
+.billHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid var(--ck-text);
+}
+
+.billKind {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.billNo {
+  font-family: var(--mantine-font-family-monospace);
+  font-size: 11px;
+  color: var(--ck-text-muted);
+  margin-top: 2px;
+}
+
+.billDate {
+  text-align: right;
+  font-size: 12px;
+  color: var(--ck-text-strong);
+}
+
+.line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--ck-border);
+  font-variant-numeric: tabular-nums;
+
+  & small {
+    display: block;
+    color: var(--ck-text-muted);
+    font-size: 11px;
+    margin-top: 1px;
+  }
+}
+
+.sums {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 4px;
+  padding: 10px 0 8px;
+  color: var(--ck-text-strong);
+  font-variant-numeric: tabular-nums;
+
+  & span:nth-child(even) {
+    text-align: right;
+  }
+}
+
+.total {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 2px solid var(--ck-text);
+  font-weight: 800;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.words {
+  margin-top: 6px;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--ck-text-muted);
+}
+
+.stamp {
+  position: absolute;
+  right: 34px;
+  bottom: 22px;
+  transform: rotate(-12deg);
+  border: 3px double var(--mantine-color-green-7);
+  border-radius: 10px;
+  padding: 4px 14px 3px;
+  color: var(--mantine-color-green-7);
+  background: rgb(255 255 255 / 0.55);
+  opacity: 0.9;
+  text-align: center;
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.12em;
+  line-height: 1.05;
+  mix-blend-mode: multiply;
+  animation: thump 300ms ease-out 1400ms both;
+}
+
+.stampSub {
+  font-family: 'Noto Sans Devanagari', var(--mantine-font-family);
+  font-size: 12px;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+@keyframes thump {
+  from {
+    opacity: 0;
+    transform: rotate(-12deg) scale(1.6);
+  }
+  to {
+    opacity: 0.9;
+    transform: rotate(-12deg) scale(1);
+  }
+}
+
+/* Sections -------------------------------------------------------------------------- */
+.section {
+  padding: 104px 0;
+  scroll-margin-top: 68px;
+
+  @mixin smaller-than $mantine-breakpoint-sm {
+    padding: 64px 0;
+  }
+}
+
+.tinted {
+  background: var(--ck-bg);
+  border-top: 1px solid var(--ck-border);
+  border-bottom: 1px solid var(--ck-border);
+}
+
+.sectionHead {
+  margin-bottom: 48px;
+
+  @mixin smaller-than $mantine-breakpoint-sm {
+    margin-bottom: 32px;
+  }
+}
+
+.sectionTitle {
+  font-size: clamp(26px, 3.4vw, 36px);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  font-weight: 800;
+  margin-bottom: 14px;
+  max-width: 680px;
+}
+
+/* The problem: what used to happen, struck through in red pen, and what happens now. */
+.problem {
+  position: relative;
+  padding: 24px;
+  border: 1px solid var(--ck-border);
+  border-radius: var(--mantine-radius-md);
+  background: var(--ck-surface);
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+
+  &:hover {
+    border-color: var(--mantine-color-orange-3);
+    box-shadow: var(--mantine-shadow-sm);
+  }
+}
+
+.problemIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--mantine-color-orange-0);
+  color: var(--mantine-color-orange-7);
+  margin-bottom: 16px;
+}
+
+.before {
+  font-size: var(--mantine-font-size-sm);
+  color: var(--ck-text-strong);
+  text-decoration: line-through;
+  text-decoration-color: var(--mantine-color-red-6);
+  text-decoration-thickness: 2px;
+}
+
+.after {
+  margin-top: 8px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+/* How it works: four stops on a dashed paper feed. */
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 22px;
+    left: 22px;
+    right: 22px;
+    border-top: 2px dashed var(--mantine-color-slate-3);
+  }
+
+  @mixin smaller-than $mantine-breakpoint-md {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 40px;
+
+    &::before {
+      display: none;
+    }
+  }
+
+  @mixin smaller-than $mantine-breakpoint-xs {
+    grid-template-columns: 1fr;
+  }
+}
+
+.step {
+  position: relative;
+}
+
+.stepNo {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  background: var(--ck-surface);
+  border: 2px solid var(--mantine-color-orange-6);
+  color: var(--mantine-color-orange-7);
+  font-weight: 800;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Made for Nepal: the dark band, ruled like a ledger. */
+.nepal {
+  padding: 96px 0;
+  background:
+    radial-gradient(circle at 85% 0%, rgb(249 115 22 / 0.18), transparent 45%),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 31px,
+      rgb(148 163 184 / 0.07) 31px,
+      rgb(148 163 184 / 0.07) 32px
+    ),
+    var(--ck-sidebar);
+
+  @mixin smaller-than $mantine-breakpoint-sm {
+    padding: 64px 0;
+  }
+}
+
+.nepalItem {
+  padding: 22px;
+  border: 1px solid rgb(148 163 184 / 0.2);
+  border-radius: var(--mantine-radius-md);
+  background: rgb(15 23 42 / 0.4);
+}
+
+.nepalIcon {
+  color: var(--mantine-color-orange-4);
+}
+
+.trust {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px 28px;
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid rgb(148 163 184 / 0.2);
+}
+
+.trustItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-slate-3);
+
+  & svg {
+    color: var(--mantine-color-green-5);
+  }
+}
+
+/* Contact: a card with the colour bar of a print proof along its top. */
+.contact {
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  padding: 64px 32px 56px;
+  border: 1px solid var(--ck-border);
+  border-radius: var(--mantine-radius-lg);
+  background: var(--ck-bg);
+
+  & .sectionTitle {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 760px;
+  }
+
+  @mixin smaller-than $mantine-breakpoint-sm {
+    padding: 48px 20px 40px;
+  }
+}
+
+.contactBar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 6px;
+  background: linear-gradient(
+    to right,
+    #00aeef 0 25%,
+    #ec008c 25% 50%,
+    #fff200 50% 75%,
+    #231f20 75% 100%
+  );
+}
+
+.contactIcon {
+  color: var(--mantine-color-orange-6);
+  margin-bottom: 16px;
+}
+
+.email {
+  display: block;
+  margin-top: 14px;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--ck-text-strong);
+  overflow-wrap: anywhere;
+}
+
+/* Footer ---------------------------------------------------------------------------- */
+.footer {
+  border-top: 1px solid var(--ck-border);
+  padding: 28px 0 calc(28px + env(safe-area-inset-bottom));
+}
+
+.footerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Last, so it wins over the animations above: no movement for those who ask. */
+@media (prefers-reduced-motion: reduce) {
+  .bill,
+  .stamp {
+    animation: none;
+  }
+}

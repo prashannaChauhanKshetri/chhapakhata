@@ -102,3 +102,14 @@
   background: var(--ck-surface);
   box-shadow: var(--mantine-shadow-sm);
 }
+
+/* Back to the public home page. */
+.home {
+  position: absolute;
+  top: calc(var(--mantine-spacing-md) + 8px);
+  left: var(--ck-gutter);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ck-text-muted);
+}

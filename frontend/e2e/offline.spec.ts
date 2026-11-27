@@ -13,7 +13,7 @@ test.skip(!process.env.E2E_BASE_URL?.includes(':417'), 'Runs against the product
 test.use({ ignoreHTTPSErrors: true, viewport: { width: 390, height: 844 }, isMobile: true });
 
 test('installable app keeps working when the shop computer is off', async ({ page, context }) => {
-  await page.goto('/');
+  await page.goto('/login');
   await page.getByLabel('Username').fill('frontdesk');
   await page.getByRole('textbox', { name: 'Password' }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();

@@ -13,7 +13,7 @@ export async function signIn(browser: Browser, username: string): Promise<Page> 
   const context = await browser.newContext();
   signedIn.push(context);
   const page = await context.newPage();
-  await page.goto('/');
+  await page.goto('/login');
   await page.getByLabel('Username').fill(username);
   await page.getByRole('textbox', { name: 'Password' }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();

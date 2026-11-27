@@ -4,17 +4,19 @@ import { useMediaQuery } from '@mantine/hooks';
 import { Notifications } from '@mantine/notifications';
 import { IconWifiOff } from '@tabler/icons-react';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import { RouterProvider } from 'react-router';
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext';
 import { LoginPage } from '@/auth/LoginPage';
+import { HomePage } from '@/features/home/HomePage';
 import { AppSkeleton } from '@/components/Skeletons';
 
 import { AppErrorBoundary } from './AppErrorBoundary';
 import { checkConnectionSoon, persistOptions, refreshSavedData, useConnection } from './offline';
 import { PwaManager } from './pwa';
 import { queryClient } from './queryClient';
+import { goTo, usePathname } from './publicNav';
 import { router } from './router';
 import { theme } from './theme';
 
@@ -54,18 +56,23 @@ function Gate() {
   const { connection } = useConnection();
   const wasSignedIn = useRef(false);
 
-  // After signing out (or a session expiring), start the next person on the
-  // dashboard rather than on the last user's page, which they may not be allowed to see.
-  useEffect(() => {
+  const path = usePathname();
+
+  // After signing out (or a session expiring), show the sign-in page, and start the
+  // next person on the dashboard rather than on the last user's page, which they
+  // may not be allowed to see.
+  useLayoutEffect(() => {
     if (user) wasSignedIn.current = true;
     else if (wasSignedIn.current) {
       wasSignedIn.current = false;
-      void router.navigate('/', { replace: true });
+      goTo('/login', { replace: true });
     }
   }, [user]);
 
   if (loading) return connection === 'online' ? <AppSkeleton /> : <NoServerYet />;
-  if (!user) return <LoginPage />;
+  // Signed out: the home page for visitors at the bare address; anything else
+  // (a staff link, /login) asks them to sign in.
+  if (!user) return path === '/' ? <HomePage /> : <LoginPage />;
   return <RouterProvider router={router} />;
 }
 

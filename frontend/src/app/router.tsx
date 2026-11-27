@@ -43,6 +43,8 @@ const SETTINGS_PERMS = [
 ];
 
 export const router = createBrowserRouter([
+  // Signed in, the sign-in page has nothing to do: go to the dashboard.
+  { path: '/login', element: <Navigate to="/" replace /> },
   {
     element: <AppLayout />,
     errorElement: <RouteError />,

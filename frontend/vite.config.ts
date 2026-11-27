@@ -34,9 +34,11 @@ export default defineConfig({
         id: '/',
         name: 'ChhapaKhata · OM Traders',
         short_name: 'ChhapaKhata',
-        description: 'Orders, production, stock and billing for OM Traders and Suppliers.',
+        description:
+          'Print shop management for Nepal: orders, bills in Miti, customer khata, stock and salary.',
         lang: 'en',
-        start_url: '/',
+        // Opens at sign-in (signed in, that goes straight to the dashboard), not the home page.
+        start_url: '/login',
         scope: '/',
         display: 'standalone',
         orientation: 'any',

@@ -19,7 +19,7 @@ const SCREENS = [
 ];
 
 test('on an iPhone every screen fits the width and lists show as cards', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/login');
   await page.getByLabel('Username').fill('owner');
   await page.getByRole('textbox', { name: 'Password' }).fill(PASSWORD);
   await page.getByRole('button', { name: 'Sign in' }).click();

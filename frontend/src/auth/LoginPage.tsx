@@ -1,5 +1,6 @@
 import {
   Alert,
+  Anchor,
   Box,
   Button,
   Paper,
@@ -13,6 +14,7 @@ import {
 import { useForm } from '@mantine/form';
 import {
   IconAlertCircle,
+  IconArrowLeft,
   IconBuildingWarehouse,
   IconClipboardList,
   IconFileInvoice,
@@ -24,6 +26,7 @@ import { useTranslation } from 'react-i18next';
 
 import { api, ensureCsrfCookie, unwrap } from '@/api/client';
 import { errorMessage } from '@/api/errors';
+import { goTo } from '@/app/publicNav';
 import { Logo, LogoMark } from '@/components/Logo';
 import { TextSizeControl } from '@/components/TextSizeControl';
 
@@ -107,6 +110,10 @@ export function LoginPage() {
         </div>
       </Box>
       <Box className={classes.formPanel}>
+        <Anchor component="button" className={classes.home} size="sm" onClick={() => goTo('/')}>
+          <IconArrowLeft size={14} />
+          {t('Home')}
+        </Anchor>
         <Box className={classes.textSize}>
           <TextSizeControl withLabel={false} />
         </Box>
