@@ -218,3 +218,33 @@ test('a worker added by mistake is deleted; one with an advance can only leave',
   await expect(form.getByRole('switch', { name: 'Still working here' })).toBeVisible();
   await expect(form.getByRole('button', { name: 'Delete worker' })).toHaveCount(0);
 });
+
+test('a Miti typed just before Save is the one saved; one that cannot be read stops it', async ({
+  browser,
+}) => {
+  const owner = await signIn(browser, 'owner');
+  // A slow connection: each Miti takes a second to convert on the server.
+  await owner.route('**/api/v1/utils/date/?bs=*', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await route.continue();
+  });
+  const name = `Gita ${Date.now() % 100000}`;
+  await owner.goto('/staff/list');
+  await owner.getByRole('button', { name: 'Add staff' }).click();
+  const form = owner.getByRole('dialog');
+  await form.getByRole('textbox', { name: 'Name' }).fill(name);
+  await form.getByRole('textbox', { name: 'Monthly salary (Rs)' }).fill('9000');
+  await form.getByLabel('Joined on (Miti)').fill('2083.08.01');
+  await form.getByRole('button', { name: 'Add staff' }).click(); // straight away
+  await expect(form).toBeHidden();
+  await expect(owner.getByRole('row').filter({ hasText: name })).toContainText('2083-08-01 BS');
+
+  await owner.getByRole('row').filter({ hasText: name }).first().click();
+  const edit = owner.getByRole('dialog');
+  await edit.getByLabel('Joined on (Miti)').fill('2083.13.40');
+  await edit.getByRole('button', { name: 'Save' }).click();
+  await expect(edit.getByText('There is no such Miti.')).toBeVisible();
+  await expect(edit).toBeVisible(); // not saved
+  await edit.getByRole('button', { name: 'Cancel' }).click();
+  await expect(owner.getByRole('row').filter({ hasText: name })).toContainText('2083-08-01 BS');
+});

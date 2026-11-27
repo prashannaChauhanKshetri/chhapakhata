@@ -2,7 +2,7 @@ import { ActionIcon, Popover, SimpleGrid, TextInput } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { IconCalendar } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { apiGet } from '@/api/http';
@@ -11,6 +11,30 @@ import { BsCalendar } from '@/components/BsCalendar';
 import { todayISO } from '@/lib/format';
 
 const BS_PATTERN = /^(\d{4})[.\-/ ](\d{1,2})[.\-/ ](\d{1,2})$/;
+
+/** Typed Miti still being converted on the server (left before the answer came). */
+const converting = new Set<Promise<void>>();
+/** Boxes whose typed Miti could not be read (they show the reason). */
+const unreadable = new Set<symbol>();
+
+/**
+ * Wait until every typed Miti has been converted and passed on, then say whether
+ * all of them could be read. Call it before reading the dates to save or print:
+ * clicking Save right after typing a Miti would otherwise use the date from
+ * before, and a Miti that cannot be read would be quietly ignored.
+ */
+export async function datesSettled(): Promise<boolean> {
+  while (converting.size > 0) await Promise.all([...converting]);
+  return unreadable.size === 0;
+}
+
+/** A form's submit handler that first waits for the dates ({@link datesSettled}). */
+export function afterDates(submit: () => void) {
+  return (event?: React.FormEvent) => {
+    event?.preventDefault();
+    void datesSettled().then((ok) => ok && submit());
+  };
+}
 
 /**
  * The order date as Miti (BS, typed) and AD (calendar), kept in step.
@@ -44,25 +68,44 @@ export function OrderDateField({
   });
   const bsText = bsDraft ?? (data && data.ad === value ? data.bs.replaceAll('-', '.') : '');
 
-  const readBs = async () => {
+  const [id] = useState(() => Symbol('miti'));
+  useEffect(() => () => void unreadable.delete(id), [id]);
+  const fail = (message: string) => {
+    setBsError(message);
+    unreadable.add(id);
+  };
+
+  /** A date was chosen: show its Miti, with no error. */
+  const settle = () => {
+    setBsError(null);
+    setBsDraft(null);
+    unreadable.delete(id);
+  };
+
+  const readBs = () => {
     if (bsDraft === null) return; // nothing typed
+    const job = convert();
+    converting.add(job);
+    void job.finally(() => converting.delete(job));
+  };
+
+  const convert = async () => {
     const match = BS_PATTERN.exec(bsText.trim());
     if (!match) {
-      setBsError(t('Write the Miti like 2083.08.04'));
+      fail(t('Write the Miti like 2083.08.04'));
       return;
     }
     const bs = `${match[1]}-${match[2].padStart(2, '0')}-${match[3].padStart(2, '0')}`;
     try {
       const converted = await apiGet<DateConversion>('/api/v1/utils/date/', { bs });
       if (converted.ad > todayISO()) {
-        setBsError(t('The date cannot be in the future.'));
+        fail(t('The date cannot be in the future.'));
         return;
       }
-      setBsError(null);
-      setBsDraft(null);
+      settle();
       onChange(converted.ad);
     } catch {
-      setBsError(t('There is no such Miti.'));
+      fail(t('There is no such Miti.'));
     }
   };
 
@@ -118,8 +161,7 @@ export function OrderDateField({
             value={value || null}
             maxDate={todayISO()}
             onPick={(ad) => {
-              setBsError(null);
-              setBsDraft(null);
+              settle();
               setCalendarOpen(false);
               onChange(ad);
             }}
@@ -133,8 +175,7 @@ export function OrderDateField({
         value={value || null}
         onChange={(v) => {
           if (v) {
-            setBsError(null);
-            setBsDraft(null);
+            settle();
             onChange(String(v).slice(0, 10));
           }
         }}

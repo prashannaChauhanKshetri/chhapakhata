@@ -29,7 +29,7 @@ import { handleFormError, notifyError, notifySuccess } from '@/lib/forms';
 import { formatNPR, todayISO, toNumber } from '@/lib/format';
 import { PAYMENT_MODES } from '@/lib/status';
 
-import { OrderDateField } from '../orders/OrderDateField';
+import { afterDates, OrderDateField } from '../orders/OrderDateField';
 
 // -- Add or edit a worker -------------------------------------------------------------
 
@@ -153,7 +153,7 @@ function StaffForm({ staff, onDone }: { staff?: Staff; onDone: () => void }) {
     });
 
   return (
-    <form onSubmit={submit} noValidate>
+    <form onSubmit={afterDates(submit)} noValidate>
       <Stack gap="sm">
         {!staff && (
           <SegmentedControl

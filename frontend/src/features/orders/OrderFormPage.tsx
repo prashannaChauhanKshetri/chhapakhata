@@ -35,7 +35,7 @@ import { useUnsavedChanges } from '@/lib/useUnsavedChanges';
 
 import { CustomerSelect } from '../customers/CustomerSelect';
 import { ItemRow } from './ItemRow';
-import { OrderDateField } from './OrderDateField';
+import { datesSettled, OrderDateField } from './OrderDateField';
 import classes from './OrderForm.module.css';
 import {
   emptyItem,
@@ -156,6 +156,7 @@ function OrderFormInner({
   );
 
   const save = async (mode: 'quotation' | 'confirm') => {
+    if (!(await datesSettled())) return; // a typed Miti: wait for it, or it shows its error
     const validation = form.validate();
     if (!customer) {
       form.setFieldError('customer', t('Choose the customer'));
@@ -164,7 +165,7 @@ function OrderFormInner({
     if (validation.hasErrors) return;
     setSaving(mode);
     try {
-      const body = orderPayload(form.values, customer.id, mode === 'confirm');
+      const body = orderPayload(form.getValues(), customer.id, mode === 'confirm');
       const saved = isEdit
         ? await unwrap(
             api.PUT('/api/v1/orders/{id}/', { params: { path: { id: order.id } }, body }),
