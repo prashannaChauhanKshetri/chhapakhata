@@ -1,4 +1,4 @@
-import { lazy, type ReactNode } from 'react';
+import { lazy, type ReactNode, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router';
 
 import { RequirePerm } from '@/auth/RequirePerm';
@@ -7,6 +7,12 @@ import { Perm, type PermName } from '@/lib/permissions';
 import { AppLayout } from './layout/AppLayout';
 import { RouteError } from './RouteError';
 
+const TermsPage = lazy(() =>
+  import('@/features/legal/LegalPage').then((m) => ({ default: m.TermsPage })),
+);
+const PrivacyPage = lazy(() =>
+  import('@/features/legal/LegalPage').then((m) => ({ default: m.PrivacyPage })),
+);
 const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage'));
 const OrdersPage = lazy(() => import('@/features/orders/OrdersPage'));
 const OrderFormPage = lazy(() => import('@/features/orders/OrderFormPage'));
@@ -45,6 +51,23 @@ const SETTINGS_PERMS = [
 export const router = createBrowserRouter([
   // Signed in, the sign-in page has nothing to do: go to the dashboard.
   { path: '/login', element: <Navigate to="/" replace /> },
+  // The terms and privacy policy read the same signed in or out.
+  {
+    path: '/terms',
+    element: (
+      <Suspense fallback={null}>
+        <TermsPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: '/privacy',
+    element: (
+      <Suspense fallback={null}>
+        <PrivacyPage />
+      </Suspense>
+    ),
+  },
   {
     element: <AppLayout />,
     errorElement: <RouteError />,

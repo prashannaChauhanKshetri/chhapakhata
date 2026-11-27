@@ -9,7 +9,9 @@ import { RouterProvider } from 'react-router';
 
 import { AuthProvider, useAuth } from '@/auth/AuthContext';
 import { LoginPage } from '@/auth/LoginPage';
+import { CookieNotice } from '@/features/home/CookieNotice';
 import { HomePage } from '@/features/home/HomePage';
+import { PrivacyPage, TermsPage } from '@/features/legal/LegalPage';
 import { AppSkeleton } from '@/components/Skeletons';
 
 import { AppErrorBoundary } from './AppErrorBoundary';
@@ -72,7 +74,21 @@ function Gate() {
   if (loading) return connection === 'online' ? <AppSkeleton /> : <NoServerYet />;
   // Signed out: the home page for visitors at the bare address; anything else
   // (a staff link, /login) asks them to sign in.
-  if (!user) return path === '/' ? <HomePage /> : <LoginPage />;
+  if (!user)
+    return (
+      <>
+        {path === '/' ? (
+          <HomePage />
+        ) : path === '/terms' ? (
+          <TermsPage />
+        ) : path === '/privacy' ? (
+          <PrivacyPage />
+        ) : (
+          <LoginPage />
+        )}
+        <CookieNotice />
+      </>
+    );
   return <RouterProvider router={router} />;
 }
 

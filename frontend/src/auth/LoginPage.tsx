@@ -3,6 +3,7 @@ import {
   Anchor,
   Box,
   Button,
+  Group,
   Paper,
   PasswordInput,
   SimpleGrid,
@@ -154,6 +155,14 @@ export function LoginPage() {
             </Stack>
           </form>
         </Paper>
+        <Group gap="md" mt="lg">
+          <Anchor component="button" size="xs" c="dimmed" onClick={() => goTo('/terms')}>
+            {t('Terms')}
+          </Anchor>
+          <Anchor component="button" size="xs" c="dimmed" onClick={() => goTo('/privacy')}>
+            {t('Privacy')}
+          </Anchor>
+        </Group>
       </Box>
     </Box>
   );

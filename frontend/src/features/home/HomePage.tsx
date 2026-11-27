@@ -1,4 +1,4 @@
-import { Anchor, Button, Group, SimpleGrid, Text, Title } from '@mantine/core';
+import { Button, Group, SimpleGrid, Text, Title } from '@mantine/core';
 import {
   IconArrowRight,
   IconBuildingWarehouse,
@@ -17,12 +17,10 @@ import {
 } from '@tabler/icons-react';
 
 import { goTo } from '@/app/publicNav';
-import { Logo } from '@/components/Logo';
 
+import { ContactButton, EMAIL } from './ContactButton';
 import classes from './HomePage.module.css';
-
-const EMAIL = 'prashannachauhankshetri@gmail.com';
-const MAILTO = `mailto:${EMAIL}?subject=${encodeURIComponent('ChhapaKhata for my shop')}`;
+import { PublicFooter, PublicNav } from './PublicChrome';
 
 /** What goes wrong in a busy agency, and what ChhapaKhata does about it. */
 const PROBLEMS = [
@@ -118,27 +116,13 @@ export function HomePage() {
 
   return (
     <div className={classes.page}>
-      <header className={classes.nav}>
-        <div className={`${classes.wrap} ${classes.navInner}`}>
-          <Logo size={34} />
-          <Group gap="lg" wrap="nowrap">
-            <Group gap="lg" visibleFrom="sm">
-              <Anchor href="#problem" c="dimmed" size="sm">
-                Why
-              </Anchor>
-              <Anchor href="#how" c="dimmed" size="sm">
-                How it works
-              </Anchor>
-              <Anchor href="#contact" c="dimmed" size="sm">
-                Contact
-              </Anchor>
-            </Group>
-            <Button onClick={signIn} variant="default">
-              Sign in
-            </Button>
-          </Group>
-        </div>
-      </header>
+      <PublicNav
+        links={[
+          { href: '#problem', label: 'Why' },
+          { href: '#how', label: 'How it works' },
+          { href: '#contact', label: 'Contact' },
+        ]}
+      />
 
       <main>
         {/* Hero ------------------------------------------------------------------------ */}
@@ -156,14 +140,9 @@ export function HomePage() {
               who still owes you.
             </Text>
             <Group gap="sm" mt={32} className={classes.ctas}>
-              <Button
-                component="a"
-                href={MAILTO}
-                size="md"
-                rightSection={<IconArrowRight size={18} />}
-              >
+              <ContactButton size="md" rightSection={<IconArrowRight size={18} />}>
                 Get it for your shop
-              </Button>
+              </ContactButton>
               <Button size="md" variant="default" onClick={signIn}>
                 Sign in
               </Button>
@@ -326,34 +305,16 @@ export function HomePage() {
                 Write to me. I will set ChhapaKhata up with your own rates, customers and old
                 records, and show your staff how to use it.
               </Text>
-              <Button
-                component="a"
-                href={MAILTO}
-                size="md"
-                mt="xl"
-                leftSection={<IconMail size={18} />}
-              >
+              <ContactButton size="md" mt="xl" leftSection={<IconMail size={18} />}>
                 Email me
-              </Button>
-              <Anchor href={MAILTO} className={classes.email}>
-                {EMAIL}
-              </Anchor>
+              </ContactButton>
+              <Text className={classes.email}>{EMAIL}</Text>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className={classes.footer}>
-        <div className={`${classes.wrap} ${classes.footerInner}`}>
-          <Logo size={24} />
-          <Text size="sm" c="dimmed">
-            छापा means print, खाता the account book. Made in Nepal.
-          </Text>
-          <Anchor component="button" size="sm" onClick={signIn}>
-            Staff sign in
-          </Anchor>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

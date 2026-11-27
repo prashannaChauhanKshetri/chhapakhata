@@ -488,6 +488,7 @@
   font-size: var(--mantine-font-size-sm);
   color: var(--ck-text-strong);
   overflow-wrap: anywhere;
+  user-select: all; /* one tap selects the whole address */
 }
 
 /* Footer ---------------------------------------------------------------------------- */
@@ -502,6 +503,29 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+/* The cookie note, bottom left (full width on phones). */
+.cookie {
+  position: fixed;
+  z-index: 200;
+  left: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  max-width: 360px;
+  padding: 14px 16px;
+
+  @mixin smaller-than $mantine-breakpoint-sm {
+    left: 12px;
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    max-width: none;
+  }
+}
+
+.cookieIcon {
+  flex: none;
+  margin-top: 1px;
+  color: var(--mantine-color-orange-6);
 }
 
 /* Last, so it wins over the animations above: no movement for those who ask. */

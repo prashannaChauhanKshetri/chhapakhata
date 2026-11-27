@@ -1,0 +1,14 @@
+# ChhapaKhata: the public pages may be indexed; the app and its API are private.
+User-agent: *
+Allow: /$
+Allow: /terms
+Allow: /privacy
+Allow: /assets/
+Allow: /icons/
+Allow: /brand/
+Allow: /favicon
+Allow: /apple-touch-icon.png
+Allow: /manifest.webmanifest
+Disallow: /
+
+Sitemap: https://chhapakhata.tech/sitemap.xml
