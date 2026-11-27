@@ -74,7 +74,7 @@ Cloudflare's ranges change rarely; check them against
 | Disabled accounts | refused, even with the right password; a disabled **business** refuses all its logins |
 | Password change | needs the current password; every other signed-in device is signed out, the one that changed it stays in (`update_session_auth_hash`) |
 | Active users | capped per business (`MAX_ACTIVE_USERS`, default 5); there is always one active owner |
-| Roles | fixed matrix: owner, front desk, operator (see `docs/rbac.md`); every API view checks its permission on the server |
+| Roles | fixed matrix: owner, admin (finance), front desk, operator (see `docs/rbac.md`); every API view checks its permission on the server |
 
 ---
 

@@ -161,6 +161,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -305,6 +319,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -445,6 +473,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -577,6 +619,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -724,6 +780,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -868,6 +938,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -999,6 +1083,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -1147,6 +1245,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -1280,6 +1392,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -1419,6 +1545,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -1550,6 +1690,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -1689,6 +1843,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -1774,6 +1942,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -2013,6 +2195,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -2132,6 +2328,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -2304,6 +2514,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -2442,6 +2666,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -2574,6 +2812,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -2721,6 +2973,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -2863,6 +3129,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -3010,6 +3290,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -3142,6 +3436,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -3287,6 +3595,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -3465,6 +3787,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -3619,6 +3955,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -3796,6 +4146,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -3922,6 +4286,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -4012,6 +4390,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -4150,6 +4542,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -4335,6 +4741,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -4472,6 +4892,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -4603,6 +5037,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -4751,6 +5199,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -4893,6 +5355,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -5031,6 +5507,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -5244,6 +5734,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -5375,6 +5879,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -5520,6 +6038,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -5651,6 +6183,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -5798,6 +6344,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -5943,6 +6503,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -6074,6 +6648,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -6226,6 +6814,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -6422,6 +7024,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -6594,6 +7210,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -6737,6 +7367,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -6876,6 +7520,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -7007,6 +7665,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -7153,6 +7825,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -7296,6 +7982,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -7426,6 +8126,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -7571,6 +8285,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -7779,6 +8507,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -7916,6 +8658,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -8047,6 +8803,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -8191,6 +8961,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -8338,6 +9122,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -8469,6 +9267,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -8616,6 +9428,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -8759,6 +9585,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -8905,6 +9745,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -9036,6 +9890,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -9170,6 +10038,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -9309,6 +10191,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -9458,6 +10354,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -9662,6 +10572,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -9799,6 +10723,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -9930,6 +10868,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -10078,6 +11030,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -10216,6 +11182,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -10362,6 +11342,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -10519,6 +11513,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -10656,6 +11664,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -10789,6 +11811,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -10913,6 +11949,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -11073,6 +12123,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -11240,6 +12304,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -11370,6 +12448,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -11516,6 +12608,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -11646,6 +12752,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -11779,6 +12899,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -11926,6 +13060,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -12046,6 +13194,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -12187,6 +13349,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -12312,6 +13488,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -12451,6 +13641,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -12587,6 +13791,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -12721,6 +13939,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -12865,6 +14097,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -13004,6 +14250,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -13162,6 +14422,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -13300,6 +14574,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -13434,6 +14722,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -13563,6 +14865,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -13711,6 +15027,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -13856,6 +15186,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -13990,6 +15334,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -14122,6 +15480,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -14291,6 +15663,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -14431,6 +15817,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -14563,6 +15963,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -14710,6 +16124,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -14854,6 +16282,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -14985,6 +16427,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -15126,6 +16582,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -15270,6 +16740,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -15417,6 +16901,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -15560,6 +17058,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -15755,6 +17267,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -15897,6 +17423,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -16035,6 +17575,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -16165,6 +17719,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -16310,6 +17878,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -16450,6 +18032,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -16603,6 +18199,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -16729,6 +18339,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -16853,6 +18477,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -16983,6 +18621,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -17125,6 +18777,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -17253,6 +18919,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -17398,6 +19078,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -17522,6 +19216,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -17672,6 +19380,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -17807,6 +19529,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -17948,6 +19684,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -18082,6 +19832,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -18208,6 +19972,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -18262,11 +20040,13 @@ paths:
         schema:
           type: string
           enum:
+          - finance
           - front_desk
           - operator
           - owner
         description: |-
-          * `owner` - Owner (Admin)
+          * `owner` - Owner
+          * `finance` - Admin (Finance)
           * `front_desk` - Front desk / Sales
           * `operator` - Production operator
       - name: search
@@ -18375,6 +20155,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -18515,6 +20309,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -18647,6 +20455,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -18794,6 +20616,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -18936,6 +20772,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -19084,6 +20934,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -19120,11 +20984,13 @@ paths:
         schema:
           type: string
           enum:
+          - finance
           - front_desk
           - operator
           - owner
         description: |-
-          * `owner` - Owner (Admin)
+          * `owner` - Owner
+          * `finance` - Admin (Finance)
           * `front_desk` - Front desk / Sales
           * `operator` - Production operator
       - name: search
@@ -19233,6 +21099,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -19374,6 +21254,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -19511,6 +21405,20 @@ paths:
                       detail: Unsupported media type "application/json" in request.
                       attr: null
           description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
+                      attr: null
+          description: ''
         '500':
           content:
             application/json:
@@ -19636,6 +21544,20 @@ paths:
                     errors:
                     - code: unsupported_media_type
                       detail: Unsupported media type "application/json" in request.
+                      attr: null
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse429'
+              examples:
+                Throttled:
+                  value:
+                    type: client_error
+                    errors:
+                    - code: throttled
+                      detail: Request was throttled.
                       attr: null
           description: ''
         '500':
@@ -35117,11 +37039,13 @@ components:
     RoleEnum:
       enum:
       - owner
+      - finance
       - front_desk
       - operator
       type: string
       description: |-
-        * `owner` - Owner (Admin)
+        * `owner` - Owner
+        * `finance` - Admin (Finance)
         * `front_desk` - Front desk / Sales
         * `operator` - Production operator
     Roll:

@@ -34,12 +34,42 @@ import type { Paginated, User } from '@/api/types';
 import { SectionCard } from '@/components/SectionCard';
 import { handleFormError, notifySuccess } from '@/lib/forms';
 import { formatDateTime, toNumber } from '@/lib/format';
+import { useTracksProduction } from '@/features/orders/useCatalog';
 import { ROLE_LABELS } from '@/lib/permissions';
 
-const ROLES = Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }));
+/** Roles with a discount limit (the owner has none). */
+const LIMITED = new Set(['finance', 'front_desk']);
+
+const ROLE_COLOURS: Record<string, string> = {
+  owner: 'slate',
+  finance: 'teal',
+  front_desk: 'blue',
+  operator: 'violet',
+};
+
+const ROLE_HELP: Record<string, string> = {
+  owner: 'Everything, including users, prices, settings and backups.',
+  finance:
+    'All the money: orders, bills, receipts, cancelling, balances, purchases, stock, reports and salary. Not users, prices, settings or backups.',
+  front_desk: 'Orders, bills and receipts at the counter. Cannot cancel or void.',
+  operator: 'The production board and material used.',
+};
+
+/** Front desk and Operator split the counter from the print room, so they are offered
+ * only when the shop tracks production. Otherwise there are two roles: Owner and Admin
+ * (Finance)
+ * (an account already on another role keeps it until changed). */
+const PRODUCTION_ROLES = new Set(['front_desk', 'operator']);
+
+function roleOptions(tracksProduction: boolean, current?: string) {
+  return Object.entries(ROLE_LABELS)
+    .filter(([value]) => tracksProduction || !PRODUCTION_ROLES.has(value) || value === current)
+    .map(([value, label]) => ({ value, label }));
+}
 
 function UserForm({ user, onDone }: { user?: User; onDone: () => void }) {
   const client = useQueryClient();
+  const tracksProduction = useTracksProduction();
   const [busy, setBusy] = useState(false);
   const form = useForm({
     initialValues: {
@@ -47,7 +77,7 @@ function UserForm({ user, onDone }: { user?: User; onDone: () => void }) {
       first_name: user?.first_name ?? '',
       last_name: user?.last_name ?? '',
       phone: user?.phone ?? '',
-      role: user?.role ?? 'front_desk',
+      role: user?.role ?? 'finance',
       max_discount_percent:
         user?.max_discount_percent === null || user?.max_discount_percent === undefined
           ? ('' as number | string)
@@ -101,11 +131,21 @@ function UserForm({ user, onDone }: { user?: User; onDone: () => void }) {
           />
           <TextInput label="Phone" {...form.getInputProps('phone')} />
         </SimpleGrid>
-        <Select label="Role" data={ROLES} {...form.getInputProps('role')} />
-        {form.values.role === 'front_desk' && (
+        <Select
+          label="Role"
+          data={roleOptions(tracksProduction, user?.role)}
+          description={ROLE_HELP[form.values.role]}
+          allowDeselect={false}
+          {...form.getInputProps('role')}
+        />
+        {LIMITED.has(form.values.role) && (
           <NumberInput
             label="Discount limit %"
-            description="Leave empty to use the shop default."
+            description={
+              form.values.role === 'finance'
+                ? 'Leave empty for no limit.'
+                : 'Leave empty to use the shop default.'
+            }
             min={0}
             max={100}
             decimalScale={2}
@@ -241,13 +281,7 @@ export function UsersTab() {
             {
               accessor: 'role',
               title: t('Role'),
-              render: (u) => (
-                <Badge
-                  color={u.role === 'owner' ? 'slate' : u.role === 'operator' ? 'violet' : 'blue'}
-                >
-                  {u.role_label}
-                </Badge>
-              ),
+              render: (u) => <Badge color={ROLE_COLOURS[u.role] ?? 'blue'}>{u.role_label}</Badge>,
             },
             {
               accessor: 'last_login',

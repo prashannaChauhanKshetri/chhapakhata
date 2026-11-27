@@ -63,11 +63,12 @@ class StaffSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"left_on": "The last day cannot be before joining."})
         if joined and joined > services.local_today():
             # Usually a date picked in the wrong year on the AD calendar.
+            try:
+                when = f"{bs_string(joined)} BS ({joined:%d %b %Y})"
+            except serializers.ValidationError:  # beyond the Nepali calendar
+                when = f"{joined:%d %b %Y}"
             raise serializers.ValidationError(
-                {
-                    "joined_on": f"{bs_string(joined)} BS ({joined:%d %b %Y}) is still to come. "
-                    "Check the joining date and its year."
-                }
+                {"joined_on": f"{when} is still to come. Check the joining date and its year."}
             )
         year = attrs.get("balance_year", getattr(self.instance, "balance_year", None))
         month = attrs.get("balance_month", getattr(self.instance, "balance_month", None))

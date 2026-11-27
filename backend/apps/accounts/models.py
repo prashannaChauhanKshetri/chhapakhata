@@ -53,7 +53,7 @@ class User(AbstractUser):
         """Maximum discount as a percent of subtotal, or ``None`` for no limit."""
         if self.max_discount_percent is not None:
             return self.max_discount_percent
-        if self.is_superuser or self.role == Role.OWNER:
+        if self.is_superuser or self.role in (Role.OWNER, Role.FINANCE):
             return None
         if self.role == Role.FRONT_DESK:
             from apps.core.models import ShopSettings

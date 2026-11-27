@@ -12,7 +12,7 @@ import { LoginPage } from '@/auth/LoginPage';
 import { AppSkeleton } from '@/components/Skeletons';
 
 import { AppErrorBoundary } from './AppErrorBoundary';
-import { checkConnectionSoon, persistOptions, useConnection } from './offline';
+import { checkConnectionSoon, persistOptions, refreshSavedData, useConnection } from './offline';
 import { PwaManager } from './pwa';
 import { queryClient } from './queryClient';
 import { router } from './router';
@@ -73,7 +73,11 @@ export function App() {
   return (
     <MantineProvider theme={theme} defaultColorScheme="light" forceColorScheme="light">
       <DatesProvider settings={{ firstDayOfWeek: 0, consistentWeeks: true }}>
-        <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={persistOptions}
+          onSuccess={refreshSavedData}
+        >
           <AppNotifications />
           <PwaManager />
           <AppErrorBoundary>

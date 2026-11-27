@@ -37,16 +37,22 @@ from apps.orders.models import Order, OrderStatus
 
 from .models import Job, JobStageEvent, Priority, Stage
 
+#: Finance moves jobs at the counter's stages, like front desk.
+COUNTER = frozenset({Role.FRONT_DESK, Role.FINANCE})
 STAGE_MOVERS: dict[int, frozenset[str]] = {
-    Stage.DESIGN: frozenset({Role.FRONT_DESK}),
-    Stage.READY_FOR_PRINT: frozenset({Role.FRONT_DESK}),
+    Stage.DESIGN: COUNTER,
+    Stage.READY_FOR_PRINT: COUNTER,
     Stage.PRINTING: frozenset({Role.OPERATOR}),
     Stage.FINISHING: frozenset({Role.OPERATOR}),
     Stage.READY: frozenset({Role.OPERATOR}),
-    Stage.DELIVERED: frozenset({Role.FRONT_DESK}),
+    Stage.DELIVERED: COUNTER,
 }
 
-ROLE_NAMES = {Role.FRONT_DESK: "front desk", Role.OPERATOR: "operator"}
+ROLE_NAMES = {
+    Role.FRONT_DESK: "front desk",
+    Role.FINANCE: "admin (finance)",
+    Role.OPERATOR: "operator",
+}
 
 
 def _is_owner(user: Any) -> bool:
@@ -174,7 +180,7 @@ def move_job(
             {"to_stage": ["Only jobs that are ready for collection can be delivered."]}
         )
     if not can_move_to(user, target):
-        movers = " or ".join(ROLE_NAMES[r] for r in STAGE_MOVERS[target])
+        movers = " or ".join(ROLE_NAMES[r] for r in sorted(STAGE_MOVERS[target]))
         raise PermissionDenied(f"Only the owner or {movers} can move a job to '{target.label}'.")
 
     warnings: list[str] = []

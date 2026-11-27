@@ -157,3 +157,22 @@ def test_a_logo_over_2_mb_is_refused(api, owner, shop):
     response = api(owner).patch("/api/v1/settings/shop/", {"logo": big}, format="multipart")
     assert response.status_code == 400
     assert "2 MB" in str(response.json())
+
+
+# -- Dates beyond the Nepali calendar --------------------------------------------------
+
+
+def test_a_date_beyond_the_nepali_calendar_is_a_clear_error(api, owner, shop):
+    """2083 typed as an AD year used to crash the server (500)."""
+    client = api(owner)
+    worker = {"name": "Ram", "monthly_salary": "15000", "joined_on": "2083-01-01"}
+    response = client.post("/api/v1/staff/", worker, format="json")
+    assert response.status_code == 400
+    assert "still to come" in str(response.json())
+    for path in (
+        "/api/v1/reports/daily-sales/?date=2083-01-01",
+        "/api/v1/utils/date/?ad=2083-01-01",
+    ):
+        response = client.get(path)
+        assert response.status_code == 400, path
+        assert "outside the Nepali calendar" in str(response.json()), path

@@ -11,6 +11,7 @@ import datetime as dt
 
 import nepali_datetime
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
 
 BS_MONTHS = (
     "Baisakh",
@@ -44,7 +45,14 @@ def as_date(value: dt.date | dt.datetime) -> dt.date:
 
 
 def to_bs(value: dt.date | dt.datetime) -> nepali_datetime.date:
-    return nepali_datetime.date.from_datetime_date(as_date(value))
+    day = as_date(value)
+    try:
+        return nepali_datetime.date.from_datetime_date(day)
+    except OverflowError as exc:
+        # Usually a BS year typed into an AD date (2083 AD is beyond the calendar).
+        raise ValidationError(
+            f"{day:%d %b %Y} is outside the Nepali calendar. Check the year."
+        ) from exc
 
 
 def from_bs(year: int, month: int, day: int) -> dt.date:

@@ -85,8 +85,10 @@ def test_saturday_is_off_or_worked_and_a_working_day_present_or_absent(ram, owne
 
 
 def test_days_to_come_and_days_before_joining_cannot_be_marked(ram, owner):
+    tomorrow = local_today() + dt.timedelta(days=1)
+    kind = "worked" if tomorrow.weekday() == 5 else "absent"  # Saturday is the holiday
     with pytest.raises(ValidationError, match="still to come"):
-        mark(ram, local_today() + dt.timedelta(days=1), "absent", owner)
+        mark(ram, tomorrow, kind, owner)
     with pytest.raises(ValidationError, match="not working here"):
         mark(ram, dt.date(2025, 12, 30), "absent", owner)
 

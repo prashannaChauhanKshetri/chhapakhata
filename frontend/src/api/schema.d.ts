@@ -9579,12 +9579,13 @@ export interface components {
             new_password: string;
         };
         /**
-         * @description * `owner` - Owner (Admin)
+         * @description * `owner` - Owner
+         *     * `finance` - Admin (Finance)
          *     * `front_desk` - Front desk / Sales
          *     * `operator` - Production operator
          * @enum {string}
          */
-        RoleEnum: "owner" | "front_desk" | "operator";
+        RoleEnum: "owner" | "finance" | "front_desk" | "operator";
         Roll: {
             readonly id: number;
             code: string;
@@ -13790,6 +13791,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -13877,6 +13886,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -13968,6 +13985,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -14052,6 +14077,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -14146,6 +14179,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -14229,6 +14270,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -14323,6 +14372,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -14415,6 +14472,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -14499,6 +14564,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -14590,6 +14663,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -14674,6 +14755,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -14764,6 +14853,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -14828,6 +14925,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -14993,6 +15098,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -15074,6 +15187,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -15175,6 +15296,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -15264,6 +15393,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -15348,6 +15485,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -15442,6 +15587,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -15532,6 +15685,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -15626,6 +15787,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -15710,6 +15879,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -15802,6 +15979,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -15906,6 +16091,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -15998,6 +16191,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -16102,6 +16303,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -16187,6 +16396,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -16252,6 +16469,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -16340,6 +16565,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -16444,6 +16677,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -16533,6 +16774,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -16617,6 +16866,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -16711,6 +16968,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -16797,6 +17062,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -16886,6 +17159,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -17004,6 +17285,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -17088,6 +17377,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -17182,6 +17479,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -17266,6 +17571,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -17360,6 +17673,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -17452,6 +17773,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -17536,6 +17865,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -17626,6 +17963,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -17735,6 +18080,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -17832,6 +18185,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -17919,6 +18280,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -18010,6 +18379,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -18094,6 +18471,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -18188,6 +18573,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -18271,6 +18664,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -18365,6 +18766,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -18455,6 +18864,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -18566,6 +18983,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -18655,6 +19080,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -18739,6 +19172,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -18833,6 +19274,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -18925,6 +19374,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -19009,6 +19466,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -19104,6 +19569,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -19194,6 +19667,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -19288,6 +19769,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -19374,6 +19863,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -19458,6 +19955,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -19549,6 +20054,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -19638,6 +20151,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -19750,6 +20271,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -19839,6 +20368,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -19923,6 +20460,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -20017,6 +20562,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -20103,6 +20656,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -20195,6 +20756,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -20290,6 +20859,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -20379,6 +20956,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -20465,6 +21050,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -20548,6 +21141,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -20644,6 +21245,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -20744,6 +21353,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -20828,6 +21445,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -20922,6 +21547,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -21008,6 +21641,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -21092,6 +21733,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -21185,6 +21834,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -21266,6 +21923,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -21357,6 +22022,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -21438,6 +22111,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -21529,6 +22210,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -21614,6 +22303,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -21697,6 +22394,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -21787,6 +22492,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -21874,6 +22587,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -21969,6 +22690,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -22058,6 +22787,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -22141,6 +22878,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -22227,6 +22972,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -22321,6 +23074,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -22404,6 +23165,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -22498,6 +23267,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -22585,6 +23362,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -22687,6 +23472,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -22776,6 +23569,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -22860,6 +23661,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -22954,6 +23763,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -23037,6 +23854,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -23131,6 +23956,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -23221,6 +24054,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -23315,6 +24156,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -23407,6 +24256,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -23497,6 +24354,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -23605,6 +24470,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -23692,6 +24565,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -23783,6 +24664,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -23867,6 +24756,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -23961,6 +24858,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -24051,6 +24956,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -24145,6 +25058,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -24226,6 +25147,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -24313,6 +25242,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -24394,6 +25331,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -24485,6 +25430,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -24566,6 +25519,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -24657,6 +25618,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -24738,6 +25707,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -24829,6 +25806,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -24912,6 +25897,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -25002,6 +25995,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -25089,6 +26090,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -25172,6 +26181,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -25193,11 +26210,12 @@ export interface operations {
                 /** @description Number of results to return per page. */
                 page_size?: number;
                 /**
-                 * @description * `owner` - Owner (Admin)
+                 * @description * `owner` - Owner
+                 *     * `finance` - Admin (Finance)
                  *     * `front_desk` - Front desk / Sales
                  *     * `operator` - Production operator
                  */
-                role?: "front_desk" | "operator" | "owner";
+                role?: "finance" | "front_desk" | "operator" | "owner";
                 /** @description A search term. */
                 search?: string;
             };
@@ -25269,6 +26287,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -25360,6 +26386,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -25444,6 +26478,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -25538,6 +26580,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -25628,6 +26678,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -25721,6 +26779,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -25738,11 +26804,12 @@ export interface operations {
                 /** @description Which field to use when ordering the results. */
                 ordering?: string;
                 /**
-                 * @description * `owner` - Owner (Admin)
+                 * @description * `owner` - Owner
+                 *     * `finance` - Admin (Finance)
                  *     * `front_desk` - Front desk / Sales
                  *     * `operator` - Production operator
                  */
-                role?: "front_desk" | "operator" | "owner";
+                role?: "finance" | "front_desk" | "operator" | "owner";
                 /** @description A search term. */
                 search?: string;
             };
@@ -25814,6 +26881,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {
@@ -25904,6 +26979,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -25992,6 +27075,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse415"];
                 };
             };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
+                };
+            };
             500: {
                 headers: {
                     [name: string]: unknown;
@@ -26073,6 +27164,14 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse415"];
+                };
+            };
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse429"];
                 };
             };
             500: {

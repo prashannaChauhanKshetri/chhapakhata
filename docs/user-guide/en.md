@@ -2,11 +2,12 @@
 
 ChhapaKhata keeps a print shop's daily work in one place: orders and quotations, the production board, bills and payments, every customer's account (khata), stock, reports and backups.
 
-This guide is for the **owner**, the **front desk** and the **production operators**. Each part says who it is for. You only see the menus your role allows.
+This guide is for the **owner**, the **admin (finance)**, the **front desk** and the **production operators**. Each part says who it is for. You only see the menus your role allows.
 
 | Role | Can do |
 |---|---|
-| **Owner (Admin)** | Everything: settings, prices, staff accounts, imports, reports, cancelling bills, backups |
+| **Owner** | Everything: settings, prices, staff accounts, imports, reports, cancelling bills, backups, activity log |
+| **Admin (Finance)** | All the money: customers, orders, bills, payments, cancelling bills and voiding receipts, balances, purchases and stock, every report, staff attendance and salary. Not staff accounts, prices, settings, backups or the activity log |
 | **Front desk** | Customers, orders, quotations, payments, bills, approving designs, delivering, daily sales |
 | **Operator** | The production board, recording material used and wastage, their own production log |
 

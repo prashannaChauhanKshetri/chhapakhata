@@ -74,6 +74,11 @@ def desk(db) -> User:
 
 
 @pytest.fixture
+def finance(db) -> User:
+    return make_user("finance", Role.FINANCE)
+
+
+@pytest.fixture
 def operator(db) -> User:
     return make_user("operator", Role.OPERATOR)
 

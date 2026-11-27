@@ -34,7 +34,8 @@ export const Perm = {
 export type PermName = (typeof Perm)[keyof typeof Perm];
 
 export const ROLE_LABELS: Record<string, string> = {
-  owner: 'Owner (Admin)',
+  owner: 'Owner',
+  finance: 'Admin (Finance)',
   front_desk: 'Front desk / Sales',
   operator: 'Production operator',
 };

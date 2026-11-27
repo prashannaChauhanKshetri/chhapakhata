@@ -132,18 +132,19 @@ It is **in daily use at OM Traders and Suppliers, Nepalgunj**, and one installat
 
 ## Who can do what
 
-| | Owner | Front desk | Operator |
-|---|:-:|:-:|:-:|
-| Orders, quotations, customers | ✓ | ✓ | |
-| Bills and payments | ✓ | ✓ | |
-| Cancel bills, void payments, adjust balances | ✓ | | |
-| Rate card and discounts without limit | ✓ | up to 10 % | |
-| Customer dues and ledger | ✓ | view | |
-| Production board | ✓ | design, delivery | printing, finishing |
-| Stock and purchases | ✓ | view | record usage |
-| Reports | all | daily sales | own work |
-| Staff, attendance and salary | ✓ | | |
-| Users, settings, backups, activity log | ✓ | | |
+| | Owner | Admin (Finance) | Front desk | Operator |
+|---|:-:|:-:|:-:|:-:|
+| Orders, quotations, customers | ✓ | ✓ | ✓ | |
+| Bills and payments | ✓ | ✓ | ✓ | |
+| Cancel bills, void payments, adjust balances | ✓ | ✓ | | |
+| Discounts | no limit | no limit | up to 10 % | |
+| Rate card | ✓ | view | view | |
+| Customer dues and ledger | ✓ | ✓ | view | |
+| Production board | ✓ | design, delivery | design, delivery | printing, finishing |
+| Stock and purchases | ✓ | ✓ | view | record usage |
+| Reports | all | all | daily sales | own work |
+| Staff, attendance and salary | ✓ | ✓ | | |
+| Users, settings, backups, activity log | ✓ | | | |
 
 The server enforces every rule; the screens only hide what a role cannot use. Details: [docs/rbac.md](docs/rbac.md).
 

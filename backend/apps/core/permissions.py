@@ -26,7 +26,8 @@ from rest_framework.permissions import BasePermission
 
 
 class Role(models.TextChoices):
-    OWNER = "owner", "Owner (Admin)"
+    OWNER = "owner", "Owner"
+    FINANCE = "finance", "Admin (Finance)"
     FRONT_DESK = "front_desk", "Front desk / Sales"
     OPERATOR = "operator", "Production operator"
 
@@ -70,11 +71,25 @@ class Perm:
         )
 
 
+#: What only the owner can do: run the shop itself rather than its money.
+OWNER_ONLY: frozenset[str] = frozenset(
+    {
+        Perm.USERS_MANAGE,  # logins and passwords
+        Perm.SETTINGS_MANAGE,  # shop details, bill design, imports, erase
+        Perm.CATALOG_MANAGE,  # rates, media types, add-ons
+        Perm.AUDIT_VIEW,  # who did what
+        Perm.SYSTEM_BACKUP,  # backups
+    }
+)
+
 #: Marker meaning "any signed-in user".
 AUTHENTICATED: tuple[str, ...] = ()
 
 ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
     Role.OWNER: Perm.all(),
+    # All the money: bills, receipts, cancelling and voiding, balances, purchases and
+    # stock, every report, staff attendance and salary.
+    Role.FINANCE: Perm.all() - OWNER_ONLY,
     Role.FRONT_DESK: frozenset(
         {
             Perm.CATALOG_VIEW,

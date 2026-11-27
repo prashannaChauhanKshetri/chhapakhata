@@ -11,43 +11,50 @@ from apps.core.permissions import ROLE_PERMISSIONS, Perm, Role
 
 pytestmark = pytest.mark.django_db
 
-#             path                                   owner  desk   operator
+#             path                                   owner  finance desk  operator
 READS = [
-    ("/api/v1/media-types/", True, True, False),
-    ("/api/v1/customers/", True, True, False),
-    ("/api/v1/orders/", True, True, False),
-    ("/api/v1/invoices/", True, True, False),
-    ("/api/v1/payments/", True, True, False),
-    ("/api/v1/jobs/board/", True, True, True),
-    ("/api/v1/jobs/", True, True, True),
-    ("/api/v1/stock-items/", True, True, True),
-    ("/api/v1/rolls/", True, True, True),
-    ("/api/v1/purchases/", True, False, False),
-    ("/api/v1/suppliers/", True, False, False),
-    ("/api/v1/users/", True, False, False),
-    ("/api/v1/activity/", True, False, False),
-    ("/api/v1/system/backups/", True, False, False),
-    ("/api/v1/reports/daily-sales/", True, True, False),
-    ("/api/v1/reports/monthly-sales/", True, False, False),
-    ("/api/v1/reports/pending-dues/", True, False, False),
-    ("/api/v1/reports/collections/", True, False, False),
-    ("/api/v1/reports/material-vs-sales/", True, False, False),
-    ("/api/v1/reports/operator-log/", True, False, True),
-    ("/api/v1/reports/stock/", True, False, False),
-    ("/api/v1/dashboard/", True, True, True),
-    ("/api/v1/settings/shop/", True, True, True),
-    ("/api/v1/staff/", True, False, False),
-    ("/api/v1/attendance/", True, False, False),
-    ("/api/v1/attendance/month/", True, False, False),
-    ("/api/v1/utils/bs-month/", True, True, True),
-    ("/api/v1/staff-advances/", True, False, False),
-    ("/api/v1/salary/", True, False, False),
+    ("/api/v1/media-types/", True, True, True, False),
+    ("/api/v1/customers/", True, True, True, False),
+    ("/api/v1/orders/", True, True, True, False),
+    ("/api/v1/invoices/", True, True, True, False),
+    ("/api/v1/payments/", True, True, True, False),
+    ("/api/v1/jobs/board/", True, True, True, True),
+    ("/api/v1/jobs/", True, True, True, True),
+    ("/api/v1/stock-items/", True, True, True, True),
+    ("/api/v1/rolls/", True, True, True, True),
+    ("/api/v1/purchases/", True, True, False, False),
+    ("/api/v1/suppliers/", True, True, False, False),
+    ("/api/v1/users/", True, False, False, False),
+    ("/api/v1/activity/", True, False, False, False),
+    ("/api/v1/system/backups/", True, False, False, False),
+    ("/api/v1/reports/daily-sales/", True, True, True, False),
+    ("/api/v1/reports/monthly-sales/", True, True, False, False),
+    ("/api/v1/reports/pending-dues/", True, True, False, False),
+    ("/api/v1/reports/collections/", True, True, False, False),
+    ("/api/v1/reports/material-vs-sales/", True, True, False, False),
+    ("/api/v1/reports/operator-log/", True, True, False, True),
+    ("/api/v1/reports/stock/", True, True, False, False),
+    ("/api/v1/dashboard/", True, True, True, True),
+    ("/api/v1/settings/shop/", True, True, True, True),
+    ("/api/v1/staff/", True, True, False, False),
+    ("/api/v1/attendance/", True, True, False, False),
+    ("/api/v1/attendance/month/", True, True, False, False),
+    ("/api/v1/utils/bs-month/", True, True, True, True),
+    ("/api/v1/staff-advances/", True, True, False, False),
+    ("/api/v1/salary/", True, True, False, False),
 ]
 
 
-@pytest.mark.parametrize(("path", "as_owner", "as_desk", "as_operator"), READS)
-def test_read_access(api, owner, desk, operator, path, as_owner, as_desk, as_operator):
-    for user, allowed in ((owner, as_owner), (desk, as_desk), (operator, as_operator)):
+@pytest.mark.parametrize(("path", "as_owner", "as_finance", "as_desk", "as_operator"), READS)
+def test_read_access(
+    api, owner, finance, desk, operator, path, as_owner, as_finance, as_desk, as_operator
+):
+    for user, allowed in (
+        (owner, as_owner),
+        (finance, as_finance),
+        (desk, as_desk),
+        (operator, as_operator),
+    ):
         status = api(user).get(path).status_code
         assert (status == 200) is allowed, f"{user.role} GET {path} → {status}"
 
@@ -138,3 +145,73 @@ def test_matrix_matches_proposal_summary():
     assert Perm.USERS_MANAGE not in desk | op
     assert Perm.STAFF_MANAGE not in desk | op  # salaries are the owner's alone
     assert ROLE_PERMISSIONS[Role.OWNER] == Perm.all()
+
+
+def test_finance_has_all_the_money_but_not_the_shop():
+    finance = ROLE_PERMISSIONS[Role.FINANCE]
+    for perm in (
+        Perm.INVOICES_CANCEL,
+        Perm.PAYMENTS_VOID,
+        Perm.LEDGER_MANAGE,
+        Perm.INVENTORY_MANAGE,
+        Perm.REPORTS_ALL,
+        Perm.STAFF_MANAGE,
+    ):
+        assert perm in finance, perm
+    for perm in (
+        Perm.USERS_MANAGE,
+        Perm.SETTINGS_MANAGE,
+        Perm.CATALOG_MANAGE,
+        Perm.AUDIT_VIEW,
+        Perm.SYSTEM_BACKUP,
+    ):
+        assert perm not in finance, perm
+
+
+def test_finance_writes(api, owner, finance, customer, star_flex):
+    """Finance cancels, voids, adjusts stock and pays salary; rates and users stay the owner's."""
+    from apps.inventory.models import StockItem
+
+    client = api(finance)
+    body = {"name": "Mesh", "rate": "40"}
+    assert client.post("/api/v1/media-types/", body, format="json").status_code == 403
+    new_user = {"username": "x1", "first_name": "X", "role": "finance", "password": "Long@2083x"}
+    assert client.post("/api/v1/users/", new_user, format="json").status_code == 403
+    assert client.patch("/api/v1/settings/shop/", {"name": "X"}, format="json").status_code == 403
+    assert client.post("/api/v1/system/backups/run/").status_code == 403
+
+    order = {
+        "customer": customer.pk,
+        "items": [{"media_type": star_flex.pk, "width": "3", "height": "2", "quantity": 1}],
+        "discount_amount": "500",  # no discount limit, like the owner
+        "confirm": True,
+    }
+    response = client.post("/api/v1/orders/", order, format="json")
+    assert response.status_code == 201, response.content
+    order_id = response.json()["id"]
+
+    pay = {"customer": customer.pk, "order": order_id, "amount": "100", "mode": "cash"}
+    payment = client.post("/api/v1/payments/", pay, format="json")
+    assert payment.status_code == 201
+    void = client.post(
+        f"/api/v1/payments/{payment.json()['id']}/void/", {"reason": "Mistake"}, format="json"
+    )
+    assert void.status_code == 200
+
+    invoice = client.post(f"/api/v1/orders/{order_id}/invoice/", {}, format="json")
+    assert invoice.status_code == 201
+    cancel = client.post(
+        f"/api/v1/invoices/{invoice.json()['id']}/cancel/", {"reason": "Wrong"}, format="json"
+    )
+    assert cancel.status_code == 200
+
+    ink = StockItem.objects.create(name="Ink", kind="ink", unit="litre", on_hand=D("0"))
+    api(owner).post(f"/api/v1/stock-items/{ink.pk}/opening/", {"quantity": "5"}, format="json")
+    adjust = {"counted_quantity": "4", "reason": "Count"}
+    assert (
+        client.post(f"/api/v1/stock-items/{ink.pk}/adjust/", adjust, format="json").status_code
+        == 200
+    )
+
+    worker = {"name": "Ram", "monthly_salary": "15000", "joined_on": "2026-04-14"}
+    assert client.post("/api/v1/staff/", worker, format="json").status_code == 201

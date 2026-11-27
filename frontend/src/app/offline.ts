@@ -17,6 +17,8 @@ import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persist
 import type { PersistQueryClientOptions } from '@tanstack/react-query-persist-client';
 import { useSyncExternalStore } from 'react';
 
+import { queryClient } from './queryClient';
+
 const HEALTH_URL = '/api/v1/health/';
 const CHECK_EVERY_MS = 15_000;
 const CHECK_TIMEOUT_MS = 5_000;
@@ -164,6 +166,15 @@ export const persistOptions: Omit<PersistQueryClientOptions, 'queryClient'> = {
       query.state.status === 'success' && !NOT_SAVED.has(String(query.queryKey[0])),
   },
 };
+
+/**
+ * After the saved copy is restored, mark it all stale. The screens show it at
+ * once and refresh from the server: the copy is written at most every 2 s, so a
+ * reload right after saving could otherwise show the older figures as current.
+ */
+export function refreshSavedData(): Promise<void> {
+  return queryClient.invalidateQueries();
+}
 
 /** Forget the saved copy (sign-out, session expiry). */
 export function clearSavedData(): void {
